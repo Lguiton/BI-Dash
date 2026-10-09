@@ -238,7 +238,7 @@ export interface AiChart { kind: "line" | "bar"; title: string; x_label: string;
 export interface AiAnswer {
   chart: AiChart | null;
   answer: string; model: string; provider: AiProviderId; stopped_early: boolean; steps: AiStep[];
-  route: { kind: "simple" | "complex"; reason: string; forced: boolean } | null; attempts: AiAttempt[];
+  route: { kind: "simple" | "medium" | "complex"; reason: string; forced: boolean } | null; attempts: AiAttempt[];
   usage: { input_tokens: number; output_tokens: number };
 }
 
@@ -355,3 +355,104 @@ export interface InboxFiles { folders: string[]; files: { name: string; folder: 
 
 export interface BackupItem { name: string; kind: string; size_bytes: number; created_at: string }
 export interface AuditEntry { id: number; at: string; workspace: WorkspaceName; action: string; detail: string; ok: boolean }
+
+// ---- Project & product management ----
+export interface PmItem {
+  id: number; kind: string; title: string; status: string; priority: number; owner: string | null; sprint_id: number | null; points: number | null;
+  reach: number | null; impact: number | null; confidence: number | null; effort: number | null; value: number | null; time_crit: number | null; risk_red: number | null;
+  moscow: string | null; start_date: string | null; duration_days: number | null; deps: number[]; planned_cost: number | null; actual_cost: number | null;
+  started_at: string | null; done_at: string | null; notes: string | null;
+}
+export interface PmPct { avg: number; median: number; p85: number; n: number }
+export interface PmSprint { id: number; name: string; start_date: string; end_date: string; goal: string | null; committed: number; completed: number; items: number; ended: boolean; completion_pct: number }
+export interface PmRisk { id: number; title: string; probability: number; impact_usd: number; status: string; owner: string | null; mitigation: string | null; emv: number }
+export interface PmKr { id: number; objective: string; kr: string; start_value: number; target_value: number; current_value: number; owner: string | null; progress_pct: number }
+export interface PmFcast { sprints: number; date: string }
+export interface PmOverview {
+  as_of: string; items: PmItem[]; counts: Record<string, number>; empty: boolean;
+  prioritization: { rows: { id: number; title: string; kind: string; status: string; moscow: string | null; points: number | null; rice: number | null; wsjf: number | null; rice_rank?: number }[]; moscow: Record<string, { items: number; points: number }>; moscow_unclassified: number; must_share_pct: number | null; unscored: number };
+  flow: { done_count: number; cycle_days: PmPct; lead_days: PmPct; throughput_weekly: { week: string; done: number }[]; wip: number; littles_law: { throughput_per_day: number; avg_cycle_days: number; expected_wip: number; actual_wip: number }; cfd: { day: string; todo: number; doing: number; done: number }[] };
+  sprint: { sprints: PmSprint[]; velocity: { history: number[]; avg_last3: number | null }; burndown: { sprint: string; committed: number; remaining: number; points: { day: string; ideal: number; actual: number | null }[]; status: string } | null; forecast: { remaining_points: number; avg_velocity: number; likely: PmFcast; fast: PmFcast; slow: PmFcast; note: string } | null };
+  schedule: { available: boolean; duration_days?: number; finish?: string; rows: { id: number; title: string; status: string; duration: number; es: number; ef: number; ls: number; lf: number; float: number; critical: boolean; deps: number[]; start: string; finish: string }[]; critical: number[]; unknown_dependencies: number[]; reason?: string };
+  earned_value: { available: boolean; as_of?: string; bac?: number; pv?: number; ev?: number; ac?: number; cpi?: number | null; spi?: number | null; cv?: number; sv?: number; eac?: number | null; etc?: number | null; vac?: number | null; tcpi?: number | null; unscheduled_items?: number; reading?: string; rule?: string; reason?: string };
+  risks: { risks: PmRisk[]; open_count: number; exposure: number; matrix: number[][]; matrix_note: string; reserve_hint: string };
+  okrs: { objectives: { objective: string; progress_pct: number; key_results: PmKr[] }[]; note: string };
+  enums: { kinds: string[]; statuses: string[]; moscow: string[]; risk_status: string[] };
+}
+export interface PmProduct {
+  available: boolean; last_day?: string; avg_dau?: number; mau?: number; stickiness_pct?: number | null;
+  weekly_active?: { week: string; active: number; records: number }[]; funnel?: { stage: string; n: number; share_pct: number }[];
+  cohorts?: { cohort: string; size: number; retention: (number | null)[] }[]; mapping?: string; stickiness_note?: string; reason?: string;
+}
+
+// ---- Systems analyst ----
+export interface SaReq { id: number; code: string; title: string; kind: string; priority: string; status: string; source: string | null; acceptance: string | null; test_ref: string | null }
+export interface SaFeas { rows: { key: string; label: string; question: string; score: number | null; weight: number; note: string }[]; weighted_score: number | null; verdict: string | null; weakest: string | null; scale?: string }
+export interface SaOverview {
+  requirements: SaReq[];
+  traceability: { total: number; by_status: Record<string, number>; by_kind: Record<string, number>; test_coverage_pct: number | null; gaps: { code: string; title: string; problem: string }[]; note: string };
+  enums: { kinds: string[]; priority: string[]; status: string[] };
+  feasibility: SaFeas;
+}
+export interface SaDictionary {
+  tables: { name: string; kind: string; columns: { name: string; type: string; nullable: boolean; key: string; description: string; null_pct: number | null; distinct: number | null }[]; rows: number; description: string }[];
+  relationships: { from_table: string; from_column: string; to_table: string; to_column: string; meaning: string; orphans: number; valid: boolean }[];
+  mermaid: string;
+}
+export interface SaProcess {
+  available: boolean; reason?: string; records?: number; days?: number; duration?: { avg: number; p50: number; p85: number; p95: number; cv: number }; variability?: string;
+  entities?: { entity: string; records: number; avg_min: number; p85_min: number; units: number; minutes: number; cost_per_unit: number | null; completion_pct: number | null; units_per_hour: number | null }[];
+  statuses?: { status: string; n: number }[]; bottleneck?: { entity: string; p85_min: number; why: string };
+  littles_law?: { arrivals_per_day: number; avg_minutes: number; avg_in_progress: number; reading: string };
+  queue_inputs?: { arrivals_per_day: number; service_minutes: number };
+}
+
+// ---- Database admin and governance ----
+export interface DbaHealth {
+  workspace: string; engine: string; file: { name: string; size_bytes: number; wal_bytes: number; modified: string };
+  blocks: { total: number; used: number; free: number; free_pct: number; block_size: number };
+  tables: { name: string; rows: number; columns: number; has_pk: boolean; indexes: number }[]; views: number;
+  constraints: { table: string; type: string; columns: string[] }[]; memory: { tag: string; bytes: number }[]; settings: { name: string; value: string }[];
+  integrity: { name: string; ok: boolean; detail: string; fix?: string }[];
+  backup: { count: number; latest: string | null; age_hours: number | null; auto: boolean; rpo: string };
+  findings: { level: string; text: string; action: string }[]; growth: { at: string; size_bytes: number; rows_total: number }[]; access: string;
+}
+export interface DbaBench { threshold_ms: number; queries: { name: string; sql: string; median_ms: number; runs_ms: number[]; slow: boolean; scans: number; plan: string; note: string }[]; reading: string }
+export interface GovAsset {
+  name: string; kind: string; system: boolean; rows: number; columns: { name: string; type: string }[]; owner: string | null; steward: string | null; description: string | null;
+  classification: string | null; retention_days: number | null; retention_column: string | null; completeness_pct: number | null; duplicate_rows: number;
+  retention_eligible_rows: number | null; pii_columns: number; suggested_classification: string;
+}
+export interface GovCatalog { assets: GovAsset[]; classes: string[]; classes_help: Record<string, string> }
+export interface GovPii { findings: { table: string; column: string; category: string; evidence: string; confidence: string; protected_from_ai: boolean }[]; unprotected: number; note: string }
+export interface GovLineage { nodes: { id: string; kind: string }[]; edges: { from: string; to: string; kind: string }[]; consumers: { name: string; reads: string }[]; pipeline: string }
+export interface GovControls { controls: { id: string; title: string; ok: boolean; detail: string; fix?: string }[]; in_place: number; total: number }
+export interface GovAccess { since: string; by_action: { action: string; n: number; failed: number }[]; failed_total: number; data_leaving: { action: string; detail: string; at: string }[]; ai: { mode: string; blocked_columns: string[] }; note: string }
+
+// ---- Full stack developer ----
+export interface FsEndpoint { method: string; path: string; group: string; summary: string; params: { name: string; in: string; required: boolean; type: string }[]; json_body: boolean; sample_body: Record<string, null> | null; multipart: boolean }
+export interface FsApiMap { title: string; version: string; total: number; by_method: Record<string, number>; groups: { group: string; endpoints: number }[]; endpoints: FsEndpoint[] }
+export interface FsResponse { method: string; path: string; status: number; ms: number; content_type: string; truncated: boolean; body: string; reading: string }
+export interface FsScaffold { table: string; primary_key: string | null; columns: number; route: string; files: { name: string; language: string; content: string }[]; next_steps: string[]; caveat: string }
+export interface FsCodebase { languages: { language: string; files: number; lines: number }[]; files: number; tests: number; route_functions: number; test_to_python_ratio: number | null; largest: { file: string; lines: number }[]; reading: string }
+export interface FsStack { python: string; platform: string; packages: Record<string, string | null>; tools_on_path: Record<string, boolean>; facts: { area: string; value: string; note: string }[]; reading: string }
+
+// ---- Company engagement ----
+export interface CoDeliverable { id: string; discipline: string; title: string; why: string; href: string; auto: boolean; detected: boolean; manual: boolean; done: boolean; detail: string }
+export interface CoOverview {
+  workspace: WorkspaceName; brief: { company: string; goal: string; notes: string };
+  phases: { id: string; name: string; about: string; done: number; total: number; deliverables: CoDeliverable[] }[];
+  disciplines: { id: string; name: string; does: string; total: number; done: number; learning_done: number; learning_total: number; href: string }[];
+  done: number; total: number; pct: number; next: CoDeliverable | null; note: string;
+}
+
+// ---- Manuals and discipline agents ----
+export interface ManualStep { id: string; title: string; what: string; how: string[]; tool: { label: string; href: string | null; tab: string | null } | null; done_when: string; mistakes: string[]; ask: string }
+export interface Manual { track: string; title: string; intro: string; outcome: string; steps: ManualStep[]; done: string[] }
+export interface AgentInfo {
+  track: string; name: string; focus: string; can_propose: string[]; can: string[]; suggestions: string[];
+  status: { ready: string[]; policy: { mode: string; allowed: boolean; workspace: string; blocked_columns: string[] } };
+}
+export interface AgentProposal { type: string; data: Record<string, unknown>; reason: string }
+export interface AgentAction { tab?: string; href?: string; label: string }
+export interface AgentMsg { role: "user" | "agent"; content: string; proposals?: AgentProposal[]; actions?: AgentAction[]; meta?: string; error?: boolean }

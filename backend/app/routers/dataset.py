@@ -21,7 +21,7 @@ def _ai_ready() -> bool:
 def dataset():
     with get_cursor() as cur:
         info = fetch_one(cur, """
-            SELECT COUNT(*) AS rows, COUNT(DISTINCT entity_id) AS entities, COUNT(DISTINCT record_date) AS days,
+            SELECT COUNT(*) AS rows, COUNT(duration_minutes) AS with_duration, COUNT(DISTINCT entity_id) AS entities, COUNT(DISTINCT record_date) AS days,
                    STRFTIME(MIN(record_date), '%Y-%m-%d') AS date_min, STRFTIME(MAX(record_date), '%Y-%m-%d') AS date_max,
                    COUNT(DISTINCT CASE WHEN ISODOW(record_date) >= 6 THEN record_date END) AS weekend_days,
                    COUNT(DISTINCT CASE WHEN ISODOW(record_date) < 6 THEN record_date END) AS weekday_days
@@ -43,6 +43,12 @@ def dataset():
          "checks": [check(n >= 100, "100+ records", f"{n:,} records"), check(days >= 20, "20+ distinct days for a time split", f"{days} days")]},
         {"id": "engineering", "name": "Data Engineering", "uses": "Pipeline monitor (choose \"Your uploaded data\"), exports, Postgres lab",
          "checks": [check(n > 0, "at least 1 record to send through the pipeline", f"{n:,} records")]},
+        {"id": "pm", "name": "Project & Product", "uses": "Board and metrics (your own items), product analytics from your records",
+         "checks": [check(n >= 20 and days >= 7, "20+ records over 7+ days for activity and retention", f"{n:,} records, {days} days")]},
+        {"id": "sysanalyst", "name": "Systems Analyst", "uses": "Data dictionary, process analysis, calculators, requirements",
+         "checks": [check(info["with_duration"] >= 10, "10+ records with duration_minutes for process analysis", f"{info['with_duration']:,} with a duration")]},
+        {"id": "fullstack", "name": "Full Stack Developer", "uses": "API map and tester, scaffolds from your tables, codebase and stack facts",
+         "checks": [check(n > 0, "at least 1 record so the scaffolds have a table to work on", f"{n:,} records")]},
         {"id": "ai", "name": "AI Engineering", "uses": "AI Lab questions and charts over your tables",
          "checks": [check(n > 0, "at least 1 record", f"{n:,} records"), check(_ai_ready(), "an API key in backend/.env", "key found" if _ai_ready() else "no key yet")]},
     ]

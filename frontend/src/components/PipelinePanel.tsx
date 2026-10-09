@@ -36,8 +36,8 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
     <div className="space-y-4">
       {error && <ErrorBanner message={error} />}
       <div className="card flex flex-wrap items-center gap-3 p-4 text-sm">
-        <label>Source{" "}
-          <select className="field" value={source} onChange={(e) => setSource(e.target.value as "clean" | "messy" | "uploaded")}>
+        <label className="max-w-full">Source{" "}
+          <select className="field max-w-full" value={source} onChange={(e) => setSource(e.target.value as "clean" | "messy" | "uploaded")}>
             <option value="clean">Clean sample (3,650 rows)</option>
             <option value="messy">Messy sample (duplicates, bad rows)</option>
             <option value="uploaded">Your uploaded data (what the dashboard holds now)</option>

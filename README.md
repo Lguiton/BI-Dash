@@ -34,15 +34,18 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * **KPIs** (`/kpis`): turn a metric into a KPI with a target, direction, window and warning band.
 * **Data quality** (`/quality`): nine checks (nulls, negatives, orphans, duplicates, date gaps...) with sample rows.
 * **Chart gallery** (main dashboard, under the entity chart): a dropdown of 12 charts over your filtered data: pie, donut, treemap, ranked bar, Pareto, radar, funnel, stacked area, waterfall, histogram, box plot and bubble. Pick the measure (revenue, cost, profit, units, duration) and what to group by.
-* **Your data in every track** (main dashboard, collapsible): one import feeds all five careers; this card checks whether your data is big enough for each career's exercises. Each career dashboard shows the same check. The pipeline monitor can run on "Your uploaded data", and `postgres_practice/load_data.py --uploaded` loads it into Postgres.
-* **Study widget** (main dashboard): progress bars for the five careers and a **Continue** button to your next step. Progress is stored in the DuckDB file.
+* **Your data in every track** (main dashboard, collapsible): one import feeds all eight careers; this card checks whether your data is big enough for each career's exercises. Each career dashboard shows the same check. The pipeline monitor can run on "Your uploaded data", and `postgres_practice/load_data.py --uploaded` loads it into Postgres.
+* **Company engagement** (`/company`, second item in the nav, and a card on the home page): the plan for being hired to do every discipline for one company. Four phases, 22 deliverables, each linked to the dashboard where it is done. Progress is detected from your workspace's own data where possible and ticked by you where not; Practice and Real keep separate plans. See docs/COMPANY_ENGAGEMENT.md.
+* **How-to manual + AI agent in every discipline** (docs/AGENTS_AND_MANUALS.md): each track opens on a step-by-step manual with buttons that jump to the right tool, and has a search bar to ask its AI agent questions or give it instructions. Agents can draft requirements, risks, backlog items, KPIs and catalog entries for you to approve; they can't change anything themselves, and they respect your AI privacy mode.
+* **Eight career tracks**: Analyst, Scientist, ML, Data Engineering (with **Database admin** and **Data governance** tabs), AI, **Project & Product**, **Systems Analyst** and **Full Stack Developer** (API map and in-app request tester, code scaffolds from your tables, codebase stats, stack and config facts; docs/FULL_STACK_DEVELOPMENT.md). See docs/PROJECT_PRODUCT_MANAGEMENT.md, docs/SYSTEMS_ANALYSIS.md and docs/DBA_AND_GOVERNANCE.md. Example data for the PM and requirements views loads in Practice only; Real never gets invented data.
+* **Study widget** (main dashboard): progress bars for the eight careers and a **Continue** button to your next step. Progress is stored in the DuckDB file.
 * **Career dashboards** (`/tracks/analyst`, `/scientist`, `/ml`, `/engineering`, `/ai`): a practice dashboard per career (analyst KPIs and quality score; weekend t-test, KMeans segments and correlations; ML experiment log; pipeline health; AI usage) plus a learning-path checklist and portfolio ideas.
 * **Tracks** (`/tracks`): Data Analyst, Data Scientist, Machine Learning, Data Engineering and AI Engineering, each with real tools, an ordered path through this project, and portfolio projects.
 * **Labs** menu:
   * **SQL Lab** (`/lab`): read-only SQL console, 16 graded exercises, and saved queries (kept in your browser).
   * **Python** (`/python`): Jupyter launch card and 14 notebooks in `python_practice/notebooks/` (basics 00-07; analyst, statistics, clustering, ML and MLflow 10-15) with self-checking exercises.
   * **ML Lab** (`/ml`): train regression/classification models (scikit-learn) with a time-based split, baselines, cross-validation, permutation importance and plain-English warnings.
-  * **AI Lab** (`/ai`): an agent that answers questions by writing read-only SQL. Put any of `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` in `backend/.env` (see `.env.example`). Simple questions go to Gemini first (free tier), then OpenAI; complex or code questions go to Claude first. Daily caps and automatic fallback spread the load; you can also force one model.
+  * **AI Lab** (`/ai`): an agent that answers questions by writing read-only SQL. Put any of `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` in `backend/.env` (see `.env.example`). Questions are routed by difficulty: simple to Gemini first (free tier), medium (comparisons, trends, summaries, drafts) to OpenAI first, complex or code questions to Claude first, each falling back to the others if a key is missing, a cap is reached or a provider errors. The discipline agents use the same rules. Daily caps and automatic fallback spread the load; you can also force one model.
   * **Glossary** (`/glossary`): 18 metrics and concepts with formula, runnable SQL and common pitfalls.
   * **Pipeline monitor** (`/pipeline`): run the medallion pipeline (clean or messy data) and watch freshness, quarantine and health checks.
   * **Apache** (`/apache`): Spark, Airflow and Superset examples in a dropdown (`apache_practice/`).
@@ -112,6 +115,14 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET/POST /api/sources`, `POST /api/sources/test`, `POST /api/sources/{id}/run` | saved sources and refresh |
 | `GET/POST /api/backups`, `POST /api/backups/restore` | backups |
 | `GET /api/audit` | activity log |
+| `/api/pm` (overview, items, sprints, risks, OKRs, `product-analytics`, `example`) | Project & Product track: RICE/WSJF, velocity, burndown, flow, critical path, earned value, risk EMV, OKRs |
+| `/api/sysanalyst` (requirements, `dictionary`, `process`, `feasibility`, `calc/*`) | Systems Analyst track: traceability, data dictionary + Mermaid ER, queueing, availability, cost-benefit, capacity, TELOS |
+| `GET /api/manuals/{track}`, `PUT /api/manuals/{track}/steps/{step}` | How-to manuals and your ticks |
+| `GET /api/agents/{track}`, `POST /api/agents/{track}/chat` | Per-discipline AI agent |
+| `/api/fullstack/*` (api-map, request, scaffold, codebase, stack) | Full Stack Developer track |
+| `/api/company` (overview, brief, deliverables) | Company engagement plan |
+| `GET /api/dba/health`, `/api/dba/benchmarks`, `POST /api/dba/checkpoint`, `/api/dba/verify-backup` | Data Engineering > Database admin |
+| `/api/governance/*` (catalog, assets, pii-scan, protect, lineage, controls, access) | Data Engineering > Data governance |
 | `GET /api/ingest/template` | CSV template |
 
 All analytics endpoints accept `date_from, date_to, entity_id, category, status`. Interactive docs at `/docs`.

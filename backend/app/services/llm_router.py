@@ -2,6 +2,7 @@
 
 Policy (edit ORDER and DEFAULT_LIMITS to taste):
   simple questions   Google Gemini first (free tier), then OpenAI, then Claude
+  medium questions   OpenAI first (comparisons, trends, summaries, drafts), then Gemini, then Claude
   complex / code     Claude first (best at multi-step reasoning and code), then OpenAI, then Gemini
 Rules that spread the load:
   * a provider is skipped when it has no key, no installed SDK, or has used up its daily cap
@@ -19,7 +20,7 @@ from datetime import datetime, timezone
 from app.services import ai_agent, providers
 from app.services.ai_agent import AiError, AskResult
 
-ORDER = {"simple": ["google", "openai", "anthropic"], "complex": ["anthropic", "openai", "google"]}
+ORDER = {"simple": ["google", "openai", "anthropic"], "medium": ["openai", "google", "anthropic"], "complex": ["anthropic", "openai", "google"]}
 DEFAULT_LIMITS = {"google": 200, "openai": 100, "anthropic": 40}   # questions per UTC day, override with BI_LIMIT_<PROVIDER>
 
 _lock = threading.Lock()
@@ -27,12 +28,15 @@ _usage: dict[str, list] = {}      # provider -> [utc_date, count]
 
 COMPLEX_HINTS = re.compile(
     r"\b(code|script|function|python|debug|refactor|regression|correlat\w*|forecast\w*|predict\w*|statistic\w*|"
-    r"significan\w*|outlier\w*|root cause|why|step[- ]by[- ]step|compare|trend\w*|seasonal\w*|cohort\w*|window function)\b", re.I)
+    r"significan\w*|outlier\w*|root cause|why|step[- ]by[- ]step|seasonal\w*|cohort\w*|window function)\b", re.I)
+MEDIUM_HINTS = re.compile(
+    r"\b(compar\w*|trend\w*|versus|vs|breakdown|break down|rank\w*|top \d+|summar\w*|explain|average|per|share|percent\w*|ratio|growth|change[sd]?|"
+    r"draft|suggest\w*|plan|recommend\w*|list|prioriti[sz]\w*|review|improve\w*)\b", re.I)
 
 
 def classify(question: str, effort: str = "auto") -> tuple[str, str]:
-    """Return ("simple" | "complex", reason)."""
-    if effort in ("simple", "complex"):
+    """Return ("simple" | "medium" | "complex", reason)."""
+    if effort in ("simple", "medium", "complex"):
         return effort, "chosen by you"
     q = question or ""
     m = COMPLEX_HINTS.search(q)
@@ -40,6 +44,11 @@ def classify(question: str, effort: str = "auto") -> tuple[str, str]:
         return "complex", f"mentions '{m.group(0).lower()}'"
     if len(q) > 240 or q.count("?") > 1 or len(re.findall(r"\b(and|then|also)\b", q, re.I)) >= 3:
         return "complex", "long or multi-part question"
+    m = MEDIUM_HINTS.search(q)
+    if m:
+        return "medium", f"mentions '{m.group(0).lower()}'"
+    if len(q) > 110 or len(re.findall(r"\b(and|then|also)\b", q, re.I)) >= 1:
+        return "medium", "a bit longer than a one-liner"
     return "simple", "short, direct question"
 
 

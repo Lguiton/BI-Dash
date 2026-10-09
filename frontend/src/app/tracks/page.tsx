@@ -36,7 +36,7 @@ export default function TracksPage() {
   }
 
   return (
-    <PageShell title="Career tracks" subtitle="Five paths, each with real tools and a learning path through this project.">
+    <PageShell title="Career tracks" subtitle="Eight paths, each with real tools and a learning path through this project.">
       {error && <ErrorBanner message={error} onRetry={() => setAttempt((a) => a + 1)} />}
       <div className="flex flex-wrap items-center gap-3">
         <label htmlFor="track" className="text-sm font-medium">Track</label>

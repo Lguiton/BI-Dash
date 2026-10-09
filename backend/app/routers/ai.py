@@ -31,7 +31,7 @@ def _check_rate() -> None:
 class AskIn(BaseModel):
     question: str = Field(min_length=3, max_length=500)
     provider: Literal["auto", "google", "openai", "anthropic"] = "auto"
-    effort: Literal["auto", "simple", "complex"] = "auto"
+    effort: Literal["auto", "simple", "medium", "complex"] = "auto"
 
 
 @router.get("/status")

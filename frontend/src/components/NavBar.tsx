@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Activity, BarChart3, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
+import { Activity, BarChart3, Building2, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
 
 const MAIN = [
   { href: "/", label: "Dashboard", Icon: BarChart3 },
+  { href: "/company", label: "Company", Icon: Building2 },
   { href: "/data", label: "My data", Icon: Table2 },
   { href: "/kpis", label: "KPIs", Icon: Target },
   { href: "/quality", label: "Data quality", Icon: ShieldCheck },

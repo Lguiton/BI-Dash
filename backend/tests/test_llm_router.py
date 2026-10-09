@@ -43,7 +43,8 @@ def stubs(**kw): return {p: Stub(p, text=f"answer from {p}", fail=kw.get(p)) for
 # ---- classification and plan ----
 @pytest.mark.parametrize("q,kind", [
     ("How many records are there?", "simple"), ("Which entity earns the most?", "simple"),
-    ("Write python code to compute margin", "complex"), ("Why did revenue drop in March?", "complex"),
+    ("Write python code to compute margin", "complex"), ("Why did revenue drop in March?", "complex"), ("Compare revenue by entity", "medium"), ("Summarise last week", "medium"),
+    ("Top 5 entities by cost", "medium"), ("Draft three risks for my plan", "medium"),
     ("Is there a seasonal trend?", "complex"), ("x" * 300, "complex"),
 ])
 def test_classify(q, kind):
@@ -173,3 +174,35 @@ def test_provider_errors_are_translated():
     e = providers.translate("google", ClientError())
     assert e.status == 400 and "BI_GOOGLE_MODEL" in str(e)
     assert providers.translate("google", RuntimeError()).status == 502
+
+
+def test_three_tiers_with_all_keys(monkeypatch):
+    all_keys(monkeypatch)
+    got = {q: llm_router.ask(q, adapters=stubs()).provider for q in ("How many records?", "Compare revenue by entity", "Write python code to compute margin")}
+    assert list(got.values()) == ["google", "openai", "anthropic"]
+
+
+def test_medium_falls_back_in_order(monkeypatch):
+    all_keys(monkeypatch)
+    assert llm_router.ask("Compare revenue by entity", adapters=stubs(openai="OpenAI is rate limiting requests")).provider == "google"
+    assert llm_router.plan("hi", effort="medium")["order"] == ["openai", "google", "anthropic"]
+
+
+def test_agents_use_the_same_three_tiers(client, monkeypatch):
+    from app.services import agents
+    from app.services.providers import Turn
+    all_keys(monkeypatch)
+    monkeypatch.setattr(providers, "sdk_installed", lambda p: True)
+
+    class A:
+        def __init__(self, name): self.provider, self.model = name, name
+        def start(self, *a): pass
+        def next_turn(self): return Turn("ok")
+        def add_results(self, *a): pass
+    ad = {p: A(p) for p in ("google", "openai", "anthropic")}
+    seen = {m: agents.chat("pm", m, adapters=ad) for m in ("How many items are done?", "Compare my sprints", "Debug the schedule step by step")}
+    assert [r.provider for r in seen.values()] == ["google", "openai", "anthropic"]
+    assert [r.route["kind"] for r in seen.values()] == ["simple", "medium", "complex"]
+    # history must not push a short question into a bigger tier
+    long_hist = [{"role": "user", "content": "x" * 600}] * 6
+    assert agents.chat("pm", "How many items are done?", long_hist, adapters=ad).provider == "google"

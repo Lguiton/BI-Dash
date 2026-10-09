@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DatasetStrip } from "@/components/DatasetCard";
 import { BookOpen, FileCode, LayoutDashboard } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -8,18 +9,29 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
 import { PipelinePanel } from "@/components/PipelinePanel";
+import { PmPanel } from "@/components/panels/PmPanel";
+import { FullStackPanel } from "@/components/panels/FullStackPanel";
+import { SaPanel } from "@/components/panels/SaPanel";
+import { DbaPanel, GovernancePanel } from "@/components/panels/DbaGovPanels";
+import { Tabs } from "@/components/panels/kit";
+import { AgentPanel, CommandBar, useAgentChat } from "@/components/panels/AgentUi";
+import { ManualPanel } from "@/components/panels/ManualPanel";
 import { ApiError, getJson, putJson } from "@/lib/api";
 import { money, pct } from "@/lib/format";
 import { useChartColors } from "@/lib/useChartColors";
-import type { AiDash, AnalystDash, EngineeringDash, MlDash, Progress, ScientistDash, Track, TrackStep } from "@/lib/types";
+import type { AgentAction, ManualStep, AiDash, AnalystDash, EngineeringDash, MlDash, Progress, ScientistDash, Track, TrackStep } from "@/lib/types";
 
 type Dash = { ideas: string[] } & Record<string, unknown>;
+const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", engineering: "pipeline" };
 const OPEN_LAB: Record<string, { href: string; label: string }[]> = {
   analyst: [{ href: "/lab", label: "SQL Lab" }, { href: "/kpis", label: "KPI builder" }, { href: "/quality", label: "Data quality" }],
   scientist: [{ href: "/python", label: "Notebooks" }, { href: "/ml", label: "ML Lab" }],
   ml: [{ href: "/ml", label: "ML Lab" }, { href: "/python", label: "Notebooks 13-15" }],
   engineering: [{ href: "/pipeline", label: "Pipeline monitor" }, { href: "/apache", label: "Apache lab" }],
   ai: [{ href: "/ai", label: "AI Lab" }, { href: "/glossary", label: "Glossary" }],
+  fullstack: [{ href: "/lab", label: "SQL Lab" }, { href: "/schema", label: "Schema" }, { href: "/activity", label: "Activity log" }],
+  pm: [{ href: "/kpis", label: "KPI builder" }, { href: "/activity", label: "Activity log" }],
+  sysanalyst: [{ href: "/schema", label: "Schema" }, { href: "/quality", label: "Data quality" }, { href: "/lab", label: "SQL Lab" }],
 };
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
@@ -192,16 +204,44 @@ function StepRow({ s, done, onToggle, onOpen }: { s: TrackStep; done: boolean; o
   );
 }
 
-export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "engineering" | "ai" }) {
+function EngineeringTabs({ d, tab, onTab }: { d: EngineeringDash; tab: string; onTab: (t: string) => void }) {
+  const [top, sub = "catalog"] = tab.split("/");
+  return (
+    <div className="space-y-4">
+      <Tabs label="Data engineering areas" value={top} onChange={onTab} tabs={[{ id: "pipeline", label: "Pipeline" }, { id: "dba", label: "Database admin" }, { id: "gov", label: "Data governance" }]} />
+      {top === "pipeline" && <PipelinePanel initial={d.pipeline} key={JSON.stringify(d.pipeline.history[0] ?? 0)} />}
+      {top === "dba" && <DbaPanel />}
+      {top === "gov" && <GovernancePanel tab={sub} onTab={(t) => onTab(`gov/${t}`)} />}
+    </div>
+  );
+}
+
+export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack" }) {
   const [track, setTrack] = useState<Track | null>(null);
   const [dash, setDash] = useState<Dash | null>(null);
   const [prog, setProg] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<{ path: string; content: string } | null>(null);
+  const [view, setView] = useState<"manual" | "tools" | "agent">("manual");
+  const [tab, setTab] = useState(DEFAULT_TAB[id] ?? "");
+  const [agentName, setAgentName] = useState("agent");
+  const [stepId, setStepId] = useState<string | undefined>(undefined);
+  const router = useRouter();
+  const chat = useAgentChat(id);
+
+  const goTool = (t: { href: string | null; tab: string | null }) => {
+    if (t.href) { router.push(t.href); return; }
+    if (t.tab) setTab(t.tab);
+    setView("tools");
+  };
+  const goAction = (a: AgentAction) => { if (a.href) router.push(a.href); else if (a.tab) { setTab(a.tab); setView("tools"); } };
+  const askAbout = (s: ManualStep) => { setStepId(s.id); setView("agent"); void chat.send(s.ask || `Help me with step: ${s.title}`, s.id); };
+  const sendFromBar = (text: string) => { setView("agent"); void chat.send(text, stepId); };
 
   const loadProgress = useCallback((signal?: AbortSignal) => getJson<Progress>("/api/progress", signal).then(setProg).catch(() => {}), []);
   useEffect(() => {
     const ctl = new AbortController();
+    getJson<{ name: string }>(`/api/agents/${id}`, ctl.signal).then((r) => setAgentName(r.name)).catch(() => {});
     const fail = (e: unknown) => { if (!ctl.signal.aborted) setError(e instanceof ApiError ? e.message : "Couldn't load this dashboard."); };
     getJson<{ tracks: Track[] }>("/api/tracks", ctl.signal).then((r) => setTrack(r.tracks.find((t) => t.id === id) ?? null)).catch(fail);
     getJson<Dash>(`/api/tracks/${id}/dashboard`, ctl.signal).then(setDash).catch(fail);
@@ -230,25 +270,42 @@ export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "e
       {error && <ErrorBanner message={error} />}
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Link href="/tracks" className="btn">All tracks</Link>
+        <Link href="/company" className="btn">Company plan</Link>
         {OPEN_LAB[id].map((l) => <Link key={l.href} href={l.href} className="btn">{l.label}</Link>)}
         {tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
 
-      <DatasetStrip careerId={id} />
+      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} />
+
+      <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
+        {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={view === k} className={`btn ${view === k ? "btn-primary" : ""}`} onClick={() => setView(k)}>{l}</button>
+        ))}
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-4">
-          {!dash && !error && <p className="text-sm text-muted">Loading…</p>}
-          {dash && id === "analyst" && <AnalystPanels d={dash as unknown as AnalystDash} />}
-          {dash && id === "scientist" && <ScientistPanels d={dash as unknown as ScientistDash} />}
-          {dash && id === "ml" && <MlPanels d={dash as unknown as MlDash} />}
-          {dash && id === "engineering" && <PipelinePanel initial={(dash as unknown as EngineeringDash).pipeline} key={JSON.stringify((dash as unknown as EngineeringDash).pipeline.history[0] ?? 0)} />}
-          {dash && id === "ai" && <AiPanels d={dash as unknown as AiDash} />}
-          {dash && (
-            <section className="card p-4">
-              <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>
-              <ul className="list-disc space-y-1 pl-5 text-sm">{dash.ideas.map((i) => <li key={i}>{i}</li>)}</ul>
-            </section>
+          {view === "manual" && <ManualPanel track={id} onGo={goTool} onAsk={askAbout} />}
+          {view === "agent" && <AgentPanel track={id} chat={chat} onAction={goAction} />}
+          {view === "tools" && (
+            <>
+              <DatasetStrip careerId={id} />
+              {!dash && !error && <p className="text-sm text-muted">Loading…</p>}
+              {dash && id === "analyst" && <AnalystPanels d={dash as unknown as AnalystDash} />}
+              {dash && id === "scientist" && <ScientistPanels d={dash as unknown as ScientistDash} />}
+              {dash && id === "ml" && <MlPanels d={dash as unknown as MlDash} />}
+              {dash && id === "engineering" && <EngineeringTabs d={dash as unknown as EngineeringDash} tab={tab} onTab={setTab} />}
+              {dash && id === "pm" && <PmPanel tab={tab} onTab={setTab} />}
+              {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
+              {dash && id === "fullstack" && <FullStackPanel tab={tab} onTab={setTab} />}
+              {dash && id === "ai" && <AiPanels d={dash as unknown as AiDash} />}
+              {dash && (
+                <section className="card p-4">
+                  <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>
+                  <ul className="list-disc space-y-1 pl-5 text-sm">{dash.ideas.map((i) => <li key={i}>{i}</li>)}</ul>
+                </section>
+              )}
+            </>
           )}
         </div>
 

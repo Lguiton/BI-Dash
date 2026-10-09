@@ -32,11 +32,16 @@ Everything below maps to the topics in your class notes.
 | **Exam prep** | The **Quiz** page, by topic. Retry the ones you missed. |
 
 ## Career tracks (beyond the class topics)
-Open the **Tracks** page for a dropdown of Data Analyst, Data Scientist, Machine Learning, Data Engineering and AI Engineering. Each lists the real tools, an ordered path through this project, and portfolio ideas.
+The **Company** page (`/company`) strings all of them into one job: Discover, Design, Build, Operate. Start there if you want to practise doing every discipline for one company.
+
+Open the **Tracks** page for a dropdown of Data Analyst, Data Scientist, Machine Learning, Data Engineering, AI Engineering, Project & Product, Systems Analyst and Full Stack Developer. Each lists the real tools, an ordered path through this project, and portfolio ideas.
 
 | Track | Where to practice |
 |---|---|
 | Data Analyst | Dashboard, SQL Lab, `/quality`, notebooks 02, 10 (case study), 11 (is the effect real?) |
+| Project & Product | `/tracks/pm`: RICE/WSJF, sprints, critical path, earned value, risks, OKRs; docs/PROJECT_PRODUCT_MANAGEMENT.md |
+| Systems Analyst | `/tracks/sysanalyst`: requirements, data dictionary, queueing, availability, cost-benefit, TELOS; docs/SYSTEMS_ANALYSIS.md |
+| Full Stack Developer | `/tracks/fullstack`: API tester, scaffolds, codebase; docs/FULL_STACK_DEVELOPMENT.md |
 | Data Scientist | Notebooks 11 (hypothesis tests), 12 (clustering), 13 (modelling), ML Lab |
 | Machine Learning | ML Lab (`/ml`), notebooks 13-15 (regression, classification, MLflow) |
 | Data Engineering | `data_engineering/` (medallion pipeline, dbt, tests), Apache page |

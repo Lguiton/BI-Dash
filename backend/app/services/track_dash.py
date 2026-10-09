@@ -125,7 +125,8 @@ def ml() -> dict:
 
 def engineering() -> dict:
     return {"pipeline": pipeline.status(),
-            "ideas": ["Run the messy file, then read the quarantine reasons. Which rule would you add?",
+            "ideas": ["Take a backup, then run 'Verify backup' on the Database admin tab. What would you do if it failed?",
+                      "Run the PII scan after importing a file with an email column. Which columns would you restrict, and who should own the table?","Run the messy file, then read the quarantine reasons. Which rule would you add?",
                       "Run twice in a row: why do the silver counts not change?",
                       "Wrap this in an Airflow DAG (Apache page) and add a freshness alert."]}
 
@@ -138,4 +139,27 @@ def ai() -> dict:
                       "Run python ai_engineering/03_evals.py --compare and record the scores."]}
 
 
-BUILDERS = {"analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai}
+def pm_ideas() -> dict:
+    return {"ideas": ["Score five backlog items with RICE, then change one confidence value. Did the order move? What does that say about the decision?",
+                      "Open the critical path. Which task would you shorten first, and which would be wasted effort?",
+                      "Is your WIP above what Little's law expects? What would you stop starting?",
+                      "Read the retention table: at what month does your oldest cohort flatten, and what does it mean for the product?"]}
+
+
+def sysanalyst_ideas() -> dict:
+    return {"ideas": ["Write a requirement that is not testable, then rewrite it so it is.",
+                      "Use the queue calculator with your real arrival and service times. At what utilisation does waiting explode?",
+                      "Find a relationship in the data dictionary with orphans. What requirement would prevent it?",
+                      "Score a change you are considering with TELOS. Which dimension would you raise first with the sponsor?"]}
+
+
+def fullstack_ideas() -> dict:
+    return {"ideas": [
+        "Scaffold one of your tables, read every generated line, and find where user input could have become SQL (it shouldn't).",
+        "Use the API tester to send a bad body to a POST endpoint. Is the 422 message good enough for a user?",
+        "Open the codebase tab: which file is largest, and what two jobs could it be split into?",
+        "Add a column to a table and follow it through the API, the type and the form. What did you forget?",
+    ]}
+
+
+BUILDERS = {"analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai, "pm": pm_ideas, "sysanalyst": sysanalyst_ideas, "fullstack": fullstack_ideas}

@@ -24,6 +24,15 @@ CREATE TABLE IF NOT EXISTS settings (workspace TEXT, key TEXT, value TEXT, PRIMA
 CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, workspace TEXT, action TEXT, detail TEXT, ok INTEGER);
 CREATE TABLE IF NOT EXISTS sources (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, kind TEXT, config TEXT, target TEXT,
     interval_minutes INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, created_at TEXT, last_run_at TEXT, last_status TEXT, last_message TEXT);
+CREATE TABLE IF NOT EXISTS pm_items (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, kind TEXT, title TEXT, status TEXT, priority INTEGER DEFAULT 3,
+    owner TEXT, sprint_id INTEGER, points REAL, reach REAL, impact REAL, confidence REAL, effort REAL, value REAL, time_crit REAL, risk_red REAL,
+    moscow TEXT, start_date TEXT, duration_days REAL, deps TEXT, planned_cost REAL, actual_cost REAL, created_at TEXT, started_at TEXT, done_at TEXT, notes TEXT);
+CREATE TABLE IF NOT EXISTS pm_sprints (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, start_date TEXT, end_date TEXT, goal TEXT);
+CREATE TABLE IF NOT EXISTS pm_risks (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, probability REAL, impact_usd REAL, status TEXT, owner TEXT, mitigation TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS pm_okrs (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, objective TEXT, kr TEXT, start_value REAL, target_value REAL, current_value REAL, owner TEXT);
+CREATE TABLE IF NOT EXISTS sa_requirements (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, code TEXT, title TEXT, kind TEXT, priority TEXT, status TEXT, source TEXT, acceptance TEXT, test_ref TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dba_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, size_bytes INTEGER, rows_total INTEGER);
+CREATE TABLE IF NOT EXISTS gov_assets (workspace TEXT, asset TEXT, owner TEXT, steward TEXT, description TEXT, classification TEXT, retention_days INTEGER, retention_column TEXT, PRIMARY KEY (workspace, asset));
 CREATE TABLE IF NOT EXISTS source_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER, at TEXT, ok INTEGER, rows INTEGER, message TEXT, seconds REAL);
 """
 

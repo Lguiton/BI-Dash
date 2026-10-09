@@ -5,9 +5,9 @@ from app.routers import tracks
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_five_tracks(client):
+def test_eight_tracks(client):
     ts = client.get("/api/tracks").json()["tracks"]
-    assert [t["id"] for t in ts] == ["analyst", "scientist", "ml", "engineering", "ai"]
+    assert [t["id"] for t in ts] == ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack"]
     assert all(t["tools"] and t["path"] and t["projects"] for t in ts)
 
 
@@ -28,5 +28,5 @@ def test_every_reference_exists_on_disk():
 def test_file_endpoint_is_allow_listed(client):
     ok = client.get("/api/tracks/file", params={"path": "data_engineering/medallion.py"})
     assert ok.status_code == 200 and ok.json()["language"] == "python" and "bronze" in ok.json()["content"]
-    for bad in ["backend/.env", "../../etc/passwd", "backend/app/main.py", "data_engineering/../backend/app/main.py"]:
+    for bad in ["backend/.env", "../../etc/passwd", "backend/app/config.py", "data_engineering/../backend/app/config.py"]:
         assert client.get("/api/tracks/file", params={"path": bad}).status_code == 404

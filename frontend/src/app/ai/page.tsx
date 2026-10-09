@@ -19,7 +19,7 @@ export default function AiPage() {
   const [status, setStatus] = useState<AiStatus | null>(null);
   const [question, setQuestion] = useState(EXAMPLES[0]);
   const [provider, setProvider] = useState<"auto" | AiProviderId>("auto");
-  const [effort, setEffort] = useState<"auto" | "simple" | "complex">("auto");
+  const [effort, setEffort] = useState<"auto" | "simple" | "medium" | "complex">("auto");
   const [res, setRes] = useState<AiAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -105,6 +105,7 @@ export default function AiPage() {
             <select className="field" value={effort} onChange={(e) => setEffort(e.target.value as typeof effort)} disabled={provider !== "auto"}>
               <option value="auto">Auto-detect</option>
               <option value="simple">Simple (Gemini first)</option>
+              <option value="medium">Medium (OpenAI first)</option>
               <option value="complex">Complex / code (Claude first)</option>
             </select>
           </label>
