@@ -27,7 +27,7 @@ except ImportError:
 
 ORDER = {"simple": ["google", "openai", "anthropic"], "complex": ["anthropic", "openai", "google"]}
 KEYS = {"google": ("GOOGLE_API_KEY", "GEMINI_API_KEY"), "openai": ("OPENAI_API_KEY",), "anthropic": ("ANTHROPIC_API_KEY",)}
-MODELS = {"google": ("BI_GOOGLE_MODEL", "gemini-2.5-flash"), "openai": ("BI_OPENAI_MODEL", "gpt-4o-mini"),
+MODELS = {"google": ("BI_GOOGLE_MODEL", "gemini-3.5-flash-lite"), "openai": ("BI_OPENAI_MODEL", "gpt-4o-mini"),
           "anthropic": ("BI_AI_MODEL", "claude-sonnet-5-5")}
 MODEL = MODELS["anthropic"][1]            # kept for older scripts
 OFFLINE_HANDLERS: list[tuple[re.Pattern, Callable[[re.Match, str], str]]] = []

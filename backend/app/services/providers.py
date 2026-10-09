@@ -35,7 +35,7 @@ class Turn:
 # ---------- registry ----------
 INFO = {
     "google": {"label": "Google Gemini", "keys": ("GOOGLE_API_KEY", "GEMINI_API_KEY"), "module": "google.genai",
-               "model_env": "BI_GOOGLE_MODEL", "default_model": "gemini-2.5-flash", "pip": "google-genai"},
+               "model_env": "BI_GOOGLE_MODEL", "default_model": "gemini-3.5-flash-lite", "pip": "google-genai"},
     "openai": {"label": "OpenAI", "keys": ("OPENAI_API_KEY",), "module": "openai",
                "model_env": "BI_OPENAI_MODEL", "default_model": "gpt-4o-mini", "pip": "openai"},
     "anthropic": {"label": "Anthropic Claude", "keys": ("ANTHROPIC_API_KEY",), "module": "anthropic",
