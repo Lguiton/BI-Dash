@@ -7,6 +7,9 @@ node_modules/
 .env
 python_practice/_out/
 backend/data/*.duckdb*
+backend/data/*.sqlite*
+backend/data/backups/
+backend/data/inbox/
 
 apache_practice/**/_out/
 apache_practice/**/_work/

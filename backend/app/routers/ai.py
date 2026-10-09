@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services import llm_router, study
+from app.services import ai_policy, llm_router, state, study
 from app.services.ai_agent import AiError
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -36,11 +36,15 @@ class AskIn(BaseModel):
 
 @router.get("/status")
 def status():
-    return llm_router.status()
+    return {**llm_router.status(), "policy": ai_policy.describe()}
 
 
 @router.post("/ask")
 def ask(body: AskIn):
+    pol = ai_policy.describe()
+    if not pol["allowed"]:
+        state.audit("ai_ask", "blocked: AI is off for this workspace", ok=False)
+        raise HTTPException(403, "AI is switched off for the Real workspace. Turn it on in Settings (choose 'summaries only' to keep row-level data private).")
     st = llm_router.status()
     if not st["ready"] and body.provider == "auto":
         raise HTTPException(503, "No AI provider is ready. Put GOOGLE_API_KEY, OPENAI_API_KEY and/or ANTHROPIC_API_KEY in "
@@ -50,6 +54,7 @@ def ask(body: AskIn):
         r = llm_router.ask(body.question, body.provider, body.effort)
     except AiError as e:
         raise HTTPException(e.status, str(e))
+    state.audit("ai_ask", f"[{pol['mode']}] {r.provider}: {body.question[:200]}")
     study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None)
     return {"answer": r.answer, "model": r.model, "provider": r.provider, "stopped_early": r.stopped_early, "chart": r.chart,
             "route": getattr(r, "route", None), "attempts": r.attempts,

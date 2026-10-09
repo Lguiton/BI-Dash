@@ -1,8 +1,8 @@
 """Check your AI keys end to end, one provider at a time. Run it from the project root with the backend running:
- 
+
     python scripts/check_ai_keys.py            # test every configured provider
     python scripts/check_ai_keys.py --models   # list the Gemini models YOUR key can use (to set BI_GOOGLE_MODEL)
- 
+
 For every provider that has a key in backend/.env it asks one small question that REQUIRES the agent to run SQL
 (so it tests the key, the SDK, the tool-calling round trip and the read-only SQL sandbox), then asks one chart question
 on the first provider that passed. A run costs a few cents at most and counts toward the daily caps shown in the AI Lab.
@@ -14,10 +14,10 @@ import re
 import sys
 import urllib.error
 import urllib.request
- 
+
 API = os.environ.get("BI_API_URL", "http://localhost:8020")
- 
- 
+
+
 def call(path: str, body: dict | None = None):
     req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body else None,
                                  headers={"Content-Type": "application/json"}, method="POST" if body else "GET")
@@ -31,8 +31,8 @@ def call(path: str, body: dict | None = None):
             return e.code, {"detail": "unreadable error"}
     except OSError as e:
         sys.exit(f"Can't reach the backend at {API} ({e}). Start it first: uvicorn app.main:app --port 8020")
- 
- 
+
+
 def list_gemini_models() -> int:
     """List the models your Google key can call, read straight from backend/.env (the key is never printed)."""
     key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
@@ -60,8 +60,8 @@ def list_gemini_models() -> int:
     print("\n".join(f"  {n}" for n in (flash or names)))
     print("\nPut one in backend/.env, for example:  BI_GOOGLE_MODEL=" + (flash[0] if flash else names[0]) + "\nthen restart the backend.")
     return 0
- 
- 
+
+
 def main() -> int:
     if "--models" in sys.argv:
         return list_gemini_models()
@@ -104,7 +104,7 @@ def main() -> int:
             failed.append("sandbox")
     print(f"\nPassed: {passed or 'none'} | Failed: {failed or 'none'} | Skipped: {skipped or 'none'}")
     return 1 if failed or not passed else 0
- 
- 
+
+
 if __name__ == "__main__":
     sys.exit(main())

@@ -16,6 +16,7 @@ import { RecordsPanel } from "@/components/RecordsPanel";
 import { StudyWidget } from "@/components/StudyWidget";
 import { ReportButtons } from "@/components/ReportButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RealBanner, WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { UploadPanel } from "@/components/UploadPanel";
 import { ApiError, filterQuery, getJson } from "@/lib/api";
 import { money, num, pct } from "@/lib/format";
@@ -99,8 +100,9 @@ export default function Dashboard() {
               : "FastAPI + DuckDB analytics engine"}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <NavBar />
+          <WorkspaceSwitcher />
           <ThemeToggle />
           <button className="btn" onClick={refresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden /> Refresh
@@ -108,6 +110,7 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <RealBanner />
       {error && <ErrorBanner message={error} onRetry={refresh} />}
 
       <ReportButtons filters={filters} />

@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { NavBar } from "./NavBar";
 import { ThemeToggle } from "./ThemeToggle";
+import { RealBanner, WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 export function PageShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
@@ -11,8 +12,9 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
-        <div className="flex flex-wrap gap-2"><NavBar /><ThemeToggle /></div>
+        <div className="flex flex-wrap items-start gap-2"><NavBar /><WorkspaceSwitcher /><ThemeToggle /></div>
       </header>
+      <RealBanner />
       {children}
     </div>
   );

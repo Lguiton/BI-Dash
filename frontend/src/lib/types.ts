@@ -230,7 +230,8 @@ export interface AiProviderStatus {
   id: AiProviderId; label: string; configured: boolean; sdk_installed: boolean; model: string;
   used_today: number; daily_limit: number; pip: string; key_env: string; role: string;
 }
-export interface AiStatus { providers: AiProviderStatus[]; ready: AiProviderId[]; max_steps: number }
+export interface AiPolicy { workspace: WorkspaceName; mode: AiMode; blocked_columns: string[]; allowed: boolean }
+export interface AiStatus { providers: AiProviderStatus[]; ready: AiProviderId[]; max_steps: number; policy?: AiPolicy }
 export interface AiStep { tool: string; input: Record<string, unknown>; output: string; is_error: boolean }
 export interface AiAttempt { provider: AiProviderId; ok: boolean; error: string; skipped?: boolean }
 export interface AiChart { kind: "line" | "bar"; title: string; x_label: string; y_label: string; points: { x: string; y: number }[]; truncated: boolean; sql: string }
@@ -312,3 +313,45 @@ export interface DatasetInfo {
   rows: number; entities: number; days: number; date_min: string | null; date_max: string | null;
   weekend_days: number; weekday_days: number; careers: DatasetCareer[];
 }
+
+// ---- Real-use features: workspaces, imported tables, sources, backups, activity ----
+export type WorkspaceName = "practice" | "real";
+export type AiMode = "off" | "aggregate" | "full";
+export interface WorkspaceSettings { ai_mode: AiMode; blocked_columns: string[]; backup_keep: number; auto_backup: boolean }
+export interface WorkspaceInfo {
+  name: WorkspaceName; label: string; active: boolean; exists: boolean; size_bytes: number; settings: WorkspaceSettings;
+  records?: number; tables?: number;
+}
+export interface WorkspaceList { active: WorkspaceName; workspaces: WorkspaceInfo[] }
+
+export interface ColumnMeta { name: string; type: string }
+export interface UserTable { table_name: string; label: string; source: string; rows_count: number; columns: ColumnMeta[]; created_at: string; updated_at: string }
+export interface PreviewColumn { name: string; original: string; type: string; samples: string[] }
+export interface OpsField { field: string; required: boolean; hint: string }
+export interface FilePreview {
+  filename: string; rows_total: number; header: string[]; columns: PreviewColumn[]; preview: Record<string, string | null>[];
+  suggested_name: string; delimiter?: string; sheets?: string[]; sheet?: string;
+  operations: { fields: OpsField[]; suggested: Record<string, string> };
+}
+export interface ImportResult { table: string; rows: number; added: number; mode: string; columns: ColumnMeta[] }
+export interface ProfileColumn {
+  name: string; type: string; kind: "number" | "date" | "text" | "bool"; nulls: number; distinct_count: number;
+  min?: number | string | null; max?: number | string | null; mean?: number | null; median?: number | null; top?: { value: string; n: number }[];
+}
+export interface TableProfile { table: string; rows: number; columns: ProfileColumn[] }
+export interface TableAggregate { x: string; measure: string; series: string[]; data: Record<string, string | number | null>[] }
+export interface TableHistogram { column: string; n: number; bins: { start: number; end: number; label: string; count: number }[] }
+export interface TableBox { column: string; by: string | null; boxes: { name: string; mn: number; q1: number; med: number; q3: number; mx: number; mean: number; n: number }[] }
+export interface TableScatter { x: string; y: string; n: number; shown: number; correlation: number | null; points: { x: number; y: number }[] }
+
+export type SourceKind = "file" | "url" | "sql";
+export interface DataSource {
+  id: number; workspace: WorkspaceName; name: string; kind: SourceKind; config: Record<string, string | null>; target: string;
+  interval_minutes: number; enabled: boolean; last_run_at: string | null; last_status: "ok" | "error" | null; last_message: string | null;
+}
+export interface SourceRun { at: string; ok: number; rows: number; message: string; seconds: number }
+export interface SourcePreview { from: string; rows: number; columns: ColumnMeta[]; preview: Record<string, string | null>[] }
+export interface InboxFiles { folders: string[]; files: { name: string; folder: string; path: string; size_bytes: number }[] }
+
+export interface BackupItem { name: string; kind: string; size_bytes: number; created_at: string }
+export interface AuditEntry { id: number; at: string; workspace: WorkspaceName; action: string; detail: string; ok: boolean }

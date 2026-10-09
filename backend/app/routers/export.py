@@ -118,5 +118,7 @@ def export_dataset(dataset: str, fmt: Literal["csv", "tsv", "json", "xml", "xlsx
         body = _xlsx(dataset, cols, rows)
     else:
         body = _parquet(cols, rows)
+    from app.services import state
+    state.audit("export", f"{dataset}.{fmt}: {len(rows)} rows")
     return Response(body, media_type=FORMATS[fmt],
                     headers={"Content-Disposition": f'attachment; filename="bi_{dataset}.{fmt}"'})

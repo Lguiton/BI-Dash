@@ -10,6 +10,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import PlainTextResponse
 
 from app.config import MAX_UPLOAD_BYTES, MAX_UPLOAD_ROWS
+from app.services import state
 from app.services.db import get_cursor
 
 router = APIRouter(prefix="/api/ingest", tags=["ingest"])
@@ -162,29 +163,18 @@ def download_template():
     )
 
 
-@router.post("/csv")
-async def upload_csv(
-    file: UploadFile = File(...),
-    mode: Literal["append", "replace"] = Query(
-        "append",
-        description="append: add/update rows by fact_id. replace: wipe all existing data first.",
-    ),
-):
-    raw = await file.read(MAX_UPLOAD_BYTES + 1)
-    if len(raw) > MAX_UPLOAD_BYTES:
-        raise HTTPException(413, f"File is larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
-    try:
-        text = raw.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise HTTPException(400, {"message": "File is not UTF-8 text. Export as CSV (UTF-8) and retry.", "errors": []})
+class IngestError(Exception):
+    """The file was rejected before anything was written. `errors` are line-numbered messages safe to show."""
+    def __init__(self, message: str, errors: list[str] | None = None, truncated: bool = False):
+        super().__init__(message)
+        self.message, self.errors, self.truncated = message, errors or [], truncated
 
+
+def load_operations_text(text: str, mode: str) -> dict:
+    """Validate CSV text in the operations layout, then load it all-or-nothing. Shared by the upload, the mapping wizard and sources."""
     facts, entities, errors = parse_csv(text)
     if errors:
-        raise HTTPException(400, {
-            "message": f"Nothing was imported. {len(errors)} problem(s) found.",
-            "errors": errors[:MAX_REPORTED_ERRORS],
-            "truncated": len(errors) > MAX_REPORTED_ERRORS,
-        })
+        raise IngestError(f"Nothing was imported. {len(errors)} problem(s) found.", errors[:MAX_REPORTED_ERRORS], len(errors) > MAX_REPORTED_ERRORS)
 
     with get_cursor() as cur:
         cur.execute("BEGIN TRANSACTION")
@@ -227,3 +217,30 @@ async def upload_csv(
         "date_min": str(min(f[1] for f in facts)),
         "date_max": str(max(f[1] for f in facts)),
     }
+
+
+@router.post("/csv")
+async def upload_csv(
+    file: UploadFile = File(...),
+    mode: Literal["append", "replace"] = Query(
+        "append",
+        description="append: add/update rows by fact_id. replace: wipe all existing data first.",
+    ),
+):
+    raw = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(raw) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"File is larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(400, {"message": "File is not UTF-8 text. Export as CSV (UTF-8) and retry.", "errors": []})
+    if mode == "replace":
+        from app.services import backups
+        backups.safety_backup("before-replace-import")
+    try:
+        res = load_operations_text(text, mode)
+    except IngestError as e:
+        state.audit("import_operations", f"{file.filename}: rejected, {len(e.errors)} problem(s)", ok=False)
+        raise HTTPException(400, {"message": e.message, "errors": e.errors, "truncated": e.truncated})
+    state.audit("import_operations", f"{file.filename}: {res['rows_loaded']} rows ({mode})")
+    return res

@@ -11,15 +11,17 @@ import duckdb
 
 from app.config import db_path, seed_demo_enabled
 
-_lock = threading.Lock()
+_lock = threading.RLock()
 _conn: duckdb.DuckDBPyConnection | None = None
+_path: "str | None" = None          # set by workspaces.activate(); falls back to the Practice file
 
 
 def _root() -> duckdb.DuckDBPyConnection:
     global _conn
     with _lock:
         if _conn is None:
-            path = db_path()
+            from pathlib import Path
+            path = Path(_path) if _path else db_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             _conn = duckdb.connect(str(path))
             # The SQL Lab runs user-written queries. Turn off file/network access for the whole
@@ -41,11 +43,33 @@ def get_cursor():
 
 def close_connection() -> None:
     """Close the shared connection (shutdown, and between tests)."""
+    global _conn, _path
+    with _lock:
+        if _conn is not None:
+            _conn.close()
+            _conn = None
+        _path = None
+
+
+def use_path(path) -> None:
+    """Point the shared connection at another database file (workspace switch). The old one is closed first."""
+    global _conn, _path
+    with _lock:
+        if _conn is not None:
+            _conn.close()
+            _conn = None
+        _path = str(path)
+
+
+@contextmanager
+def exclusive():
+    """Close the connection while the caller copies/replaces the database file (backup, restore). It reopens on next use."""
     global _conn
     with _lock:
         if _conn is not None:
             _conn.close()
             _conn = None
+        yield
 
 
 def fetch_all(cur, sql: str, params: list | None = None) -> list[dict]:
@@ -76,7 +100,8 @@ SEED_FACTS = [
 ]
 
 
-def init_bi_schema() -> None:
+def init_bi_schema(seed: bool | None = None) -> None:
+    """Create the tables and views. `seed` defaults to the BI_SEED_DEMO setting; the Real workspace passes False."""
     with get_cursor() as cur:
         cur.execute(
             """
@@ -109,7 +134,7 @@ def init_bi_schema() -> None:
         seeded = cur.execute("SELECT 1 FROM app_meta WHERE key = 'seeded'").fetchone()
         n_facts = cur.execute("SELECT COUNT(*) FROM fact_operations").fetchone()[0]
         if not seeded:
-            if n_facts == 0 and seed_demo_enabled():
+            if n_facts == 0 and (seed_demo_enabled() if seed is None else seed):
                 cur.executemany("INSERT INTO dim_entities VALUES (?, ?, ?, ?)", SEED_ENTITIES)
                 cur.executemany("INSERT INTO fact_operations VALUES (?, ?, ?, ?, ?, ?, ?, ?)", SEED_FACTS)
             cur.execute("INSERT INTO app_meta VALUES ('seeded', '1')")

@@ -35,7 +35,8 @@ export default function AiPage() {
   }, []);
 
   const ready = (status?.ready.length ?? 0) > 0;
-  const canAsk = provider === "auto" ? ready : status?.ready.includes(provider);
+  const allowed = status?.policy?.allowed ?? true;
+  const canAsk = allowed && (provider === "auto" ? ready : status?.ready.includes(provider));
 
   async function ask() {
     setBusy(true); setError(null); setRes(null);
@@ -76,6 +77,18 @@ export default function AiPage() {
           </div>
           {!ready && <p className="mt-3 text-xs text-muted">Add at least one key, then restart the backend. No keys? The offline exercises in <code>ai_engineering/</code> still run.</p>}
         </section>
+      )}
+
+      {status?.policy && !allowed && (
+        <div role="status" className="rounded-lg px-4 py-3 text-sm" style={{ background: "var(--warn-bg)" }}>
+          AI is switched off for the {status.policy.workspace === "real" ? "Real" : "Practice"} workspace, so no question leaves this computer. Turn it on in <a className="underline" href="/settings">Settings</a>; &ldquo;Summaries only&rdquo; keeps row-level data private.
+        </div>
+      )}
+      {status?.policy && allowed && (status.policy.mode === "aggregate" || status.policy.blocked_columns.length > 0) && (
+        <p className="text-xs text-muted">
+          Privacy for this workspace: {status.policy.mode === "aggregate" ? "summaries only" : "full access"}
+          {status.policy.blocked_columns.length > 0 && `, hidden columns: ${status.policy.blocked_columns.join(", ")}`}.
+        </p>
       )}
 
       <section className="card space-y-3 p-5">

@@ -19,7 +19,7 @@ import json
 import os
 from dataclasses import dataclass, field
 
-from app.services import providers, sql_lab
+from app.services import ai_policy, providers, sql_lab
 from app.services.sql_lab import SqlLabError
 
 MAX_STEPS = 6
@@ -94,14 +94,28 @@ class AskResult:
 
 def _tool_get_schema() -> str:
     lines = []
-    for o in sql_lab.get_schema():
+    for o in ai_policy.mask_schema(sql_lab.get_schema()):
         cols = ", ".join(f"{c['name']} {c['type']}" for c in o["columns"])
         lines.append(f"{o['kind']} {o['name']} ({o['row_count']} rows): {cols}")
     return "\n".join(lines)
 
 
-def _tool_run_sql(sql: str) -> str:
+def _query(sql: str):
+    """The only way the model reaches data: workspace policy first, then the read-only sandbox, then a policy check on the result."""
+    try:
+        ai_policy.check_sql(sql if isinstance(sql, str) else "")
+    except ai_policy.PolicyError as e:
+        raise SqlLabError(str(e)) from None
     r = sql_lab.run_query(sql)           # raises SqlLabError for anything not a safe SELECT
+    try:
+        r.rows = ai_policy.check_result(r.columns, r.rows)
+    except ai_policy.PolicyError as e:
+        raise SqlLabError(str(e)) from None
+    return r
+
+
+def _tool_run_sql(sql: str) -> str:
+    r = _query(sql)
     rows = r.rows[:RESULT_ROWS_FOR_MODEL]
     text = json.dumps({"columns": r.columns, "rows": rows, "row_count": r.row_count,
                        "truncated": r.truncated or len(r.rows) > len(rows)}, default=str)
@@ -114,7 +128,7 @@ def _build_chart(args: dict) -> dict:
     sql = args.get("sql")
     if kind not in ("line", "bar") or not all(isinstance(v, str) for v in (sql, x, y)):
         raise SqlLabError("show_chart needs sql, kind (line|bar), x and y as strings.")
-    r = sql_lab.run_query(sql)
+    r = _query(sql)
     cols = [c.lower() for c in r.columns]
     if x.lower() not in cols or y.lower() not in cols:
         raise SqlLabError(f"The query returned columns {r.columns}; x='{x}' and y='{y}' must both be among them.")

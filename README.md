@@ -6,6 +6,8 @@
 
 ![Chart gallery: box plot](docs/screenshots/chart-gallery-boxplot.png)
 
+![My data: import any file, chart it](docs/screenshots/my-data.png)
+
 FastAPI + DuckDB analytics engine (`backend/`) and a Next.js dashboard (`frontend/`).
 
 ## Run it
@@ -57,7 +59,15 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * `scripts/generate_sample_data.py`: a realistic year of data (clean or messy) for practice.
 * `docs/TABLEAU.md`: a Tableau practice guide. `docs/BI_TOOLS.md`: Superset, Power BI and Metabase notes (untested).
 
-## Load your own data
+## Using it for real data
+There are two workspaces, switched with **Practice / Real** at the top of every page: separate database files, so practice data and your own data can never mix. Real starts empty, has AI off by default, and takes a backup before anything destructive. Study progress is shared between them.
+* **My data** (`/data`): import any CSV, Excel or JSON (any columns; types, dates and delimiters are detected), then chart it (bar, line, area, pie, donut, histogram, box plot, scatter). Or map its columns onto the operations dashboards, with fixed values for fields your file lacks.
+* **Sources** (`/sources`): save a file in a folder, a web link, or a read-only Postgres/SQLite query, and refresh it on a schedule. Refreshes are staged and swapped in as one step; a refresh that would shrink a table below half its size is refused. Passwords stay in `backend/.env`.
+* **Settings & backups** (`/settings`): per-workspace AI access (off, summaries only, full) and columns the AI must never see; manual and daily backups, restore, download.
+* **Activity log** (`/activity`): imports, exports, emails, AI questions, refreshes, backups.
+Full guide, limits and hosting notes: **docs/REAL_USE.md**. There are no logins: it is built for one person on one machine.
+
+## Load your own data (operations layout)
 Use **Import data (CSV)** on the dashboard (or `POST /api/ingest/csv`). Download the template from the same panel.
 Required columns: `record_date, entity_id, revenue, operational_cost, units_processed`.
 Optional: `entity_name, category, baseline_target, duration_minutes, status, fact_id`.
@@ -97,6 +107,11 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/pipeline`, `POST /api/pipeline/run` | pipeline monitor |
 | `GET /api/report/email/status`, `POST /api/report/email` | emailed report |
 | `POST /api/ingest/csv?mode=append\|replace` | CSV import |
+| `GET/POST /api/workspaces[/active]`, `GET/PUT /api/workspaces/{name}/settings` | Practice / Real, AI privacy, backup settings |
+| `POST /api/data/preview`, `/import`, `/map-operations`; `GET /api/data/tables[/{t}/profile\|rows\|chart]` | My data |
+| `GET/POST /api/sources`, `POST /api/sources/test`, `POST /api/sources/{id}/run` | saved sources and refresh |
+| `GET/POST /api/backups`, `POST /api/backups/restore` | backups |
+| `GET /api/audit` | activity log |
 | `GET /api/ingest/template` | CSV template |
 
 All analytics endpoints accept `date_from, date_to, entity_id, category, status`. Interactive docs at `/docs`.
@@ -110,10 +125,11 @@ pytest
 
 ## What has been tested against the real thing
 Tested: email over a real SMTP server (STARTTLS, SSL, none; Excel and PDF attachments open), Airflow 3.1.8 (`airflow dags test` ran all five tasks to success), Superset 6.1.0 installed with pip (CSV upload, temporal column and all four metrics matched this dashboard), Spark, and the Postgres lab against Postgres 16.
-Not tested: live Gemini/OpenAI/Claude calls (run `python scripts/check_ai_keys.py` with your keys), Docker Compose and the Superset Docker commands (Docker Hub was unreachable), Tableau and Power BI (desktop apps).
+Real-data features: 25 new backend tests (imports, types, mapping, workspace isolation, sources against a local web server, SQLite and a real Postgres 16 including the server refusing writes, backups and restore, AI privacy rules; the Postgres one runs when `BI_TEST_PG_URL` is set, and I ran it against Postgres 16) and a browser pass over every new page in Chromium. Live Gemini, OpenAI and Claude calls were verified on your machine with `scripts/check_ai_keys.py`.
+Not tested: Docker Compose and the Superset Docker commands (Docker Hub was unreachable), Tableau and Power BI (desktop apps).
 
 ## Notes
 * Margin is **total profit / total revenue** (weighted), not an average of per-row margins.
 * Insights are computed (period change, linear trend, median/MAD outliers, entity highlights), never LLM-estimated.
 * `baseline_target` is treated as a **cost budget per record** (inferred: in the demo data each entity's average cost per record ≈ its baseline). "Cost vs budget" is average cost ÷ budget − 1, so positive = over budget. Change `_by_entity` in `backend/app/routers/analytics.py` if it means something else.
-* Config via env vars: `BI_DB_PATH`, `BI_CORS_ORIGINS`, `BI_SEED_DEMO` (see `backend/.env.example`).
+* Config via env vars: `BI_DB_PATH`, `BI_CORS_ORIGINS`, `BI_SEED_DEMO`, and for real-data use `BI_SCHEDULER`, `BI_INBOX_DIR`, `BI_SOURCE_DIRS`, `BI_BACKUP_DIR` (see `backend/.env.example`).

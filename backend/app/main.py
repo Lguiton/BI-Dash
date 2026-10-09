@@ -4,19 +4,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import cors_origins
-from app.routers import ai, analytics, apache, charts, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks
-from app.services import study
-from app.services.db import close_connection, init_bi_schema
+from app.routers import ai, analytics, apache, charts, data as data_router, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks, workspaces as workspaces_router, sources as sources_router, backups as backups_router, audit as audit_router
+from app.services import sources, state, workspaces
+from app.services.db import close_connection
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_bi_schema()
-    scd.ensure_tables()
-    kpis.ensure_table()
-    study.ensure_tables()
+    workspaces.startup()
+    scheduler = sources.Scheduler()
+    scheduler.start()
     yield
+    scheduler.stop()
     close_connection()
+    state.close_all()
 
 
 app = FastAPI(title="BI Analytics Engine", version="2.0.0", lifespan=lifespan)
@@ -47,6 +48,11 @@ app.include_router(tracks.router)
 app.include_router(progress.router)
 app.include_router(glossary.router)
 app.include_router(pipeline.router)
+app.include_router(workspaces_router.router)
+app.include_router(data_router.router)
+app.include_router(sources_router.router)
+app.include_router(backups_router.router)
+app.include_router(audit_router.router)
 
 
 @app.get("/health")

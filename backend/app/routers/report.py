@@ -221,4 +221,6 @@ def email_report(body: EmailIn, flt: Filters = Depends(get_filters)):
         raise HTTPException(502, "The mail server rejected the username or password (Gmail needs an app password).")
     except (smtplib.SMTPException, OSError) as e:
         raise HTTPException(502, f"Couldn't send the email ({type(e).__name__}). Check BI_SMTP_HOST, port and security.")
+    from app.services import state
+    state.audit("email_report", f"{body.format} sent to {len(recipients)} recipient(s)")
     return {"sent_to": recipients, "format": body.format}

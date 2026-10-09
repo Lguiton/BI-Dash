@@ -2,10 +2,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, BookA, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
+import { Activity, BarChart3, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
 
 const MAIN = [
   { href: "/", label: "Dashboard", Icon: BarChart3 },
+  { href: "/data", label: "My data", Icon: Table2 },
   { href: "/kpis", label: "KPIs", Icon: Target },
   { href: "/quality", label: "Data quality", Icon: ShieldCheck },
   { href: "/tracks", label: "Tracks", Icon: Compass },
@@ -23,14 +24,18 @@ const LABS = [
   { href: "/quiz", label: "Quiz", Icon: GraduationCap },
 ];
 
-export function NavBar() {
-  const path = usePathname();
+const MANAGE = [
+  { href: "/sources", label: "Sources", Icon: Plug },
+  { href: "/settings", label: "Settings & backups", Icon: Settings2 },
+  { href: "/activity", label: "Activity log", Icon: Activity },
+];
+
+function Menu({ label, Icon, items, path }: { label: string; Icon: typeof Database; items: typeof LABS; path: string }) {
   // Remember the path the menu was opened on: navigating elsewhere closes it without an effect.
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path;
   const box = useRef<HTMLDivElement>(null);
-  const inLabs = LABS.some((l) => l.href === path);
-  const inTracks = path.startsWith("/tracks");
+  const inside = items.some((l) => l.href === path);
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +47,32 @@ export function NavBar() {
   }, [open]);
 
   return (
+    <div className="relative" ref={box}>
+      <button type="button" className={`btn ${inside ? "btn-primary" : ""}`} aria-expanded={open} aria-haspopup="true"
+              onClick={() => setOpenAt(open ? null : path)}>
+        <Icon className="h-4 w-4" aria-hidden /> {label} <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+      </button>
+      {open && (
+        <ul className="card absolute right-0 z-20 mt-1 w-52 space-y-0.5 p-1 shadow-lg">
+          {items.map(({ href, label: l, Icon: I }) => (
+            <li key={href}>
+              <Link href={href} aria-current={path === href ? "page" : undefined}
+                    className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-panel2 ${path === href ? "bg-panel2 font-semibold" : ""}`}>
+                <I className="h-4 w-4" aria-hidden /> {l}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export function NavBar() {
+  const path = usePathname();
+  const inTracks = path.startsWith("/tracks");
+
+  return (
     <nav aria-label="Primary" className="flex flex-wrap gap-1">
       {MAIN.map(({ href, label, Icon }) => {
         const active = href === "/tracks" ? inTracks : path === href;
@@ -51,24 +82,8 @@ export function NavBar() {
           </Link>
         );
       })}
-      <div className="relative" ref={box}>
-        <button type="button" className={`btn ${inLabs ? "btn-primary" : ""}`} aria-expanded={open} aria-haspopup="true"
-                onClick={() => setOpenAt(open ? null : path)}>
-          <FlaskConical className="h-4 w-4" aria-hidden /> Labs <ChevronDown className="h-3.5 w-3.5" aria-hidden />
-        </button>
-        {open && (
-          <ul className="card absolute right-0 z-20 mt-1 w-48 space-y-0.5 p-1 shadow-lg">
-            {LABS.map(({ href, label, Icon }) => (
-              <li key={href}>
-                <Link href={href} aria-current={path === href ? "page" : undefined}
-                      className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-panel2 ${path === href ? "bg-panel2 font-semibold" : ""}`}>
-                  <Icon className="h-4 w-4" aria-hidden /> {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <Menu label="Labs" Icon={FlaskConical} items={LABS} path={path} />
+      <Menu label="Manage" Icon={DatabaseBackup} items={MANAGE} path={path} />
     </nav>
   );
 }
