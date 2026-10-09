@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+node_modules/
+.next/
+.env
+python_practice/_out/
+backend/data/*.duckdb*
+
+apache_practice/**/_out/
+apache_practice/**/_work/

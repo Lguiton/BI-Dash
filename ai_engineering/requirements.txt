@@ -1,0 +1,9 @@
+duckdb
+scikit-learn
+pydantic
+python-dotenv
+google-genai
+openai
+mcp
+pytest
+anthropic

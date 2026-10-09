@@ -1,0 +1,5 @@
+lake/
+dbt_project/target/
+dbt_project/logs/
+.user.yml
+__pycache__/

@@ -1,0 +1,15 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+duckdb>=0.10.0
+pydantic>=2.6.0
+python-dotenv>=1.0.0
+python-multipart>=0.0.9
+openpyxl>=3.1.0      # XLSX export
+pyarrow>=15.0.0      # Parquet export
+reportlab>=4.0.0      # PDF report
+scikit-learn>=1.4   # ML Lab
+pandas>=2.2         # ML Lab (DuckDB .df())
+anthropic>=0.40.0   # AI Lab: Claude (complex questions, code)
+openai>=1.50        # AI Lab: OpenAI (backup)
+google-genai>=1.0   # AI Lab: Google Gemini (default, free tier)
+# keys go in backend/.env (see .env.example); the AI Lab uses whichever providers have a key
