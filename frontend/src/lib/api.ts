@@ -92,3 +92,14 @@ export async function deleteJson<T>(path: string): Promise<T> {
   if (!res.ok) throw await toError(res);
   return (await res.json()) as T;
 }
+
+export async function putJson<T>(path: string, body: unknown): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch {
+    throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
+  }
+  if (!res.ok) throw await toError(res);
+  return (await res.json()) as T;
+}

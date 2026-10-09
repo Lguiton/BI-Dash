@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { AiChart } from "@/components/AiChart";
 import { PageShell } from "@/components/PageShell";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { AiAnswer, AiProviderId, AiStatus } from "@/lib/types";
@@ -9,7 +10,8 @@ import type { AiAnswer, AiProviderId, AiStatus } from "@/lib/types";
 const EXAMPLES = [
   "Which entity has the highest profit margin, and how many records is that based on?",
   "Is revenue higher on weekends or weekdays?",
-  "Why might the cost vs budget differ between categories? Check the data.",
+  "Chart weekly revenue for the last 12 weeks.",
+  "Show a bar chart of profit margin by category.",
 ];
 const NAMES: Record<AiProviderId, string> = { google: "Gemini", openai: "OpenAI", anthropic: "Claude" };
 
@@ -98,13 +100,14 @@ export default function AiPage() {
         <div className="flex flex-wrap gap-2">
           {EXAMPLES.map((e) => <button key={e} className="btn text-xs" onClick={() => setQuestion(e)}>{e.slice(0, 38)}…</button>)}
         </div>
-        <p className="text-xs text-muted">Each question makes several API calls. Gemini&apos;s free tier is limited; paid providers cost money. Limit: 10 questions per minute. Only read-only SELECTs can run.</p>
+        <p className="text-xs text-muted">Each question makes several API calls. Gemini&apos;s free tier is limited; paid providers cost money. Limit: 10 questions per minute. Only read-only SELECTs can run. Try asking for a chart.</p>
       </section>
 
       {res && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section className="card space-y-2 p-5">
             <h2 className="text-sm font-semibold">Answer</h2>
+            {res.chart && <AiChart chart={res.chart} />}
             <p className="whitespace-pre-wrap text-sm leading-relaxed">{res.answer}</p>
             {res.stopped_early && <p className="text-xs">The agent hit its step limit; the answer may be incomplete.</p>}
             <p className="text-xs text-muted">

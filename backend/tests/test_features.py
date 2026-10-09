@@ -138,3 +138,46 @@ def test_notebooks_listing_and_download(client):
     assert r.status_code == 200 and r.json()["nbformat"] == 4
     assert client.get("/api/python/notebooks/nope.ipynb").status_code == 404
     assert client.get("/api/python/notebooks/..%2F..%2Fmain.py").status_code == 404
+
+
+# ---------- email report ----------
+class FakeSMTP:
+    sent, logins, started = [], [], []
+    def __init__(self, host, port, timeout=None, context=None): self.host, self.port = host, port
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+    def starttls(self, context=None): FakeSMTP.started.append(True)
+    def login(self, u, p): FakeSMTP.logins.append((u, p))
+    def send_message(self, m): FakeSMTP.sent.append(m)
+
+
+def test_email_report_flow(client, monkeypatch):
+    import smtplib
+    monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
+    FakeSMTP.sent.clear(); FakeSMTP.logins.clear(); FakeSMTP.started.clear()
+    for k in ("BI_SMTP_HOST", "BI_SMTP_USER", "BI_SMTP_PASSWORD", "BI_REPORT_TO", "BI_SMTP_FROM"):
+        monkeypatch.delenv(k, raising=False)
+    assert client.get("/api/report/email/status").json()["configured"] is False
+    assert client.post("/api/report/email", json={"format": "pdf"}).status_code == 503
+    monkeypatch.setenv("BI_SMTP_HOST", "smtp.example.com"); monkeypatch.setenv("BI_SMTP_USER", "me@example.com")
+    monkeypatch.setenv("BI_SMTP_PASSWORD", "pw"); monkeypatch.setenv("BI_REPORT_TO", "me@example.com, boss@example.com")
+    assert client.get("/api/report/email/status").json()["recipients"] == ["me@example.com", "boss@example.com"]
+    r = client.post("/api/report/email", json={"format": "xlsx"})
+    assert r.status_code == 200 and r.json()["sent_to"] == ["me@example.com", "boss@example.com"]
+    m = FakeSMTP.sent[0]
+    assert m["To"] == "me@example.com, boss@example.com" and FakeSMTP.logins == [("me@example.com", "pw")] and FakeSMTP.started
+    att = next(m.iter_attachments())
+    assert att.get_filename() == "bi_report.xlsx" and att.get_content()[:2] == b"PK"
+    assert client.post("/api/report/email", json={"to": "evil@attacker.com"}).status_code == 400    # not on the allow-list
+    assert len(FakeSMTP.sent) == 1
+
+
+def test_email_auth_failure_is_friendly(client, monkeypatch):
+    import smtplib
+    class Bad(FakeSMTP):
+        def login(self, u, p): raise smtplib.SMTPAuthenticationError(535, b"no")
+    monkeypatch.setattr(smtplib, "SMTP", Bad)
+    for k, v in (("BI_SMTP_HOST", "h"), ("BI_SMTP_USER", "u@x.com"), ("BI_REPORT_TO", "u@x.com")):
+        monkeypatch.setenv(k, v)
+    r = client.post("/api/report/email", json={})
+    assert r.status_code == 502 and "app password" in r.json()["detail"]

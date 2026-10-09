@@ -1,0 +1,20 @@
+# A real PostgreSQL 16 for practice.  docker compose up -d     (stop: docker compose down; wipe data: docker compose down -v)
+# Practice-only password. Bound to localhost so nothing else on your network can reach it. Never reuse this for anything real.
+services:
+  db:
+    image: postgres:16
+    container_name: bi_postgres
+    environment:
+      POSTGRES_PASSWORD: bi_practice
+      POSTGRES_DB: bi
+    ports:
+      - "127.0.0.1:5433:5432"        # 5433 on your machine, so it can't clash with a Postgres you already run
+    volumes:
+      - bi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bi"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  bi_pgdata:

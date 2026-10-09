@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services import ml_lab
+from app.services import ml_lab, study
 
 router = APIRouter(prefix="/api/ml", tags=["ml"])
 
@@ -26,8 +26,10 @@ def options():
 @router.post("/train")
 def train(body: TrainIn):
     try:
-        return ml_lab.train(body.task, body.model, body.features, body.test_fraction, body.balance_classes, body.threshold)
+        res = ml_lab.train(body.task, body.model, body.features, body.test_fraction, body.balance_classes, body.threshold)
     except ml_lab.MlError as e:
         raise HTTPException(400, str(e))
     except ImportError as e:
         raise HTTPException(501, f"The ML Lab needs scikit-learn and pandas: pip install scikit-learn pandas ({e.name})")
+    study.log_ml_run(res)      # every training run goes into the experiment log shown on the Machine Learning dashboard
+    return res

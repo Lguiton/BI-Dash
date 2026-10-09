@@ -37,7 +37,10 @@ TRACKS = [
             nb("10_analyst_case_study", "A realistic case: who is over budget, by how much, and what do you tell the manager?"),
             nb("11_hypothesis_testing", "Is the weekend premium real or noise? t-test, permutation test, bootstrap."),
             page("Build your own KPI", "/kpis", "Define a metric, set a target, track it."),
+            page("Learn the vocabulary", "/glossary", "Every metric and concept on this dashboard, with the SQL behind it."),
+            page("Take the quiz", "/quiz", "Check what stuck."),
             file("docs/TABLEAU.md", "Rebuild this dashboard in Tableau."),
+            file("docs/BI_TOOLS.md", "Rebuild it in Superset or Power BI and compare the totals."),
         ],
         "projects": [
             "One-page memo: 'Where are we losing money?' with 3 charts and one recommendation.",
@@ -115,6 +118,8 @@ TRACKS = [
             file("data_engineering/medallion.py", "Run it twice: the watermark and idempotency are the point."),
             file("data_engineering/tests/test_medallion.py", "Tests that prove idempotency, incrementality and quarantine."),
             file("data_engineering/dbt_project/models/mart_daily_kpis.sql", "dbt model; then run dbt build."),
+            page("Pipeline monitor", "/pipeline", "Run the pipeline from the browser; watch layers, health checks and quarantine."),
+            file("postgres_practice/exercises.sql", "A real PostgreSQL: indexes, EXPLAIN, constraints, roles (needs Docker)."),
             page("Apache (Spark, Airflow, Superset)", "/apache", "Orchestration and scale-out."),
         ],
         "projects": [
@@ -160,6 +165,18 @@ TRACKS = [
     },
 ]
 
+def _slug(text: str) -> str:
+    import re
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:60]
+
+
+# every step gets a stable id like "analyst:sql-lab-exercises" so progress survives edits to the wording of other steps
+STEP_IDS: set[str] = set()
+for _t in TRACKS:
+    for _s in _t["path"]:
+        _s["id"] = f"{_t['id']}:{_slug(_s['label'])}"
+        STEP_IDS.add(_s["id"])
+
 _LANG = {".py": "python", ".sql": "sql", ".md": "markdown", ".yml": "yaml"}
 
 
@@ -174,6 +191,15 @@ def _allowed() -> set[str]:
 @router.get("")
 def list_tracks():
     return {"tracks": [{k: v for k, v in t.items() if k != "files"} for t in TRACKS]}
+
+
+@router.get("/{track_id}/dashboard")
+def dashboard(track_id: str):
+    from app.services import track_dash
+    build = track_dash.BUILDERS.get(track_id)
+    if build is None:
+        raise HTTPException(404, "Unknown track.")
+    return {"track": track_id, **build()}
 
 
 @router.get("/file")

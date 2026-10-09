@@ -11,6 +11,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { KpiCard } from "@/components/KpiCard";
 import { NavBar } from "@/components/NavBar";
 import { RecordsPanel } from "@/components/RecordsPanel";
+import { StudyWidget } from "@/components/StudyWidget";
 import { ReportButtons } from "@/components/ReportButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UploadPanel } from "@/components/UploadPanel";
@@ -108,6 +109,8 @@ export default function Dashboard() {
       {error && <ErrorBanner message={error} onRetry={refresh} />}
 
       <ReportButtons filters={filters} />
+
+      <StudyWidget />
 
       <UploadPanel onLoaded={() => { setFilters(EMPTY_FILTERS); refresh(); }} />
 

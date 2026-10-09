@@ -1,5 +1,9 @@
 # Business Intelligence Dashboard
 
+![CI](https://github.com/<you>/<repo>/actions/workflows/ci.yml/badge.svg)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
 FastAPI + DuckDB analytics engine (`backend/`) and a Next.js dashboard (`frontend/`).
 
 ## Run it
@@ -25,12 +29,16 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * **Dashboard**: KPIs, filters, trend + forecast, insights, drill-down, and **Excel / PDF reports** of the current view.
 * **KPIs** (`/kpis`): turn a metric into a KPI with a target, direction, window and warning band.
 * **Data quality** (`/quality`): nine checks (nulls, negatives, orphans, duplicates, date gaps...) with sample rows.
+* **Study widget** (main dashboard): progress bars for the five careers and a **Continue** button to your next step. Progress is stored in the DuckDB file.
+* **Career dashboards** (`/tracks/analyst`, `/scientist`, `/ml`, `/engineering`, `/ai`): a practice dashboard per career (analyst KPIs and quality score; weekend t-test, KMeans segments and correlations; ML experiment log; pipeline health; AI usage) plus a learning-path checklist and portfolio ideas.
 * **Tracks** (`/tracks`): Data Analyst, Data Scientist, Machine Learning, Data Engineering and AI Engineering, each with real tools, an ordered path through this project, and portfolio projects.
 * **Labs** menu:
   * **SQL Lab** (`/lab`): read-only SQL console, 16 graded exercises, and saved queries (kept in your browser).
   * **Python** (`/python`): Jupyter launch card and 14 notebooks in `python_practice/notebooks/` (basics 00-07; analyst, statistics, clustering, ML and MLflow 10-15) with self-checking exercises.
   * **ML Lab** (`/ml`): train regression/classification models (scikit-learn) with a time-based split, baselines, cross-validation, permutation importance and plain-English warnings.
   * **AI Lab** (`/ai`): an agent that answers questions by writing read-only SQL. Put any of `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` in `backend/.env` (see `.env.example`). Simple questions go to Gemini first (free tier), then OpenAI; complex or code questions go to Claude first. Daily caps and automatic fallback spread the load; you can also force one model.
+  * **Glossary** (`/glossary`): 18 metrics and concepts with formula, runnable SQL and common pitfalls.
+  * **Pipeline monitor** (`/pipeline`): run the medallion pipeline (clean or messy data) and watch freshness, quarantine and health checks.
   * **Apache** (`/apache`): Spark, Airflow and Superset examples in a dropdown (`apache_practice/`).
   * **Star schema** (`/schema`): fact/dimension diagram, grain, additive vs non-additive measures.
   * **SCD lab** (`/scd`): change a category and compare Type 1 (overwrite) with Type 2 (history kept).
@@ -38,8 +46,11 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * `python_practice/`: six runnable scripts (file formats, pandas, data cleaning, ETL vs ELT, forecasting, charts).
 * `data_engineering/`: a medallion pipeline (DuckDB + Parquet, incremental and idempotent, with tests) and a dbt-duckdb project. See its README.
 * `ai_engineering/`: five exercises (structured output, RAG, evals, MCP server, prompt injection) that run offline with a stub or live with an API key.
+* `postgres_practice/`: the same star schema in Postgres 16 via Docker (constraints, indexes, read-only role). See its README.
+* `.github/workflows/ci.yml`: backend, labs, Postgres and frontend jobs.
+* `scripts/send_report.py`: emails the report; schedule it with cron or Task Scheduler (set `BI_SMTP_*` and `BI_REPORT_TO` in `backend/.env`).
 * `scripts/generate_sample_data.py`: a realistic year of data (clean or messy) for practice.
-* `docs/TABLEAU.md`: a Tableau practice guide.
+* `docs/TABLEAU.md`: a Tableau practice guide. `docs/BI_TOOLS.md`: Superset, Power BI and Metabase notes (untested).
 
 ## Load your own data
 Use **Import data (CSV)** on the dashboard (or `POST /api/ingest/csv`). Download the template from the same panel.
@@ -73,6 +84,11 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/ml/options`, `POST /api/ml/train` | ML Lab |
 | `GET /api/ai/status`, `POST /api/ai/ask` | AI Lab (needs API key) |
 | `GET /api/tracks`, `GET /api/tracks/file?path=` | career tracks |
+| `GET /api/tracks/{id}/dashboard` | per-career practice dashboard |
+| `GET/PUT /api/progress` | study progress |
+| `GET /api/glossary` | metrics glossary |
+| `GET /api/pipeline`, `POST /api/pipeline/run` | pipeline monitor |
+| `GET /api/report/email/status`, `POST /api/report/email` | emailed report |
 | `POST /api/ingest/csv?mode=append\|replace` | CSV import |
 | `GET /api/ingest/template` | CSV template |
 

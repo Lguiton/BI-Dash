@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
+import { BarChart3, BookA, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
 
 const MAIN = [
   { href: "/", label: "Dashboard", Icon: BarChart3 },
@@ -16,7 +16,9 @@ const LABS = [
   { href: "/apache", label: "Apache", Icon: Workflow },
   { href: "/ml", label: "ML Lab", Icon: BrainCircuit },
   { href: "/ai", label: "AI Lab", Icon: Sparkles },
+  { href: "/pipeline", label: "Pipeline", Icon: Pipe },
   { href: "/schema", label: "Star schema", Icon: Network },
+  { href: "/glossary", label: "Glossary", Icon: BookA },
   { href: "/scd", label: "SCD lab", Icon: History },
   { href: "/quiz", label: "Quiz", Icon: GraduationCap },
 ];
@@ -28,6 +30,7 @@ export function NavBar() {
   const open = openAt === path;
   const box = useRef<HTMLDivElement>(null);
   const inLabs = LABS.some((l) => l.href === path);
+  const inTracks = path.startsWith("/tracks");
 
   useEffect(() => {
     if (!open) return;
@@ -41,7 +44,7 @@ export function NavBar() {
   return (
     <nav aria-label="Primary" className="flex flex-wrap gap-1">
       {MAIN.map(({ href, label, Icon }) => {
-        const active = path === href;
+        const active = href === "/tracks" ? inTracks : path === href;
         return (
           <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`btn ${active ? "btn-primary" : ""}`}>
             <Icon className="h-4 w-4" aria-hidden /> {label}

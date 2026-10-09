@@ -150,3 +150,75 @@ def download(format: Literal["xlsx", "pdf"] = Query("xlsx"), flt: Filters = Depe
         raise HTTPException(501, f"Report export needs an extra package: pip install openpyxl reportlab ({e.name})")
     mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" if format == "xlsx" else "application/pdf"
     return Response(data, media_type=mime, headers={"Content-Disposition": f'attachment; filename="bi_report.{format}"'})
+
+
+# ---------------- email the report ----------------
+# Safe-by-design: mail only goes to addresses YOU list in BI_REPORT_TO, so the endpoint can't be used as an open mail relay.
+import os
+import smtplib
+import ssl
+from email.message import EmailMessage
+
+from pydantic import BaseModel
+
+
+def _mail_config() -> dict:
+    to = [a.strip() for a in os.environ.get("BI_REPORT_TO", "").split(",") if a.strip()]
+    host = os.environ.get("BI_SMTP_HOST", "")
+    user = os.environ.get("BI_SMTP_USER", "")
+    return {"host": host, "port": int(os.environ.get("BI_SMTP_PORT", "587") or 587), "user": user,
+            "password": os.environ.get("BI_SMTP_PASSWORD", ""), "from": os.environ.get("BI_SMTP_FROM", user),
+            "security": os.environ.get("BI_SMTP_SECURITY", "starttls").lower(), "to": to}
+
+
+class EmailIn(BaseModel):
+    format: Literal["xlsx", "pdf"] = "pdf"
+    to: str | None = None
+
+
+@router.get("/email/status")
+def email_status():
+    c = _mail_config()
+    ready = bool(c["host"] and c["to"] and c["from"])
+    return {"configured": ready, "recipients": c["to"],
+            "hint": "" if ready else "Set BI_SMTP_HOST, BI_SMTP_USER, BI_SMTP_PASSWORD and BI_REPORT_TO (the addresses allowed to receive reports) in backend/.env, then restart."}
+
+
+@router.post("/email")
+def email_report(body: EmailIn, flt: Filters = Depends(get_filters)):
+    c = _mail_config()
+    if not (c["host"] and c["to"] and c["from"]):
+        raise HTTPException(503, "Email isn't configured. Set BI_SMTP_HOST, BI_SMTP_USER, BI_SMTP_PASSWORD and BI_REPORT_TO in backend/.env.")
+    recipients = c["to"]
+    if body.to:
+        if body.to.lower() not in [a.lower() for a in c["to"]]:
+            raise HTTPException(400, "That address isn't in BI_REPORT_TO, so reports can't be sent to it.")
+        recipients = [body.to]
+    d = _gather(flt)
+    if not d["kpis"]["record_count"]:
+        raise HTTPException(400, "No data matches the current filters, so there is nothing to report.")
+    data = _xlsx(d) if body.format == "xlsx" else _pdf(d)
+    k = d["kpis"]
+    msg = EmailMessage()
+    msg["Subject"] = f"BI report: revenue ${k['total_revenue']:,.0f}, margin {k['net_margin_pct']:.1f}%"
+    msg["From"], msg["To"] = c["from"], ", ".join(recipients)
+    msg.set_content(f"Your BI report is attached.\n\nScope: {d['filters']}\nRecords: {k['record_count']:,}\n"
+                    f"Revenue: ${k['total_revenue']:,.2f}\nNet profit: ${k['net_profit']:,.2f}\nNet margin: {k['net_margin_pct']:.2f}%\n")
+    maintype, subtype = ("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet") if body.format == "xlsx" else ("application", "pdf")
+    msg.add_attachment(data, maintype=maintype, subtype=subtype, filename=f"bi_report.{body.format}")
+    try:
+        if c["security"] == "ssl":
+            server = smtplib.SMTP_SSL(c["host"], c["port"], timeout=20, context=ssl.create_default_context())
+        else:
+            server = smtplib.SMTP(c["host"], c["port"], timeout=20)
+        with server:
+            if c["security"] == "starttls":
+                server.starttls(context=ssl.create_default_context())
+            if c["user"]:
+                server.login(c["user"], c["password"])
+            server.send_message(msg)
+    except smtplib.SMTPAuthenticationError:
+        raise HTTPException(502, "The mail server rejected the username or password (Gmail needs an app password).")
+    except (smtplib.SMTPException, OSError) as e:
+        raise HTTPException(502, f"Couldn't send the email ({type(e).__name__}). Check BI_SMTP_HOST, port and security.")
+    return {"sent_to": recipients, "format": body.format}

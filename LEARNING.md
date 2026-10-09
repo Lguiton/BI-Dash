@@ -70,3 +70,9 @@ Typical flow: **Airflow** schedules the pipeline, **Spark** transforms, **Supers
 - The SQL Lab is read-only and has a 5-second timeout; the import validates before it loads. You cannot break your data from the lab.
 - Insights, forecasts and recommendations are computed and show their arithmetic. If a number looks off, check it with SQL: that habit is the point.
 - `baseline_target` is treated as a *cost budget per record* (inferred from the data). If your own data uses it differently, change `_by_entity` in `backend/app/routers/analytics.py`.
+
+## Study loop
+1. Open the main dashboard; the study widget shows where you are in each career and a Continue button.
+2. Work the step (a page, notebook, script or doc), then tick it on that career's dashboard (`/tracks/<career>`).
+3. Look up unfamiliar terms in `/glossary`; run the pipeline in `/pipeline`; practise Postgres with `postgres_practice/exercises.sql`.
+4. Ask the AI Lab for a chart ("chart weekly revenue as a line") and check its SQL yourself.

@@ -159,7 +159,7 @@ def test_gemini_adapter_round_trip(client):
     assert [c.role for c in contents] == ["user", "model", "user"]
     assert contents[-1].parts[0].function_response.name == "run_sql"
     decls = calls[0][2].tools[0].function_declarations
-    assert {d.name for d in decls} == {"get_schema", "run_sql"} and [d for d in decls if d.name == "get_schema"][0].parameters is None
+    assert {d.name for d in decls} == {"get_schema", "run_sql", "show_chart"} and [d for d in decls if d.name == "get_schema"][0].parameters is None
     assert calls[0][2].automatic_function_calling.disable is True
 
 

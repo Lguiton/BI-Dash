@@ -44,6 +44,7 @@ export default function TracksPage() {
           {(tracks ?? [{ id: "analyst", name: "Data Analyst" }]).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         {track && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{track.role}</span>}
+        {track && <Link href={`/tracks/${track.id}`} className="btn btn-primary">Open {track.name} dashboard</Link>}
       </div>
       {!tracks && !error && <p className="text-sm text-muted">Loading…</p>}
 

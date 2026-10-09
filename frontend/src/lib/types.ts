@@ -233,14 +233,60 @@ export interface AiProviderStatus {
 export interface AiStatus { providers: AiProviderStatus[]; ready: AiProviderId[]; max_steps: number }
 export interface AiStep { tool: string; input: Record<string, unknown>; output: string; is_error: boolean }
 export interface AiAttempt { provider: AiProviderId; ok: boolean; error: string; skipped?: boolean }
+export interface AiChart { kind: "line" | "bar"; title: string; x_label: string; y_label: string; points: { x: string; y: number }[]; truncated: boolean; sql: string }
 export interface AiAnswer {
+  chart: AiChart | null;
   answer: string; model: string; provider: AiProviderId; stopped_early: boolean; steps: AiStep[];
   route: { kind: "simple" | "complex"; reason: string; forced: boolean } | null; attempts: AiAttempt[];
   usage: { input_tokens: number; output_tokens: number };
 }
 
-export interface TrackStep { kind: "page" | "notebook" | "file"; label: string; why: string; href?: string; path?: string }
+export interface TrackStep { id: string; kind: "page" | "notebook" | "file"; label: string; why: string; href?: string; path?: string }
 export interface Track {
   id: string; name: string; role: string; summary: string;
   tools: { name: string; install: string }[]; path: TrackStep[]; projects: string[];
+}
+
+export interface TrackProgress {
+  id: string; name: string; done: number; total: number; pct: number; last_activity: string | null;
+  next: { id: string; kind: "page" | "notebook" | "file"; label: string; href?: string; path?: string; why: string } | null;
+}
+export interface Progress {
+  done: string[]; tracks: TrackProgress[]; overall_pct: number;
+  continue: { track: string; track_name: string; step: NonNullable<TrackProgress["next"]> } | null;
+}
+
+export interface GlossaryTerm {
+  id: string; term: string; kind: "Metric" | "KPI" | "Concept" | "Method"; definition: string; formula: string; sql: string; pitfall: string; additive?: boolean;
+}
+
+export interface PipelineLayer { layer: string; label: string; rows: number; files: number }
+export interface PipelineRun { at: string; source: string; reset: boolean; seconds: number; bronze_rows: number; silver_rows: number; quarantined: number; gold_rows: number; watermark_before: string | null; watermark_after: string | null }
+export interface PipelineStatus {
+  exists: boolean; message?: string; watermark?: string | null; loads?: number; layers?: PipelineLayer[];
+  quarantine_reasons?: { reason: string; rows: number }[]; checks?: { name: string; ok: boolean; detail: string }[]; history: PipelineRun[];
+}
+
+type Unavailable = { available: false; reason: string };
+export interface AnalystDash {
+  kpis: { records: number; revenue: number; cost: number; profit: number; margin_pct: number; vs_budget_pct: number | null; completion_pct: number };
+  over_budget: { entity: string; category: string | null; overspend_usd: number; vs_budget_pct: number; records: number }[];
+  weekly_margin: { week: string; margin_pct: number; revenue: number }[];
+  status_mix: { status: string; n: number }[];
+  quality: { score_pct: number; passed: number; total: number; failing: string[] };
+  ideas: string[];
+}
+export interface ScientistDash {
+  weekend_test: Unavailable | { available: true; weekend_days: number; weekday_days: number; weekend_mean: number; weekday_mean: number; diff: number; ci_low: number; ci_high: number; t: number; p_value: number; verdict: string };
+  segments: Unavailable | { available: true; keys: string[]; segments: { segment: number; entities: string[]; means: Record<string, number> }[] };
+  correlations: Unavailable | { available: true; names: string[]; matrix: (number | null)[][] };
+  ideas: string[];
+}
+export interface MlRun { created_at: string; task: string; model: string; features: string[]; metric: string; model_score: number | null; baseline_score: number | null; test_rows: number }
+export interface MlDash { runs: MlRun[]; total_runs: number; best: (MlRun & { lift: number | null })[]; ideas: string[] }
+export interface EngineeringDash { pipeline: PipelineStatus; ideas: string[] }
+export interface AiDash {
+  providers: AiProviderStatus[]; ready: AiProviderId[]; ideas: string[];
+  log: { totals: { questions: number; tin: number; tout: number; charts: number }; by_provider: { provider: string; questions: number }[];
+         recent: { created_at: string; question: string; provider: string; kind: string; ok: boolean }[] };
 }

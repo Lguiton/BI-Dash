@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services import llm_router
+from app.services import llm_router, study
 from app.services.ai_agent import AiError
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -50,7 +50,8 @@ def ask(body: AskIn):
         r = llm_router.ask(body.question, body.provider, body.effort)
     except AiError as e:
         raise HTTPException(e.status, str(e))
-    return {"answer": r.answer, "model": r.model, "provider": r.provider, "stopped_early": r.stopped_early,
+    study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None)
+    return {"answer": r.answer, "model": r.model, "provider": r.provider, "stopped_early": r.stopped_early, "chart": r.chart,
             "route": getattr(r, "route", None), "attempts": r.attempts,
             "steps": [{"tool": s.tool, "input": s.input, "output": s.output, "is_error": s.is_error} for s in r.steps],
             "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}

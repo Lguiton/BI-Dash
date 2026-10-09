@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import cors_origins
-from app.routers import ai, analytics, apache, export, ingest, kpis, ml, python_lab, quality, report, scd, sql, tracks
+from app.routers import ai, analytics, apache, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks
+from app.services import study
 from app.services.db import close_connection, init_bi_schema
 
 
@@ -13,6 +14,7 @@ async def lifespan(_: FastAPI):
     init_bi_schema()
     scd.ensure_tables()
     kpis.ensure_table()
+    study.ensure_tables()
     yield
     close_connection()
 
@@ -23,7 +25,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins(),
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -40,6 +42,9 @@ app.include_router(python_lab.router)
 app.include_router(ml.router)
 app.include_router(ai.router)
 app.include_router(tracks.router)
+app.include_router(progress.router)
+app.include_router(glossary.router)
+app.include_router(pipeline.router)
 
 
 @app.get("/health")
