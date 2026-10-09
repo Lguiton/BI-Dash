@@ -4,6 +4,8 @@
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
+![Chart gallery: box plot](docs/screenshots/chart-gallery-boxplot.png)
+
 FastAPI + DuckDB analytics engine (`backend/`) and a Next.js dashboard (`frontend/`).
 
 ## Run it
@@ -29,6 +31,8 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * **Dashboard**: KPIs, filters, trend + forecast, insights, drill-down, and **Excel / PDF reports** of the current view.
 * **KPIs** (`/kpis`): turn a metric into a KPI with a target, direction, window and warning band.
 * **Data quality** (`/quality`): nine checks (nulls, negatives, orphans, duplicates, date gaps...) with sample rows.
+* **Chart gallery** (main dashboard, under the entity chart): a dropdown of 12 charts over your filtered data: pie, donut, treemap, ranked bar, Pareto, radar, funnel, stacked area, waterfall, histogram, box plot and bubble. Pick the measure (revenue, cost, profit, units, duration) and what to group by.
+* **Your data in every track** (main dashboard, collapsible): one import feeds all five careers; this card checks whether your data is big enough for each career's exercises. Each career dashboard shows the same check. The pipeline monitor can run on "Your uploaded data", and `postgres_practice/load_data.py --uploaded` loads it into Postgres.
 * **Study widget** (main dashboard): progress bars for the five careers and a **Continue** button to your next step. Progress is stored in the DuckDB file.
 * **Career dashboards** (`/tracks/analyst`, `/scientist`, `/ml`, `/engineering`, `/ai`): a practice dashboard per career (analyst KPIs and quality score; weekend t-test, KMeans segments and correlations; ML experiment log; pipeline health; AI usage) plus a learning-path checklist and portfolio ideas.
 * **Tracks** (`/tracks`): Data Analyst, Data Scientist, Machine Learning, Data Engineering and AI Engineering, each with real tools, an ordered path through this project, and portfolio projects.
@@ -73,6 +77,8 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/analytics/forecast` | revenue forecast with 95% range and backtest |
 | `GET /api/analytics/recommendations` | prescriptive actions with estimated impact |
 | `GET /api/analytics/scatter`, `/heatmap` | data for the extra chart types |
+| `GET /api/charts/breakdown`, `/distribution`, `/bubble` | chart gallery data (pie, histogram, box plot...) |
+| `GET /api/dataset` | rows, date range and per-career readiness of the current data |
 | `POST /api/sql/run`, `GET /api/sql/schema` | read-only SQL Lab |
 | `GET /api/sql/exercises`, `POST .../{id}/check` | graded SQL exercises |
 | `GET /api/export/{operations\|facts\|entities\|dates}?format=csv\|tsv\|json\|xml\|xlsx\|parquet` | downloads |

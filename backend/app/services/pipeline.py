@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parents[3]
 DE_DIR = ROOT / "data_engineering"
 LAKE = DE_DIR / "lake"
 SOURCES = {"clean": ROOT / "data_samples" / "operations_clean.csv", "messy": ROOT / "data_samples" / "operations_messy.csv"}
+UPLOADED_EXPORT = DE_DIR / "landing" / "uploaded_export.csv"
 HISTORY_MAX = 25
 _run_lock = threading.Lock()
 
@@ -90,18 +91,46 @@ def _history(lake: Path) -> list[dict]:
         return []
 
 
+def export_uploaded(dest: Path | None = None) -> tuple[Path, int]:
+    """Write the dashboard's current data (whatever was imported) to a CSV in the layout the pipeline expects."""
+    import csv
+    from app.services.db import fetch_all, get_cursor
+    dest = dest or UPLOADED_EXPORT
+    with get_cursor() as cur:
+        rows = fetch_all(cur, """
+            SELECT f.fact_id, STRFTIME(f.record_date, '%Y-%m-%d') AS record_date, f.entity_id,
+                   COALESCE(e.name, f.entity_id) AS entity_name, COALESCE(e.category, '') AS category,
+                   f.revenue, f.operational_cost, f.units_processed, f.duration_minutes, f.status,
+                   e.baseline_target
+            FROM fact_operations f LEFT JOIN dim_entities e ON f.entity_id = e.entity_id ORDER BY f.record_date, f.fact_id""")
+    if not rows:
+        raise PipelineError("The dashboard has no data to send through the pipeline. Import a CSV first.", 400)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    cols = list(rows[0])
+    with dest.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(cols)
+        for r in rows:
+            w.writerow(["" if r[c] is None else r[c] for c in cols])
+    return dest, len(rows)
+
+
 def run(source: str = "clean", reset: bool = False, lake: Path | None = None) -> dict:
     lake = lake or LAKE
-    if source not in SOURCES:
-        raise PipelineError("source must be 'clean' or 'messy'.")
-    if not SOURCES[source].exists():
-        raise PipelineError(f"{SOURCES[source].name} wasn't found in data_samples/.", 404)
+    if source not in SOURCES and source != "uploaded":
+        raise PipelineError("source must be 'clean', 'messy' or 'uploaded'.")
+    if source == "uploaded":
+        path, _ = export_uploaded()
+    else:
+        path = SOURCES[source]
+        if not path.exists():
+            raise PipelineError(f"{path.name} wasn't found in data_samples/.", 404)
     if not _run_lock.acquire(blocking=False):
         raise PipelineError("A pipeline run is already in progress.", 409)
     try:
         m = _medallion()
         t0 = time.perf_counter()
-        stats = m.run(SOURCES[source], lake, reset=reset)
+        stats = m.run(path, lake, reset=reset)
         entry = {"at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "source": source, "reset": reset,
                  "seconds": round(time.perf_counter() - t0, 2), **{k: stats.get(k) for k in
                  ("bronze_rows", "silver_rows", "quarantined", "gold_rows", "watermark_before", "watermark_after")}}

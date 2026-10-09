@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DatasetStrip } from "@/components/DatasetCard";
 import { BookOpen, FileCode, LayoutDashboard } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
@@ -232,6 +233,8 @@ export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "e
         {OPEN_LAB[id].map((l) => <Link key={l.href} href={l.href} className="btn">{l.label}</Link>)}
         {tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
+
+      <DatasetStrip careerId={id} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-4">

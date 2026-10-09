@@ -4,6 +4,8 @@ import { Activity, DollarSign, Layers, Percent, RefreshCw, TrendingUp } from "lu
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Filters } from "@/components/Filters";
 import { EntityChart, TrendChart } from "@/components/Charts";
+import { DatasetCard } from "@/components/DatasetCard";
+import { ChartGallery } from "@/components/ChartGallery";
 import { EntityTable } from "@/components/EntityTable";
 import { HeatmapView, ScatterView } from "@/components/ExplorePanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -114,6 +116,8 @@ export default function Dashboard() {
 
       <UploadPanel onLoaded={() => { setFilters(EMPTY_FILTERS); refresh(); }} />
 
+      <DatasetCard refreshKey={refreshKey} />
+
       <Filters meta={meta} filters={filters} onChange={setFilters} />
 
       {summary?.previous_range && (
@@ -169,6 +173,7 @@ export default function Dashboard() {
             </h2>
             <EntityChart data={entities} selectedId={filters.entity_id} onSelect={(id) => setFilters({ ...filters, entity_id: id })} />
           </div>
+          <ChartGallery filters={filters} refreshKey={refreshKey} />
         </div>
         <InsightsPanel insights={insights} loading={loading} />
       </section>

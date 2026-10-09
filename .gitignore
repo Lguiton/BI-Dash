@@ -10,3 +10,4 @@ backend/data/*.duckdb*
 
 apache_practice/**/_out/
 apache_practice/**/_work/
+data_engineering/landing/

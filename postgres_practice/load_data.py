@@ -3,12 +3,15 @@
     docker compose up -d
     pip install "psycopg[binary]"
     python load_data.py                 # reads ../data_samples/operations_clean.csv (use --messy for the dirty file)
+    python load_data.py --uploaded      # loads whatever the dashboard holds now (needs the backend running on :8020)
 
 Safe to re-run: it rebuilds the `bi` schema each time. Connection comes from PG_DSN (default: the docker-compose database).
 """
 import argparse
 import csv
+import io
 import os
+import urllib.request
 import sys
 from pathlib import Path
 
@@ -42,13 +45,24 @@ CREATE TABLE bi.fact_operations (
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--messy", action="store_true", help="load operations_messy.csv (expect constraint violations: that's the lesson)")
+    ap.add_argument("--uploaded", action="store_true", help="load the data currently in the dashboard (your imported CSV) via its API")
     ap.add_argument("--analyze", action="store_true", default=True)
     a = ap.parse_args()
-    path = DATA / ("operations_messy.csv" if a.messy else "operations_clean.csv")
-    if not path.exists():
-        sys.exit(f"{path} not found. Run: python scripts/generate_sample_data.py{' --messy' if a.messy else ''}")
-    with open(path, newline="", encoding="utf-8") as fh:
-        rows = list(csv.DictReader(fh))
+    if a.uploaded:
+        api = os.environ.get("BI_API_URL", "http://localhost:8020")
+        try:
+            with urllib.request.urlopen(f"{api}/api/export/operations?format=csv", timeout=10) as resp:
+                rows = list(csv.DictReader(io.StringIO(resp.read().decode("utf-8"))))
+        except OSError as e:
+            sys.exit(f"Couldn't reach the dashboard API at {api} ({e}). Start the backend, or drop --uploaded to use the sample file.")
+        for r in rows:  # the export names the budget column differently
+            r["baseline_target"] = r.get("baseline_target") or r.get("cost_budget_per_record") or "0"
+    else:
+        path = DATA / ("operations_messy.csv" if a.messy else "operations_clean.csv")
+        if not path.exists():
+            sys.exit(f"{path} not found. Run: python scripts/generate_sample_data.py{' --messy' if a.messy else ''}")
+        with open(path, newline="", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
     with psycopg.connect(DSN) as conn:
         conn.execute(DDL)
         ents = {}

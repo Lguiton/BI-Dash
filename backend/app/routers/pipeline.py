@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
 
 
 class RunIn(BaseModel):
-    source: Literal["clean", "messy"] = "clean"
+    source: Literal["clean", "messy", "uploaded"] = "clean"
     reset: bool = False
 
 

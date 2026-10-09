@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import cors_origins
-from app.routers import ai, analytics, apache, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks
+from app.routers import ai, analytics, apache, charts, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks
 from app.services import study
 from app.services.db import close_connection, init_bi_schema
 
@@ -30,6 +30,8 @@ app.add_middleware(
 )
 
 app.include_router(analytics.router)
+app.include_router(charts.router)
+app.include_router(dataset.router)
 app.include_router(ingest.router)
 app.include_router(sql.router)
 app.include_router(export.router)

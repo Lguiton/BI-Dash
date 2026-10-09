@@ -290,3 +290,25 @@ export interface AiDash {
   log: { totals: { questions: number; tin: number; tout: number; charts: number }; by_provider: { provider: string; questions: number }[];
          recent: { created_at: string; question: string; provider: string; kind: string; ok: boolean }[] };
 }
+
+export interface BreakdownRow { name: string; value: number; records: number; revenue: number; cost: number; units: number }
+export interface Breakdown {
+  by: string; by_label: string; measure: string; measure_label: string; format: "money" | "number";
+  total: number; grouped_into_other: boolean; rows: BreakdownRow[];
+}
+export interface BoxStat {
+  name: string; n: number; whisker_low: number; q1: number; median: number; q3: number; whisker_high: number;
+  mean: number; outliers: number[]; outlier_count: number;
+}
+export interface Distribution {
+  measure: string; measure_label: string; format: "money" | "number"; count: number; bins?: number;
+  histogram: { from: number; to: number; count: number }[]; boxes: BoxStat[];
+}
+export interface BubbleData { rows: { name: string; category: string; cost: number; revenue: number; units: number }[] }
+
+export interface DatasetCheck { ok: boolean; need: string; have: string }
+export interface DatasetCareer { id: string; name: string; uses: string; ready: boolean; checks: DatasetCheck[] }
+export interface DatasetInfo {
+  rows: number; entities: number; days: number; date_min: string | null; date_max: string | null;
+  weekend_days: number; weekday_days: number; careers: DatasetCareer[];
+}

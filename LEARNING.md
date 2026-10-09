@@ -76,3 +76,9 @@ Typical flow: **Airflow** schedules the pipeline, **Spark** transforms, **Supers
 2. Work the step (a page, notebook, script or doc), then tick it on that career's dashboard (`/tracks/<career>`).
 3. Look up unfamiliar terms in `/glossary`; run the pipeline in `/pipeline`; practise Postgres with `postgres_practice/exercises.sql`.
 4. Ask the AI Lab for a chart ("chart weekly revenue as a line") and check its SQL yourself.
+
+## Chart gallery: which chart for which question
+- Parts of a whole (pie, donut, treemap): only when the parts add up to something meaningful and there are few of them.
+- Ranking (ranked bar, Pareto): the most accurate to read; Pareto shows how concentrated the total is.
+- Distribution (histogram, box plot): shape, spread and outliers. Try profit by category, then ask why Fleet has so many high outliers.
+- Relationships (bubble): cost vs revenue vs size. Try the same chart with different filters.

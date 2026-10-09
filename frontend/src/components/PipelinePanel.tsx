@@ -12,7 +12,7 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
   const [st, setSt] = useState<PipelineStatus | null>(initial ?? null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [source, setSource] = useState<"clean" | "messy">("clean");
+  const [source, setSource] = useState<"clean" | "messy" | "uploaded">("clean");
   const [reset, setReset] = useState(false);
 
   const load = useCallback((signal?: AbortSignal) =>
@@ -37,9 +37,10 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
       {error && <ErrorBanner message={error} />}
       <div className="card flex flex-wrap items-center gap-3 p-4 text-sm">
         <label>Source{" "}
-          <select className="field" value={source} onChange={(e) => setSource(e.target.value as "clean" | "messy")}>
+          <select className="field" value={source} onChange={(e) => setSource(e.target.value as "clean" | "messy" | "uploaded")}>
             <option value="clean">Clean sample (3,650 rows)</option>
             <option value="messy">Messy sample (duplicates, bad rows)</option>
+            <option value="uploaded">Your uploaded data (what the dashboard holds now)</option>
           </select>
         </label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={reset} onChange={(e) => setReset(e.target.checked)} /> Start over (wipe the lake)</label>
