@@ -75,9 +75,10 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
-      - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run build
+      # tsc runs after the build because Next generates the LayoutProps type during build
+      - run: npx tsc --noEmit
 
   backend-py314:
     name: Backend tests (Python 3.14, experimental)
@@ -98,7 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose build
+      - name: Build images (one retry, Docker Hub pulls sometimes fail)
+        run: docker compose build || (sleep 20 && docker compose build)
       - name: Start backend and check /health
         run: |
           docker compose up -d backend
