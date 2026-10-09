@@ -31,7 +31,7 @@ TOOLS = [
         "concepts": ["ETL stages", "Scheduling & retries", "Data-quality gate", "Idempotent loads", "Monitoring"],
         "steps": [
             "Try the logic first, no Airflow needed: python apache_practice/airflow/etl_steps.py",
-            "Airflow needs Linux/macOS/WSL2 or Docker: pip install \"apache-airflow==3.*\" (see Airflow docs for constraints).",
+            "Airflow needs Linux/macOS/WSL2 or Docker: install it in a fresh virtualenv with Airflow's constraints file (exact command in the DAG file header); a plain pip install breaks on a newer SQLAlchemy.",
             "Copy etl_steps.py and dags/bi_etl_dag.py into $AIRFLOW_HOME/dags, then run: airflow standalone",
             "Open http://localhost:8080, un-pause 'bi_daily_etl' and trigger it.",
             "Break it on purpose (wrong BI_API_URL) and watch retries and skipped downstream tasks.",

@@ -52,6 +52,7 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
 * `ai_engineering/`: five exercises (structured output, RAG, evals, MCP server, prompt injection) that run offline with a stub or live with an API key.
 * `postgres_practice/`: the same star schema in Postgres 16 via Docker (constraints, indexes, read-only role). See its README.
 * `.github/workflows/ci.yml`: backend, labs, Postgres and frontend jobs.
+* `scripts/check_ai_keys.py`: one command that tests each AI key end to end (SQL answer, chart, and a refused write). Run it after adding keys to `backend/.env`.
 * `scripts/send_report.py`: emails the report; schedule it with cron or Task Scheduler (set `BI_SMTP_*` and `BI_REPORT_TO` in `backend/.env`).
 * `scripts/generate_sample_data.py`: a realistic year of data (clean or messy) for practice.
 * `docs/TABLEAU.md`: a Tableau practice guide. `docs/BI_TOOLS.md`: Superset, Power BI and Metabase notes (untested).
@@ -106,6 +107,10 @@ cd backend
 pip install -r requirements-dev.txt
 pytest
 ```
+
+## What has been tested against the real thing
+Tested: email over a real SMTP server (STARTTLS, SSL, none; Excel and PDF attachments open), Airflow 3.1.8 (`airflow dags test` ran all five tasks to success), Superset 6.1.0 installed with pip (CSV upload, temporal column and all four metrics matched this dashboard), Spark, and the Postgres lab against Postgres 16.
+Not tested: live Gemini/OpenAI/Claude calls (run `python scripts/check_ai_keys.py` with your keys), Docker Compose and the Superset Docker commands (Docker Hub was unreachable), Tableau and Power BI (desktop apps).
 
 ## Notes
 * Margin is **total profit / total revenue** (weighted), not an average of per-row margins.

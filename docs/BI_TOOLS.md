@@ -13,7 +13,7 @@ Export the data, then rebuild the **Analyst dashboard** (`/tracks/analyst`): KPI
 |---|---|
 | KPI cards: revenue, profit, margin %, cost vs budget % | margin = SUM(profit) / SUM(revenue), **not** AVG of a margin column |
 | Weekly margin line | group by week, then compute the ratio of sums |
-| Bar: entities by cost vs budget | SUM(cost) / SUM(baseline_target) - 1, sorted |
+| Bar: entities by cost vs budget | SUM(cost) / SUM(cost_budget_per_record) - 1, sorted |
 | Status mix | COUNT by status |
 | Filters: date range, category | applied to every chart |
 

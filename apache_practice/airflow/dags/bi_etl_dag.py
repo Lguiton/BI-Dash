@@ -3,12 +3,18 @@
     extract >> transform >> validate >> load >> verify
 
 Setup (Airflow runs on Linux/macOS/WSL; on Windows use WSL2 or Docker):
-    pip install "apache-airflow==3.*"          # see https://airflow.apache.org/docs/ for the constraints file
+    # Use a fresh virtualenv and Airflow's constraints file. A plain `pip install apache-airflow` pulls a newer
+    # SQLAlchemy than Airflow supports and crashes on start (this was hit when testing this project).
+    V=3.1.8; PY=$(python -c 'import sys;print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
+    pip install "apache-airflow==$V" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-$V/constraints-$PY.txt"
     export AIRFLOW_HOME=~/airflow
     export BI_API_URL=http://localhost:8020      # the dashboard backend must be running
     mkdir -p $AIRFLOW_HOME/dags
     cp apache_practice/airflow/etl_steps.py apache_practice/airflow/dags/bi_etl_dag.py $AIRFLOW_HOME/dags/
     airflow standalone                           # prints an admin password; UI at http://localhost:8080
+
+Tested without the UI: `airflow db migrate && airflow dags reserialize && airflow dags test bi_daily_etl 2026-10-08`
+runs all five tasks (extract, transform, validate, load, verify) and ends in state=success.
 
 Then open the DAG "bi_daily_etl", un-pause it, and trigger a run. Try breaking it on purpose:
 set BI_API_URL to a wrong port and watch retries, the failed task, and the skipped downstream tasks.

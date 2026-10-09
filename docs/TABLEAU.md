@@ -25,7 +25,7 @@ For more rows, run `python scripts/generate_sample_data.py` (a year of data, 10 
 ```
 Profit            SUM([Revenue]) - SUM([Operational Cost])
 Margin %          SUM([Revenue]) - SUM([Operational Cost])) / SUM([Revenue])     // ratio of sums: non-additive!
-Cost vs Budget %  AVG([Operational Cost]) / AVG([Baseline Target]) - 1           // baseline_target is a cost budget
+Cost vs Budget %  AVG([Operational Cost]) / AVG([Cost Budget Per Record]) - 1           // baseline_target is a cost budget
 Over Budget?      [Cost vs Budget %] > 0.05
 Avg Rev / Entity  { FIXED [Entity Name] : AVG([Revenue]) }                       // LOD expression
 Revenue 7d Avg    WINDOW_AVG(SUM([Revenue]), -6, 0)                              // table calc: rolling window
