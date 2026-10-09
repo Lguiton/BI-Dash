@@ -1,7 +1,7 @@
 """Database administration and data governance endpoints (Data Engineering tab)."""
 from fastapi import APIRouter, Body, HTTPException
 
-from app.services import backups, dba, governance
+from app.services import backups, dba, drill, governance
 
 router = APIRouter(tags=["dba-governance"])
 
@@ -33,6 +33,16 @@ def checkpoint():
 @router.post("/api/dba/verify-backup")
 def verify(body: dict = Body(default={})):
     return _g(dba.verify_backup, body.get("name"))
+
+
+@router.get("/api/dba/drill")
+def drill_history():
+    return {"history": drill.history(), "due": drill.due(), "note": "A drill restores the newest backup into a scratch folder and checks it. The live database is never touched."}
+
+
+@router.post("/api/dba/drill")
+def drill_run(body: dict = Body(default={})):
+    return _g(drill.run, body.get("name"))
 
 
 @router.get("/api/governance/catalog")

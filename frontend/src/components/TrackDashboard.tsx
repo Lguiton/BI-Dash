@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DatasetStrip } from "@/components/DatasetCard";
 import { BookOpen, FileCode, LayoutDashboard } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
@@ -216,18 +216,37 @@ function EngineeringTabs({ d, tab, onTab }: { d: EngineeringDash; tab: string; o
   );
 }
 
-export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack" }) {
+type TrackId = "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack";
+const parseView = (v: string | null): "manual" | "tools" | "agent" | null => (v === "manual" || v === "tools" || v === "agent" ? v : null);
+
+/** Search results and agent links can open a track straight on a view, tab or manual step: /tracks/pm?view=manual&step=okr */
+export function TrackDashboard({ id }: { id: TrackId }) {
+  return <Suspense fallback={null}><TrackDashboardInner id={id} /></Suspense>;
+}
+
+function TrackDashboardInner({ id }: { id: TrackId }) {
+  const sp = useSearchParams();
+  const reqKey = sp.toString();
+  const [seenReq, setSeenReq] = useState(reqKey);
   const [track, setTrack] = useState<Track | null>(null);
   const [dash, setDash] = useState<Dash | null>(null);
   const [prog, setProg] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<{ path: string; content: string } | null>(null);
-  const [view, setView] = useState<"manual" | "tools" | "agent">("manual");
-  const [tab, setTab] = useState(DEFAULT_TAB[id] ?? "");
+  const [view, setView] = useState<"manual" | "tools" | "agent">(() => parseView(sp.get("view")) ?? "manual");
+  const [tab, setTab] = useState(() => sp.get("tab") ?? DEFAULT_TAB[id] ?? "");
+  const [focusStep, setFocusStep] = useState<string | undefined>(() => sp.get("step") ?? undefined);
   const [agentName, setAgentName] = useState("agent");
   const [stepId, setStepId] = useState<string | undefined>(undefined);
   const router = useRouter();
   const chat = useAgentChat(id);
+  if (reqKey !== seenReq) {                       // the address changed while this page stayed open (for example from the search box)
+    setSeenReq(reqKey);
+    const v = parseView(sp.get("view"));
+    if (v) setView(v);
+    if (sp.get("tab")) setTab(sp.get("tab") as string);
+    setFocusStep(sp.get("step") ?? undefined);
+  }
 
   const goTool = (t: { href: string | null; tab: string | null }) => {
     if (t.href) { router.push(t.href); return; }
@@ -285,7 +304,7 @@ export function TrackDashboard({ id }: { id: "analyst" | "scientist" | "ml" | "e
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-4">
-          {view === "manual" && <ManualPanel track={id} onGo={goTool} onAsk={askAbout} />}
+          {view === "manual" && <ManualPanel track={id} focus={focusStep} onGo={goTool} onAsk={askAbout} />}
           {view === "agent" && <AgentPanel track={id} chat={chat} onAction={goAction} />}
           {view === "tools" && (
             <>

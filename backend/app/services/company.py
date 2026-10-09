@@ -10,6 +10,8 @@ has been taken). Deliverables the app cannot measure are ticked by hand. Nothing
 from __future__ import annotations
 
 import json
+import re
+from datetime import date, timedelta
 
 from app.services import state, workspaces
 
@@ -133,6 +135,34 @@ def set_done(did: str, done: bool) -> dict:
     return overview()
 
 
+def _meta_all() -> dict:
+    raw = state.kv_get(f"company_meta:{_ws()}")
+    return json.loads(raw) if raw else {}
+
+
+def set_meta(did: str, note: str | None, due: str | None) -> dict:
+    """A free-text note and an optional due date for one deliverable."""
+    if did not in IDS:
+        raise CoError("No such deliverable.", 404)
+    due = (due or "").strip()
+    if due:
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", due):
+            raise CoError("Use a date like 2026-11-15.")
+        try:
+            date.fromisoformat(due)
+        except ValueError:
+            raise CoError("That date doesn't exist.") from None
+    allm = _meta_all()
+    cur = {"note": str(note or "").strip()[:600], "due": due}
+    if cur["note"] or cur["due"]:
+        allm[did] = cur
+    else:
+        allm.pop(did, None)
+    state.kv_set(f"company_meta:{_ws()}", json.dumps(allm))
+    state.audit("company_meta", f"{did}: note/due updated")
+    return overview()
+
+
 def brief_get() -> dict:
     raw = state.kv_get(f"company_brief:{_ws()}")
     return json.loads(raw) if raw else {"company": "", "goal": "", "notes": ""}
@@ -148,6 +178,9 @@ def brief_save(data: dict) -> dict:
 def overview() -> dict:
     sig = _safe(_signals, {}) or {}
     manual = _manual()
+    meta = _meta_all()
+    today = date.today()
+    overdue = due_soon = 0
     done_items = _safe(lambda: __import__("app.services.study", fromlist=["x"]).done_items(), {}) or {}
     phases = []
     total = done_total = 0
@@ -159,8 +192,14 @@ def overview() -> dict:
                 continue
             auto, detail = sig.get(key, (False, "")) if key else (False, "Tick this yourself when it's done: the app can't measure it.")
             is_done = auto or did in manual
+            m = meta.get(did, {})
+            due = m.get("due", "")
+            late = bool(due) and not is_done and date.fromisoformat(due) < today
+            soon = bool(due) and not is_done and not late and date.fromisoformat(due) <= today + timedelta(days=7)
+            overdue += late
+            due_soon += soon
             items.append({"id": did, "discipline": disc, "title": title, "why": why, "href": href, "auto": bool(key), "detected": auto,
-                          "manual": did in manual, "done": is_done, "detail": detail})
+                          "manual": did in manual, "done": is_done, "detail": detail, "note": m.get("note", ""), "due": due, "overdue": late, "due_soon": soon})
             total += 1
             done_total += is_done
             per_disc[disc]["total"] += 1
@@ -176,4 +215,106 @@ def overview() -> dict:
     nxt = next((i for p in phases for i in p["deliverables"] if not i["done"]), None)
     return {"workspace": _ws(), "brief": brief_get(), "phases": phases, "disciplines": list(per_disc.values()),
             "done": done_total, "total": total, "pct": round(100 * done_total / total) if total else 0, "next": nxt,
+            "overdue": overdue, "due_soon": due_soon,
             "note": "Deliverables marked 'detected' are proven by this workspace's own data. The rest are ticked by you. Progress belongs to the active workspace, so Practice and Real keep separate plans."}
+
+
+# ------------------------------------------------------------------ weekly snapshots and the brief
+def _flat(ov: dict) -> list[dict]:
+    return [i for p in ov["phases"] for i in p["deliverables"]]
+
+
+def snapshot(kind: str = "manual") -> dict:
+    """Save where the plan stands right now, so next week there is something to compare against."""
+    ov = overview()
+    data = {"done_ids": [i["id"] for i in _flat(ov) if i["done"]], "overdue_ids": [i["id"] for i in _flat(ov) if i["overdue"]],
+            "disciplines": [{"id": d["id"], "done": d["done"], "total": d["total"]} for d in ov["disciplines"]]}
+    brief = diff_text(ov, latest())
+    cur = state.run("INSERT INTO company_snapshots (workspace, at, kind, done, total, pct, data, brief) VALUES (?,?,?,?,?,?,?,?)",
+                    (_ws(), state.now(), kind, ov["done"], ov["total"], ov["pct"], json.dumps(data), brief))
+    state.run("DELETE FROM company_snapshots WHERE workspace = ? AND id NOT IN (SELECT id FROM company_snapshots WHERE workspace = ? ORDER BY id DESC LIMIT 60)", (_ws(), _ws()))
+    state.audit("company_snapshot", f"{kind}: {ov['done']}/{ov['total']}")
+    return {"id": cur.lastrowid, "at": state.now(), "kind": kind, "done": ov["done"], "total": ov["total"], "pct": ov["pct"], "brief": brief, "ai": False}
+
+
+def snapshots(limit: int = 12) -> list[dict]:
+    rows = state.rows("SELECT id, at, kind, done, total, pct, brief FROM company_snapshots WHERE workspace = ? ORDER BY id DESC LIMIT ?", (_ws(), int(limit)))
+    for r in rows:
+        r["ai"] = r["brief"].startswith("[AI] ") if r["brief"] else False
+        if r["ai"]:
+            r["brief"] = r["brief"][5:]
+    return rows
+
+
+def latest() -> dict | None:
+    return state.one("SELECT id, at, done, total, pct, data FROM company_snapshots WHERE workspace = ? ORDER BY id DESC LIMIT 1", (_ws(),))
+
+
+def _titles() -> dict[str, str]:
+    return {d[0]: d[3] for d in PLAYBOOK}
+
+
+def diff_data(ov: dict, prev: dict | None) -> dict:
+    """What changed since the last snapshot. Pure numbers and deliverable titles: nothing from your rows."""
+    titles = _titles()
+    now_done = {i["id"] for i in _flat(ov) if i["done"]}
+    over = [i for i in _flat(ov) if i["overdue"]]
+    if not prev:
+        return {"first": True, "done": ov["done"], "total": ov["total"], "pct": ov["pct"], "newly_done": [], "reopened": [],
+                "overdue": [{"title": i["title"], "due": i["due"]} for i in over], "next": (ov["next"] or {}).get("title")}
+    before = set(json.loads(prev["data"]).get("done_ids", []))
+    return {"first": False, "since": prev["at"], "done": ov["done"], "total": ov["total"], "pct": ov["pct"], "pct_change": ov["pct"] - prev["pct"],
+            "newly_done": [titles[i] for i in sorted(now_done - before) if i in titles], "reopened": [titles[i] for i in sorted(before - now_done) if i in titles],
+            "overdue": [{"title": i["title"], "due": i["due"]} for i in over], "next": (ov["next"] or {}).get("title")}
+
+
+def diff_text(ov: dict, prev: dict | None) -> str:
+    d = diff_data(ov, prev)
+    lines = [f"Engagement plan: {d['done']}/{d['total']} deliverables done ({d['pct']}%)."]
+    if d["first"]:
+        lines.append("This is the first snapshot, so there is nothing to compare against yet.")
+    else:
+        ch = d["pct_change"]
+        lines.append(f"Since {d['since']}: {'+' if ch >= 0 else ''}{ch} percentage points.")
+        if d["newly_done"]:
+            lines.append("Finished: " + "; ".join(d["newly_done"]) + ".")
+        if d["reopened"]:
+            lines.append("No longer done (the data changed): " + "; ".join(d["reopened"]) + ".")
+        if not d["newly_done"] and not d["reopened"]:
+            lines.append("Nothing new was finished.")
+    if d["overdue"]:
+        lines.append("Overdue: " + "; ".join(f"{o['title']} (due {o['due']})" for o in d["overdue"]) + ".")
+    if d["next"]:
+        lines.append(f"Next up: {d['next']}.")
+    return " ".join(lines)
+
+
+def ai_brief(adapters: dict | None = None) -> dict:
+    """Ask the AI to write a short status note from the numbers above. It sees counts and deliverable titles only, never your rows."""
+    from app.services import ai_policy, llm_router
+    if not ai_policy.describe()["allowed"]:
+        raise CoError("AI is switched off for this workspace. The plain-language brief above works without it. Turn AI on in Settings to use this.", 403)
+    snap = latest() or None
+    ov = overview()
+    # compare against the snapshot BEFORE the one we are about to store
+    data = diff_data(ov, snap)
+    system = ("You write a short weekly status note for a solo consultant about their own project plan. Use only the facts in the JSON. "
+              "Do not invent numbers, dates or progress. 4 to 6 sentences: where things stand, what moved, what is overdue, the single next step. Plain language.")
+    prompt = "Plan changes (JSON):\n" + json.dumps({**data, "brief": brief_get()}, default=str)
+    try:
+        r = llm_router.complete(system, prompt, "medium", "auto", adapters)
+    except Exception as e:  # noqa: BLE001
+        raise CoError(str(e), getattr(e, "status", 502)) from None
+    s = snapshot("manual")
+    state.run("UPDATE company_snapshots SET brief = ? WHERE id = ?", ("[AI] " + r["text"], s["id"]))
+    state.audit("company_ai_brief", f"{r['provider']}")
+    return {**s, "brief": r["text"], "ai": True, "provider": r["provider"], "model": r["model"]}
+
+
+def weekly_due() -> bool:
+    last = latest()
+    if not last:
+        return True
+    from datetime import datetime, timezone
+    age = datetime.now(timezone.utc) - datetime.strptime(last["at"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    return age >= timedelta(days=7)

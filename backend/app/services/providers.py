@@ -100,8 +100,9 @@ class AnthropicAdapter:
 
     def next_turn(self) -> Turn:
         try:
+            extra = {"tools": self.tools} if self.tools else {}      # a plain-text call (no tools) must omit the field
             resp = self.client.messages.create(model=self.model, max_tokens=self.max_tokens, system=self.system,
-                                               tools=self.tools, messages=self.messages)
+                                               messages=self.messages, **extra)
         except Exception as e:
             raise translate("anthropic", e)
         u = getattr(resp, "usage", None)
@@ -135,8 +136,9 @@ class OpenAIAdapter:
 
     def next_turn(self) -> Turn:
         try:
-            resp = self.client.chat.completions.create(model=self.model, messages=self.messages, tools=self.tools,
-                                                       max_completion_tokens=self.max_tokens)
+            extra = {"tools": self.tools} if self.tools else {}
+            resp = self.client.chat.completions.create(model=self.model, messages=self.messages,
+                                                       max_completion_tokens=self.max_tokens, **extra)
         except Exception as e:
             raise translate("openai", e)
         ch = resp.choices[0]
@@ -180,7 +182,7 @@ class GeminiAdapter:
             params = {"type": "object", "properties": props, "required": t["input_schema"].get("required", [])} if props else None
             decls.append(types.FunctionDeclaration(name=t["name"], description=t["description"], parameters=params))
         self.config = types.GenerateContentConfig(
-            system_instruction=system, tools=[types.Tool(function_declarations=decls)], max_output_tokens=self.max_tokens,
+            system_instruction=system, tools=[types.Tool(function_declarations=decls)] if decls else None, max_output_tokens=self.max_tokens,
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True))
         self.contents = [types.Content(role="user", parts=[types.Part.from_text(text=question)])]
 

@@ -1,5 +1,6 @@
 "use client";
 import type { ReactNode } from "react";
+import { CommandPalette, SearchButton } from "./CommandPalette";
 import { NavBar } from "./NavBar";
 import { ThemeToggle } from "./ThemeToggle";
 import { RealBanner, WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -12,8 +13,9 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
-        <div className="flex flex-wrap items-start gap-2"><NavBar /><WorkspaceSwitcher /><ThemeToggle /></div>
+        <div className="flex flex-wrap items-start gap-2"><NavBar /><SearchButton /><WorkspaceSwitcher /><ThemeToggle /></div>
       </header>
+      <CommandPalette />
       <RealBanner />
       {children}
     </div>

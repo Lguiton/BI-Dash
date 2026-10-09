@@ -28,7 +28,9 @@ _usage: dict[str, list] = {}      # provider -> [utc_date, count]
 
 COMPLEX_HINTS = re.compile(
     r"\b(code|script|function|python|debug|refactor|regression|correlat\w*|forecast\w*|predict\w*|statistic\w*|"
-    r"significan\w*|outlier\w*|root cause|why|step[- ]by[- ]step|seasonal\w*|cohort\w*|window function)\b", re.I)
+    r"significan\w*|outlier\w*|root cause|why|step[- ]by[- ]step|seasonal\w*|cohort\w*|window function|"
+    r"analy[sz]e\w*|analysis|assess\w*|evaluat\w*|trade-?offs?|strateg\w*|optimi[sz]\w*|diagnos\w*|simulat\w*|scenario\w*|"
+    r"architect\w*|critique|justify|prove)\b", re.I)
 MEDIUM_HINTS = re.compile(
     r"\b(compar\w*|trend\w*|versus|vs|breakdown|break down|rank\w*|top \d+|summar\w*|explain|average|per|share|percent\w*|ratio|growth|change[sd]?|"
     r"draft|suggest\w*|plan|recommend\w*|list|prioriti[sz]\w*|review|improve\w*)\b", re.I)
@@ -141,3 +143,36 @@ def ask(question: str, provider: str = "auto", effort: str = "auto", adapters: d
         return res
     raise AiError("Every provider failed: " + " | ".join(f"{a['provider']}: {a['error']}" for a in attempts if not a.get("skipped")),
                   last.status if last else 502)
+
+
+def complete(system: str, prompt: str, effort: str = "medium", provider: str = "auto", adapters: dict | None = None) -> dict:
+    """One plain-text answer, no tools and no data access: the model only sees what is in `prompt`.
+    Used for writing short briefs from numbers the app already computed. Same routing, caps and fallback as ask()."""
+    pl = plan(prompt, provider, effort)
+    if not pl["order"]:
+        why = "; ".join(f"{s['provider']}: {s['why']}" for s in pl["skipped"])
+        raise AiError(f"No AI provider is ready ({why}). Add a key to backend/.env and restart the backend.", 503)
+    last: AiError | None = None
+    for p in pl["order"]:
+        try:
+            adapter = adapters[p] if adapters and p in adapters else providers.ADAPTERS[p]()
+        except ImportError:
+            last = AiError(f"{providers.INFO[p]['label']} SDK isn't installed.", 501)
+            continue
+        _count(p)
+        try:
+            adapter.start(system, [], prompt)
+            turn = adapter.next_turn()
+        except providers.ProviderError as e:
+            last = AiError(str(e), e.status)
+            continue
+        except AiError as e:
+            last = e
+            continue
+        text = (turn.text or "").strip()
+        if not text:
+            last = AiError("The model returned no text.", 502)
+            continue
+        return {"text": text, "provider": p, "model": adapter.model, "kind": pl["kind"],
+                "input_tokens": turn.input_tokens, "output_tokens": turn.output_tokens}
+    raise last or AiError("Every provider failed.", 502)

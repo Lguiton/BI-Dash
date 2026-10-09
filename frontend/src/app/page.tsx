@@ -11,9 +11,11 @@ import { HeatmapView, ScatterView } from "@/components/ExplorePanel";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { KpiCard } from "@/components/KpiCard";
+import { CommandPalette, SearchButton } from "@/components/CommandPalette";
 import { NavBar } from "@/components/NavBar";
 import { RecordsPanel } from "@/components/RecordsPanel";
 import { CompanyCard } from "@/components/CompanyCard";
+import { AlertsCard } from "@/components/panels/OpsPanels";
 import { StudyWidget } from "@/components/StudyWidget";
 import { ReportButtons } from "@/components/ReportButtons";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -103,6 +105,7 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-wrap items-start gap-2">
           <NavBar />
+          <SearchButton />
           <WorkspaceSwitcher />
           <ThemeToggle />
           <button className="btn" onClick={refresh} disabled={loading}>
@@ -111,10 +114,13 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <CommandPalette />
       <RealBanner />
       {error && <ErrorBanner message={error} onRetry={refresh} />}
 
       <ReportButtons filters={filters} />
+
+      <AlertsCard />
 
       <CompanyCard />
 

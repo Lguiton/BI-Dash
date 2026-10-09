@@ -132,6 +132,8 @@ def _ctx_pm(txt: bool) -> dict:
          "earned_value": {k: ev.get(k) for k in ("cpi", "spi", "eac", "bac")} if ev.get("available") else "not available",
          "open_risks": o["risks"]["open_count"], "risk_exposure_usd": o["risks"]["exposure"],
          "okr_progress_pct": [x["progress_pct"] for x in o["okrs"]["objectives"]]}
+    tv = pm.time_view()
+    d["time_logged_hours"], d["hourly_rate"], d["time_feeds_earned_value"] = tv["total_hours"], tv["rate"], tv["feeds_earned_value"]
     if txt:
         d["top_ranked_items"] = [r["title"] for r in o["prioritization"]["rows"][:5]]
         d["top_risks"] = [{"title": r["title"], "emv": r["emv"]} for r in o["risks"]["risks"][:4]]
@@ -340,7 +342,7 @@ def chat(track: str, message: str, history: list[dict] | None = None, step_id: s
         res.provider, res.model = p, adapter.model
         res.route = {"kind": pl["kind"], "reason": pl["reason"], "forced": pl["forced"]}
         state.audit("agent_chat", f"[{pol['mode']}] {track}/{p}: {message[:160]}")
-        study.log_ai(f"[{track} agent] {message}", p, adapter.model, "agent", res.input_tokens, res.output_tokens, True, False)
+        study.log_ai(f"[{track} agent] {message}", p, adapter.model, "agent", res.input_tokens, res.output_tokens, True, False, pl["kind"], track)
         return res
     raise AgentError(last or "Every provider failed.", 502)
 
@@ -363,12 +365,26 @@ def _loop(track: str, adapter, system: str, tools: list, question: str) -> ChatR
         results = []
         for c in turn.calls:
             out, err = _tool(track, c.name, c.args, res)
-            res.tools_used.append({"tool": c.name, "error": err})
+            res.tools_used.append({"tool": c.name, "error": err, "what": _what(c.name, c.args), "chars": len(out or "")})
             results.append((c, out, err))
         adapter.add_results(turn, results)
     res.stopped_early = True
     res.reply = "I stopped after several tool calls without a final answer. Try a narrower question."
     return res
+
+
+def _what(name: str, args: dict) -> str:
+    """A short, human-readable description of one tool call, for the 'how did it answer' panel."""
+    a = args or {}
+    if name == "run_sql":
+        return str(a.get("sql") or a.get("query") or "")[:240]
+    if name == "get_manual_step":
+        return str(a.get("step_id", ""))[:60]
+    if name == "navigate":
+        return str(a.get("tab") or a.get("href") or "")[:80]
+    if name == "propose":
+        return str(a.get("type", ""))[:40]
+    return ""
 
 
 def _tool(track: str, name: str, args: dict, res: ChatResult) -> tuple[str, bool]:

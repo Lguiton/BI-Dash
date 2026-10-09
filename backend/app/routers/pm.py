@@ -101,3 +101,26 @@ def edit_okr(oid: int, body: dict = Body(...)):
 def remove_okr(oid: int):
     pm.delete_okr(oid)
     return {"deleted": oid}
+
+
+@router.get("/time")
+def time_get():
+    return pm.time_view()
+
+
+@router.post("/time")
+def time_add(body: dict = Body(...)):
+    _g(pm.time_log, body.get("item_id"), body.get("day"), body.get("hours"), body.get("note", ""))
+    return pm.time_view()
+
+
+@router.delete("/time/{tid}")
+def time_del(tid: int):
+    _g(pm.time_delete, tid)
+    return pm.time_view()
+
+
+@router.put("/rate")
+def rate_put(body: dict = Body(...)):
+    _g(pm.set_rate, body.get("rate"))
+    return pm.time_view()

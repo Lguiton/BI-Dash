@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, Field
 
 from app.routers import ai as ai_router
-from app.services import agents, manuals
+from app.services import agent_evals, agents, manuals, quizzes
 
 router = APIRouter(tags=["agents"])
 
@@ -58,3 +58,45 @@ def chat(track: str, body: ChatIn):
         raise HTTPException(e.status, e.message) from None
     return {"reply": r.reply, "provider": r.provider, "model": r.model, "route": r.route, "proposals": r.proposals, "actions": r.actions,
             "tools_used": r.tools_used, "stopped_early": r.stopped_early, "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}
+
+
+class EvalIn(BaseModel):
+    track: str
+    mode: Literal["route", "live"] = "route"
+    provider: Literal["auto", "google", "openai", "anthropic"] = "auto"
+    confirm: bool = False
+
+
+@router.get("/api/agent-evals")
+def evals_overview():
+    return agent_evals.overview()
+
+
+@router.post("/api/agent-evals/run")
+def evals_run(body: EvalIn):
+    try:
+        return agent_evals.run(body.track, body.mode, body.provider, body.confirm)
+    except agent_evals.EvalError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/api/quizzes/{track}")
+def quiz_get(track: str):
+    try:
+        return quizzes.get(track)
+    except quizzes.QuizError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.post("/api/quizzes/{track}")
+def quiz_submit(track: str, body: dict = Body(...)):
+    try:
+        return quizzes.submit(track, body.get("answers"))
+    except quizzes.QuizError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/api/quizzes")
+def quiz_all():
+    r = quizzes._results()
+    return {"tracks": {t: {"questions": len(q), "result": r.get(t)} for t, q in quizzes.QUIZZES.items()}, "pass_pct": quizzes.PASS_PCT}

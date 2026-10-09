@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { AiChart } from "@/components/AiChart";
 import { PageShell } from "@/components/PageShell";
+import { EvalsPanel, UsagePanel } from "@/components/AiLabExtras";
+import { Tabs } from "@/components/panels/kit";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { AiAnswer, AiProviderId, AiStatus } from "@/lib/types";
 
@@ -23,6 +25,7 @@ export default function AiPage() {
   const [res, setRes] = useState<AiAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("ask");
 
   const loadStatus = (signal?: AbortSignal) =>
     getJson<AiStatus>("/api/ai/status", signal).then(setStatus)
@@ -48,8 +51,11 @@ export default function AiPage() {
   return (
     <PageShell title="AI Lab" subtitle="An agent that answers questions by writing SQL, spread across Gemini, OpenAI and Claude.">
       {error && <ErrorBanner message={error} />}
+      <Tabs label="AI Lab sections" value={tab} onChange={setTab} tabs={[{ id: "ask", label: "Ask" }, { id: "usage", label: "Usage" }, { id: "evals", label: "Agent evals" }]} />
+      {tab === "usage" && <UsagePanel />}
+      {tab === "evals" && <EvalsPanel />}
 
-      {status && (
+      {tab === "ask" && status && (
         <section className="card p-4" aria-label="Providers">
           <div className="grid gap-3 sm:grid-cols-3">
             {status.providers.map((p) => {
@@ -79,19 +85,19 @@ export default function AiPage() {
         </section>
       )}
 
-      {status?.policy && !allowed && (
+      {tab === "ask" && status?.policy && !allowed && (
         <div role="status" className="rounded-lg px-4 py-3 text-sm" style={{ background: "var(--warn-bg)" }}>
           AI is switched off for the {status.policy.workspace === "real" ? "Real" : "Practice"} workspace, so no question leaves this computer. Turn it on in <a className="underline" href="/settings">Settings</a>; &ldquo;Summaries only&rdquo; keeps row-level data private.
         </div>
       )}
-      {status?.policy && allowed && (status.policy.mode === "aggregate" || status.policy.blocked_columns.length > 0) && (
+      {tab === "ask" && status?.policy && allowed && (status.policy.mode === "aggregate" || status.policy.blocked_columns.length > 0) && (
         <p className="text-xs text-muted">
           Privacy for this workspace: {status.policy.mode === "aggregate" ? "summaries only" : "full access"}
           {status.policy.blocked_columns.length > 0 && `, hidden columns: ${status.policy.blocked_columns.join(", ")}`}.
         </p>
       )}
 
-      <section className="card space-y-3 p-5">
+      {tab === "ask" && <section className="card space-y-3 p-5">
         <label htmlFor="q" className="text-sm font-medium">Your question</label>
         <textarea id="q" className="field w-full" rows={3} maxLength={500} value={question} onChange={(e) => setQuestion(e.target.value)} />
         <div className="flex flex-wrap items-center gap-3">
@@ -115,9 +121,9 @@ export default function AiPage() {
           {EXAMPLES.map((e) => <button key={e} className="btn text-xs" onClick={() => setQuestion(e)}>{e.slice(0, 38)}…</button>)}
         </div>
         <p className="text-xs text-muted">Each question makes several API calls. Gemini&apos;s free tier is limited; paid providers cost money. Limit: 10 questions per minute. Only read-only SELECTs can run. Try asking for a chart.</p>
-      </section>
+      </section>}
 
-      {res && (
+      {tab === "ask" && res && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section className="card space-y-2 p-5">
             <h2 className="text-sm font-semibold">Answer</h2>

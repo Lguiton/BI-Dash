@@ -163,12 +163,8 @@ from pydantic import BaseModel
 
 
 def _mail_config() -> dict:
-    to = [a.strip() for a in os.environ.get("BI_REPORT_TO", "").split(",") if a.strip()]
-    host = os.environ.get("BI_SMTP_HOST", "")
-    user = os.environ.get("BI_SMTP_USER", "")
-    return {"host": host, "port": int(os.environ.get("BI_SMTP_PORT", "587") or 587), "user": user,
-            "password": os.environ.get("BI_SMTP_PASSWORD", ""), "from": os.environ.get("BI_SMTP_FROM", user),
-            "security": os.environ.get("BI_SMTP_SECURITY", "starttls").lower(), "to": to}
+    from app.services import mailer
+    return mailer.config()
 
 
 class EmailIn(BaseModel):

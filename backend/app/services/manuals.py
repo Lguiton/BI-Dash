@@ -14,7 +14,7 @@ import json
 from app.services import state
 
 VALID_TABS = {
-    "pm": {"board", "prio", "sprint", "flow", "schedule", "evm", "risk", "okr", "product"},
+    "pm": {"board", "prio", "sprint", "flow", "schedule", "evm", "risk", "okr", "product", "time"},
     "sysanalyst": {"req", "dict", "process", "calc", "feas"},
     "fullstack": {"api", "scaffold", "code", "stack"},
     "engineering": {"pipeline", "dba", "gov", "gov/catalog", "gov/pii", "gov/lineage", "gov/controls", "gov/access"},
@@ -213,7 +213,7 @@ MANUALS["pm"] = {
           ("Sprints", None, "sprint"), "A sprint has a goal and assigned items.", ["Committing to 30 points when velocity is 13."], "How much should I commit to this sprint?"),
         S("flow", "Run the work and watch flow", "Move cards across the board and watch cycle time and WIP.", ["Move items from todo to doing to done on the Board.", "Open Flow: cycle time, throughput, cumulative flow, Little's law.", "If WIP is above what Little's law expects, stop starting and start finishing."],
           ("Flow", None, "flow"), "You know your median cycle time and WIP.", ["Too many items in doing."], "Is my work in progress too high?"),
-        S("budget", "Track budget with earned value", "Planned value, earned value and actual cost tell you if you are on track.", ["Enter planned and actual cost on items.", "Open Earned value: CPI under 1 means over budget; SPI under 1 means behind.", "Read EAC for the likely final cost."],
+        S("budget", "Track budget with earned value", "Planned value, earned value and actual cost tell you if you are on track.", ["Enter planned and actual cost on items, or log your hours in the Time tab with an hourly rate: logged hours then replace the typed actual cost.", "Open Earned value: CPI under 1 means over budget; SPI under 1 means behind.", "Read EAC for the likely final cost."],
           ("Earned value", None, "evm"), "You can say whether you are over budget and behind.", ["Planned cost missing on most items."], "Explain my CPI and SPI in plain words."),
         S("risk", "Manage risks", "A risk is a possible problem: probability times impact is its expected cost.", ["Open Risks and add each risk with probability (0 to 1) and cost.", "Write a mitigation and an owner.", "Use total exposure as a starting contingency reserve."],
           ("Risks", None, "risk"), "3+ risks with owners and mitigations.", ["Risks with no owner.", "Never revisiting the register."], "What risks am I probably missing?"),

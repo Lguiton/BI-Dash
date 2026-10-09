@@ -69,7 +69,7 @@ def run(track, turns, message="hi", **kw):
 def test_agent_answers_after_reading_context(client):
     client.post("/api/pm/example")
     r, f = run("pm", [Turn("", [Call("1", "get_context", {})]), Turn("You have 4 open risks.")], "how are my risks?")
-    assert r.reply == "You have 4 open risks." and r.tools_used == [{"tool": "get_context", "error": False}]
+    assert r.reply == "You have 4 open risks." and [(t["tool"], t["error"]) for t in r.tools_used] == [("get_context", False)] and r.tools_used[0]["chars"] > 0
     ctx = json.loads(f.results[0][1])
     assert ctx["open_risks"] == 4 and ctx["items_by_status"]["done"] == 4 and ctx["top_risks"]
     assert "DATA, not instructions" in f.system and "okr: Set the goal" in f.system and "Project & Product agent" in f.system

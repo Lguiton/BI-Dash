@@ -1,0 +1,59 @@
+# The whole dashboard in two containers:   docker compose up --build      then open http://localhost:3000
+# Stop: docker compose down        Wipe the data too: docker compose down -v
+# There is no login, so both ports are bound to 127.0.0.1 (this computer only). Do not change that unless you add your own protection.
+# Your AI keys and email settings go in backend/.env (copy backend/.env.example); the file is optional and never baked into an image.
+# Optional real PostgreSQL for the practice labs:   docker compose --profile postgres up -d db
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      BI_DB_PATH: /data/bi_warehouse.duckdb
+      BI_CORS_ORIGINS: http://localhost:3000
+    env_file:
+      - path: backend/.env
+        required: false
+    ports:
+      - "127.0.0.1:8020:8020"
+    volumes:
+      - bi_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8020/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8020
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_PASSWORD: bi_practice      # practice only: never reuse this for anything real
+      POSTGRES_DB: bi
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - bi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bi"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  bi_data:
+  bi_pgdata:

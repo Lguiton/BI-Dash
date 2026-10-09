@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Activity, BarChart3, Building2, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
+import { Activity, ArrowLeftRight, BarChart3, Building2, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
 
 const MAIN = [
   { href: "/", label: "Dashboard", Icon: BarChart3 },
@@ -27,6 +27,7 @@ const LABS = [
 
 const MANAGE = [
   { href: "/sources", label: "Sources", Icon: Plug },
+  { href: "/compare", label: "Practice vs Real", Icon: ArrowLeftRight },
   { href: "/settings", label: "Settings & backups", Icon: Settings2 },
   { href: "/activity", label: "Activity log", Icon: Activity },
 ];

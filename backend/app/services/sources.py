@@ -337,6 +337,11 @@ def tick() -> int:
         backups.maybe_auto()
     except Exception:  # noqa: BLE001
         pass
+    try:
+        from app.services import jobs
+        jobs.tick()
+    except Exception:  # noqa: BLE001
+        pass
     n = 0
     for s in due():
         try:

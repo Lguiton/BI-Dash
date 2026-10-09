@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS pm_okrs (id INTEGER PRIMARY KEY AUTOINCREMENT, worksp
 CREATE TABLE IF NOT EXISTS sa_requirements (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, code TEXT, title TEXT, kind TEXT, priority TEXT, status TEXT, source TEXT, acceptance TEXT, test_ref TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS dba_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, size_bytes INTEGER, rows_total INTEGER);
 CREATE TABLE IF NOT EXISTS gov_assets (workspace TEXT, asset TEXT, owner TEXT, steward TEXT, description TEXT, classification TEXT, retention_days INTEGER, retention_column TEXT, PRIMARY KEY (workspace, asset));
+CREATE TABLE IF NOT EXISTS pm_time (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, item_id INTEGER, day TEXT, hours REAL, note TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS company_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, kind TEXT, done INTEGER, total INTEGER, pct INTEGER, data TEXT, brief TEXT);
 CREATE TABLE IF NOT EXISTS source_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER, at TEXT, ok INTEGER, rows INTEGER, message TEXT, seconds REAL);
 """
 
@@ -52,8 +54,17 @@ def conn() -> sqlite3.Connection:
             c = sqlite3.connect(key, check_same_thread=False, isolation_level=None)
             c.row_factory = sqlite3.Row
             c.executescript(SCHEMA)
+            _migrate(c)
             _conns[key] = c
         return c
+
+
+def _migrate(c: sqlite3.Connection) -> None:
+    """Additive upgrades for state files made by older versions."""
+    have = {r[1] for r in c.execute("PRAGMA table_info(ai_log)").fetchall()}
+    for col in ("tier", "track"):
+        if col not in have:
+            c.execute(f"ALTER TABLE ai_log ADD COLUMN {col} TEXT")
 
 
 def close_all() -> None:

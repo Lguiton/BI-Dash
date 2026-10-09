@@ -39,6 +39,12 @@ def status():
     return {**llm_router.status(), "policy": ai_policy.describe()}
 
 
+@router.get("/usage")
+def usage(days: int = 14):
+    from app.services import usage as usage_svc
+    return usage_svc.summary(days)
+
+
 @router.post("/ask")
 def ask(body: AskIn):
     pol = ai_policy.describe()
@@ -55,7 +61,7 @@ def ask(body: AskIn):
     except AiError as e:
         raise HTTPException(e.status, str(e))
     state.audit("ai_ask", f"[{pol['mode']}] {r.provider}: {body.question[:200]}")
-    study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None)
+    study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None, (r.route or {}).get("kind", ""), "")
     return {"answer": r.answer, "model": r.model, "provider": r.provider, "stopped_early": r.stopped_early, "chart": r.chart,
             "route": getattr(r, "route", None), "attempts": r.attempts,
             "steps": [{"tool": s.tool, "input": s.input, "output": s.output, "is_error": s.is_error} for s in r.steps],

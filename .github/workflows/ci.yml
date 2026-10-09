@@ -5,6 +5,13 @@ on:
     branches: [main, master]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
     name: Backend tests
@@ -13,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.txt }
-      - run: pip install -r backend/requirements.txt pytest httpx duckdb
+      - run: pip install -r backend/requirements.txt pytest httpx duckdb pyyaml
       - name: Generate sample data (if not committed)
         run: test -f data_samples/operations_clean.csv || python scripts/generate_sample_data.py
       - name: Run backend tests
@@ -68,5 +75,38 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
+      - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run build
+
+  backend-py314:
+    name: Backend tests (Python 3.14, experimental)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.14-dev" }
+      - run: pip install -r backend/requirements.txt pytest httpx duckdb pyyaml
+      - run: test -f data_samples/operations_clean.csv || python scripts/generate_sample_data.py
+      - working-directory: backend
+        run: python -m pytest -q
+        env: { BI_OFFLINE: "1" }
+
+  docker:
+    name: Docker build and smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+      - name: Start backend and check /health
+        run: |
+          docker compose up -d backend
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:8020/health && exit 0
+            sleep 2
+          done
+          docker compose logs backend
+          exit 1
+      - if: always()
+        run: docker compose down -v

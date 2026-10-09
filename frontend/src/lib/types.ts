@@ -438,12 +438,12 @@ export interface FsCodebase { languages: { language: string; files: number; line
 export interface FsStack { python: string; platform: string; packages: Record<string, string | null>; tools_on_path: Record<string, boolean>; facts: { area: string; value: string; note: string }[]; reading: string }
 
 // ---- Company engagement ----
-export interface CoDeliverable { id: string; discipline: string; title: string; why: string; href: string; auto: boolean; detected: boolean; manual: boolean; done: boolean; detail: string }
+export interface CoDeliverable { id: string; discipline: string; title: string; why: string; href: string; auto: boolean; detected: boolean; manual: boolean; done: boolean; detail: string; note: string; due: string; overdue: boolean; due_soon: boolean }
 export interface CoOverview {
   workspace: WorkspaceName; brief: { company: string; goal: string; notes: string };
   phases: { id: string; name: string; about: string; done: number; total: number; deliverables: CoDeliverable[] }[];
   disciplines: { id: string; name: string; does: string; total: number; done: number; learning_done: number; learning_total: number; href: string }[];
-  done: number; total: number; pct: number; next: CoDeliverable | null; note: string;
+  done: number; total: number; pct: number; next: CoDeliverable | null; note: string; overdue: number; due_soon: number;
 }
 
 // ---- Manuals and discipline agents ----
@@ -455,4 +455,50 @@ export interface AgentInfo {
 }
 export interface AgentProposal { type: string; data: Record<string, unknown>; reason: string }
 export interface AgentAction { tab?: string; href?: string; label: string }
-export interface AgentMsg { role: "user" | "agent"; content: string; proposals?: AgentProposal[]; actions?: AgentAction[]; meta?: string; error?: boolean }
+export interface AgentMsg { role: "user" | "agent"; content: string; proposals?: AgentProposal[]; actions?: AgentAction[]; meta?: string; error?: boolean; trace?: AgentTrace }
+
+// ---- Update 12: usage, evals, company extras, alerts, drill, time, compare, quizzes, search ----
+export interface AiUsage {
+  days: number; total_questions: number; total_tokens: number; total_cost_usd: number | null; cost_note: string; caps_note: string;
+  today: { provider: AiProviderId; label: string; configured: boolean; used: number; limit: number; pct: number; model: string }[];
+  daily: ({ day: string; total: number; tokens: number } & Record<AiProviderId, number>)[];
+  matrix: Record<"simple" | "medium" | "complex", Record<AiProviderId, number>>;
+  by_track: Record<string, number>;
+  tokens: Record<AiProviderId, { input: number; output: number; cost_usd: number | null }>;
+  recent: { created_at: string; question: string; provider: string; model: string; tier: string; track: string | null; tin: number; tout: number }[];
+}
+export interface EvalCheck { name: string; ok: boolean; detail: string }
+export interface EvalRun {
+  at: string; track: string; mode: "route" | "live"; models: string[]; passed: number; total: number; pct: number;
+  results: { id: string; ask: string; expected_tier: string; ok: boolean; reply: string; provider: string; model: string; seconds: number | null; checks: EvalCheck[] }[];
+}
+export interface EvalOverview { tracks: { track: string; name: string; cases: { id: string; ask: string; tier: string }[] }[]; runs: EvalRun[]; max_live_cases: number; note: string }
+export interface CoSnapshot { id?: number; at: string; kind: string; done: number; total: number; pct: number; brief: string; ai: boolean; provider?: string; model?: string }
+export interface AlertItem { id: string; level: "red" | "warn"; title: string; detail: string; href: string }
+export interface AlertStatus {
+  config: { enabled: boolean; email: boolean; stale_days: number; backup_days: number; cooldown_hours: number }; email_ready: boolean;
+  options: { cooldown_hours: number[] }; alerts: AlertItem[]; red: number; emailed: string[]; email_problem: string | null; checked_at: string;
+}
+export interface DrillEntry {
+  at: string; backup: string; ok: boolean; seconds: number; steps: { name: string; ok: boolean; detail: string }[]; backup_age_hours: number;
+  records_since_backup: number | null; reading: string; recovery_point: string;
+}
+export interface PmTime {
+  rate: number; total_hours: number; unassigned_hours: number; cost: number | null; feeds_earned_value: boolean; note: string;
+  entries: { id: number; item_id: number | null; item_title: string; day: string; hours: number; note: string }[];
+  by_item: { item_id: number; title: string; status: string; hours: number; cost: number | null; planned_cost: number | null; over_plan: boolean }[];
+  weeks: { week: string; hours: number }[];
+}
+export interface CompareData {
+  active: WorkspaceName; exists: Record<WorkspaceName, boolean>; real_has_data: boolean; note: string; kpi_note: string; errors: Record<string, string>;
+  metrics: { key: string; label: string; unit: string; practice: number | string | null; real: number | string | null; delta: { abs: number; pct: number | null } | null }[];
+  tables: { table: string; practice: number | null; real: number | null }[];
+  schema_differences: { table: string; only_practice: string[]; only_real: string[] }[];
+  top_entities: Record<WorkspaceName, { name: string; revenue: number }[]>;
+  kpis: { name: string; label: string; target: number; direction: string; practice: { value: number | null; status: string; unit: string } | null; real: { value: number | null; status: string; unit: string } | null }[];
+}
+export interface QuizData { track: string; pass_pct: number; result: QuizResult | null; questions: { id: number; step: string; step_title: string; q: string; options: string[] }[] }
+export interface QuizResult { best_pct: number; last_pct: number; attempts: number; passed: boolean; last_at: string; missed_steps: string[] }
+export interface QuizGraded { score: number; total: number; pct: number; passed_now: boolean; result: QuizResult; graded: { id: number; ok: boolean; picked: number; correct: number; why: string; step: string }[]; review: string[] }
+export interface SearchHit { kind: string; title: string; sub: string; href: string }
+export interface AgentTrace { route: { kind: string; reason: string; forced: boolean } | null; model: string; provider: string; tools: { tool: string; error: boolean; what: string; chars: number }[]; tokens_in: number; tokens_out: number }

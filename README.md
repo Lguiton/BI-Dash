@@ -98,6 +98,17 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/export/{operations\|facts\|entities\|dates}?format=csv\|tsv\|json\|xml\|xlsx\|parquet` | downloads |
 | `GET /api/report?format=xlsx\|pdf` | report of the filtered view |
 | `GET/POST /api/kpis`, `DELETE /api/kpis/{id}`, `GET /api/kpis/metrics` | KPI builder |
+| `GET /api/search?q=` | Ctrl+K command palette: manual steps, deliverables, tracks |
+| `GET /api/ai/usage` | AI calls per provider and tier; cost only if `BI_PRICE_*` is set |
+| `GET /api/agent-evals`, `POST /api/agent-evals/run` | re-runnable agent checks (route free, live opt-in) |
+| `GET/POST /api/quizzes/{track}` | checkpoint quiz per manual |
+| `GET /api/company/export?format=xlsx\|pdf` | export the Company plan |
+| `GET/POST /api/company/snapshots`, `POST .../snapshots/ai-brief` | weekly progress snapshots and an agent-written brief |
+| `PUT /api/company/deliverables/{id}/meta` | notes and due date on a deliverable |
+| `GET /api/alerts`, `PUT /api/alerts/config`, `POST /api/alerts/check`, `POST /api/alerts/test-email` | email alerts for real data |
+| `GET/POST /api/dba/drill` | backup restore drill |
+| `GET/POST/DELETE /api/pm/time` | time tracker feeding earned value |
+| `GET /api/compare` | Practice vs Real side by side (read only) |
 | `GET /api/quality` | data-quality checks |
 | `GET /api/scd/state`, `/compare`, `POST /api/scd/change`, `/reset` | slowly changing dimension sandbox |
 | `GET /api/python/notebooks[/{file}]`, `GET /api/apache/tools` | notebook and Apache examples |
@@ -126,6 +137,9 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/ingest/template` | CSV template |
 
 All analytics endpoints accept `date_from, date_to, entity_id, category, status`. Interactive docs at `/docs`.
+
+## Docker (optional)
+`docker compose up --build` starts the backend on 127.0.0.1:8020 and the frontend on 127.0.0.1:3000, with data in the `bi_data` volume and keys read from `backend/.env`. `docker compose --profile postgres up` also starts the practice Postgres on 127.0.0.1:5433. The files are checked by tests and CI builds them, but they are only as verified as your own first run.
 
 ## Tests
 ```

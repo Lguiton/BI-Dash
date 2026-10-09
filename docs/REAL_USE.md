@@ -49,3 +49,6 @@ Settings → Backups. A backup is a copy of the database file taken in a few mil
 
 ## Limits
 Up to 1,000,000 rows and 300 columns per table, 50 MB per upload. There is no multi-user access control, no row-level security, and no encryption of the files on disk (use disk encryption if the machine could be lost).
+
+## Alerts and comparison
+Alerts check your Real data (late data, quality failures, KPI breaches) and can email you through the SMTP settings. Compare shows Practice and Real side by side and only reads.

@@ -5,6 +5,7 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson, putJson } from "@/lib/api";
 import { useChartColors } from "@/lib/useChartColors";
 import type { DbaBench, DbaHealth, GovAccess, GovCatalog, GovControls, GovLineage, GovPii } from "@/lib/types";
+import { DrillSection } from "./OpsPanels";
 import { Badge, Field, Section, Stat, Table, Tabs, bytes, errMsg, num } from "./kit";
 
 const tone = (l: string) => (l === "high" || l === "critical" ? "bad" : l === "medium" || l === "warn" || l === "warning" ? "warn" : "muted");
@@ -46,6 +47,7 @@ export function DbaPanel() {
       <Section title="Findings (what to do next)">
         {h.findings.length === 0 ? <p className="text-sm text-muted">Nothing to flag.</p> : <ul className="space-y-2 text-sm">{h.findings.map((f, i) => <li key={i}><Badge tone={tone(f.level)}>{f.level}</Badge> {f.text} <span className="text-muted">→ {f.action}</span></li>)}</ul>}
       </Section>
+      <DrillSection onDone={load} />
       <Section title="Integrity checks">
         <Table head={["Check", "Result", "Detail", "Fix"]} rows={h.integrity.map((i) => [i.name, <Badge key="r" tone={i.ok ? "ok" : "bad"}>{i.ok ? "pass" : "fail"}</Badge>, i.detail, i.fix ?? ""])} />
       </Section>

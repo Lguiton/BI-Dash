@@ -25,3 +25,6 @@ Vocabulary: **RPO** (recovery point objective: how much data you can afford to l
 * **Access and egress**: the last 30 days of activity from the audit log, with exports, emailed reports and AI questions called out as the ways data leaves this computer.
 
 Vocabulary: **data owner vs steward**, **data catalog**, **data classification**, **PII** (personally identifiable information), **data minimisation**, **retention and purge**, **lineage**, **data contract**, **least privilege**, **audit trail**. Frameworks you will meet at work: GDPR, CCPA/CPRA, HIPAA (health), SOX (financial reporting), PCI DSS (cards). This project does not make you compliant with any of them; it gives you the vocabulary and the controls to practise.
+
+## Restore drill
+The drill restores the latest backup into a temporary copy, compares row counts and reports pass or fail. It never touches the live workspace.

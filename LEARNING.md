@@ -87,3 +87,9 @@ Typical flow: **Airflow** schedules the pipeline, **Spark** transforms, **Supers
 - Ranking (ranked bar, Pareto): the most accurate to read; Pareto shows how concentrated the total is.
 - Distribution (histogram, box plot): shape, spread and outliers. Try profit by category, then ask why Fleet has so many high outliers.
 - Relationships (bubble): cost vs revenue vs size. Try the same chart with different filters.
+
+## Update 12 practice ideas
+- Press Ctrl+K and jump straight to a manual step. Notice the search is over your own plan, not the web.
+- Log a few hours on the PM Time tab, then watch Earned value use hours x rate instead of the planned cost.
+- Run the DBA restore drill: a backup you have never restored is a hope, not a backup.
+- Take a manual quiz, then run Agent evals before and after changing a model or routing rule.

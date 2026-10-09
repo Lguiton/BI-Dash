@@ -20,3 +20,6 @@ That is eight disciplines, each its own field. **Company** (top of the dashboard
 ## Using it
 Fill in the brief (company, goal, notes), then follow **Next up**. Each deliverable links to the dashboard where it is done.
 Every discipline card shows deliverables done and learning-path steps done, so you can see both the job and your own skill growth.
+
+## Notes, due dates, snapshots and export
+Deliverables take a note and a due date. Snapshots record weekly progress; the AI brief is a draft you should check against the numbers. Export the plan to Excel or PDF from the Company page.

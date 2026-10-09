@@ -52,3 +52,6 @@ Entities stand in for accounts or users and each record is one unit of activity.
 
 ## Habits worth building
 Write the problem before the solution (a one-page PRD: who, what pain, how you will know it worked). Slice work so every item finishes inside a sprint. Re-estimate rarely, re-prioritise often. Review the numbers in a retro, not to blame but to pick one thing to change.
+
+## Time tracker
+Log hours per work item on the Time tab. Earned value uses logged hours x rate for actual cost when hours exist; otherwise it uses the planned cost.

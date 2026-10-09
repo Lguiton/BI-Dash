@@ -22,3 +22,6 @@ Put at least one key in `backend/.env` (see `.env.example`), restart the backend
 
 ## Honest limits
 The agent plumbing is covered by tests that use a scripted fake model (no network, no cost). Real model quality depends on the provider you use, so verify its numbers (SQL Lab) and treat its drafts as drafts.
+
+## Transparency, usage, evals and quizzes
+Every agent reply can show its trace (tools used, what each returned, sizes). The AI Lab Usage tab counts calls per provider and tier; cost appears only if you set `BI_PRICE_<PROVIDER>_IN` / `_OUT`. Agent evals: the route check is free; a live check makes up to 6 real calls and tests structure only, so it cannot tell you an answer is good. Each manual has a checkpoint quiz. Replies render safe markdown; daily caps reset when the backend restarts.

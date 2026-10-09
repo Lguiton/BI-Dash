@@ -455,16 +455,113 @@ def earned_value(items: list[dict], as_of: date) -> dict:
             unscheduled += 1
         if i["status"] == "done":
             ev += i["planned_cost"]            # the 0/100 rule: work earns its value only when finished
-    ac = sum(i["actual_cost"] or 0 for i in items)
+    tm, rate = _time_by_item(), get_rate()
+    from_time = 0
+
+    def eff(i):
+        nonlocal from_time
+        h = tm.get(i["id"])
+        if rate and h:
+            from_time += 1
+            return h * rate
+        return i["actual_cost"] or 0
+    ac = sum(eff(i) for i in items)
     cpi = ev / ac if ac else None
     spi = ev / pv if pv else None
     eac = bac / cpi if cpi else None
     return {"available": True, "as_of": as_of.isoformat(), "bac": _r(bac), "pv": _r(pv), "ev": _r(ev), "ac": _r(ac), "cpi": _r(cpi, 3), "spi": _r(spi, 3),
             "cv": _r(ev - ac), "sv": _r(ev - pv), "eac": _r(eac), "etc": _r(eac - ac) if eac is not None else None, "vac": _r(bac - eac) if eac is not None else None,
-            "tcpi": _r((bac - ev) / (bac - ac), 3) if bac != ac else None, "unscheduled_items": unscheduled,
+            "tcpi": _r((bac - ev) / (bac - ac), 3) if bac != ac else None, "unscheduled_items": unscheduled, "items_costed_from_time": from_time,
             "reading": ("No cost or progress data yet." if cpi is None or spi is None else
                         f"{'Under' if cpi >= 1 else 'Over'} budget (CPI {cpi:.2f}) and {'ahead of' if spi >= 1 else 'behind'} schedule (SPI {spi:.2f})."),
             "rule": "Earned value uses the 0/100 rule: an item counts only when it is done."}
+
+
+# ------------------------------------------------------------------ time tracking
+def get_rate() -> float:
+    try:
+        return float(state.setting_get(_ws(), "pm_rate", 0) or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def set_rate(rate) -> dict:
+    try:
+        v = float(rate)
+    except (TypeError, ValueError):
+        raise PmError("The hourly rate must be a number.") from None
+    if not 0 <= v <= 10000:
+        raise PmError("The hourly rate must be between 0 and 10,000 dollars.")
+    state.setting_set(_ws(), "pm_rate", round(v, 2))
+    state.audit("pm_rate", f"${v:,.2f}/h")
+    return {"rate": round(v, 2)}
+
+
+def _time_by_item() -> dict[int, float]:
+    return {r["item_id"]: r["h"] for r in state.rows("SELECT item_id, SUM(hours) AS h FROM pm_time WHERE workspace = ? AND item_id IS NOT NULL GROUP BY item_id", (_ws(),))}
+
+
+def time_log(item_id, day: str | None, hours, note: str = "") -> dict:
+    try:
+        h = float(hours)
+    except (TypeError, ValueError):
+        raise PmError("Hours must be a number.") from None
+    if not 0 < h <= 24:
+        raise PmError("Log between 0 and 24 hours per entry.")
+    d = _d(day) if day else today()
+    if d is None:
+        raise PmError("Use a date like 2026-10-09.")
+    if d > today():
+        raise PmError("You can't log time in the future.")
+    if (today() - d).days > 366:
+        raise PmError("That date is more than a year ago.")
+    iid = None
+    if item_id not in (None, ""):
+        try:
+            iid = int(item_id)
+        except (TypeError, ValueError):
+            raise PmError("Pick an item from the list.") from None
+        get_item(iid)
+    cur = state.run("INSERT INTO pm_time (workspace, item_id, day, hours, note, created_at) VALUES (?,?,?,?,?,?)",
+                    (_ws(), iid, d.isoformat(), round(h, 2), str(note or "")[:200].strip(), state.now()))
+    state.audit("pm_time", f"{h:g}h on {d.isoformat()}")
+    return state.one("SELECT * FROM pm_time WHERE id = ?", (cur.lastrowid,))
+
+
+def time_delete(tid: int) -> None:
+    if not state.one("SELECT id FROM pm_time WHERE id = ? AND workspace = ?", (tid, _ws())):
+        raise PmError("No such time entry.", 404)
+    state.run("DELETE FROM pm_time WHERE id = ? AND workspace = ?", (tid, _ws()))
+
+
+def time_view() -> dict:
+    rate = get_rate()
+    items = {i["id"]: i for i in list_items()}
+    entries = state.rows("SELECT * FROM pm_time WHERE workspace = ? ORDER BY day DESC, id DESC LIMIT 300", (_ws(),))
+    per = _time_by_item()
+    by_item = []
+    for iid, h in sorted(per.items(), key=lambda kv: -kv[1]):
+        it = items.get(iid)
+        if not it:
+            continue
+        cost = h * rate if rate else None
+        by_item.append({"item_id": iid, "title": it["title"], "status": it["status"], "hours": _r(h), "cost": _r(cost) if cost is not None else None,
+                        "planned_cost": it["planned_cost"], "over_plan": bool(cost is not None and it["planned_cost"] and cost > it["planned_cost"])})
+    weeks: dict[str, float] = {}
+    for e in state.rows("SELECT day, hours FROM pm_time WHERE workspace = ?", (_ws(),)):
+        dd = _d(e["day"])
+        if dd:
+            monday = (dd - timedelta(days=dd.weekday())).isoformat()
+            weeks[monday] = weeks.get(monday, 0) + e["hours"]
+    total = sum(e["hours"] for e in state.rows("SELECT hours FROM pm_time WHERE workspace = ?", (_ws(),)))
+    unassigned = sum(e["hours"] for e in state.rows("SELECT hours FROM pm_time WHERE workspace = ? AND item_id IS NULL", (_ws(),)))
+    for e in entries:
+        e["item_title"] = items[e["item_id"]]["title"] if e["item_id"] in items else ("" if e["item_id"] is None else "(deleted item)")
+    return {"rate": rate, "entries": entries, "total_hours": _r(total), "unassigned_hours": _r(unassigned), "cost": _r(total * rate) if rate else None,
+            "by_item": by_item, "weeks": [{"week": k, "hours": _r(v)} for k, v in sorted(weeks.items())[-12:]],
+            "feeds_earned_value": bool(rate and per),
+            "note": ("Hours on an item replace the typed actual cost in earned value (hours x rate). Unassigned hours are tracked but not charged to any item."
+                     if rate else "Set an hourly rate and logged hours will drive earned value: actual cost = hours x rate.")}
 
 
 def risk_view(risks: list[dict]) -> dict:

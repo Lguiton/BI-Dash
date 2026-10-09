@@ -4,9 +4,10 @@ import { Bot, Search, Send } from "lucide-react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ApiError, getJson, postJson, putJson } from "@/lib/api";
 import type { AgentAction, AgentInfo, AgentMsg, AgentProposal } from "@/lib/types";
+import { Markdown } from "@/components/Markdown";
 import { Badge, errMsg } from "./kit";
 
-interface ChatResp { reply: string; provider: string; model: string; route: { kind: string } | null; proposals: AgentProposal[]; actions: AgentAction[]; tools_used: { tool: string }[]; stopped_early: boolean }
+interface ChatResp { reply: string; provider: string; model: string; route: { kind: string; reason: string; forced: boolean } | null; proposals: AgentProposal[]; actions: AgentAction[]; tools_used: { tool: string; error: boolean; what: string; chars: number }[]; stopped_early: boolean; usage: { input_tokens: number; output_tokens: number } }
 
 const DIRECT_EXAMPLES: Record<string, string[]> = {
   pm: ["Draft 5 backlog items for a customer-reporting feature", "Add the top 3 risks you see in my plan", "Which item should I do first?", "Take me to the schedule tab"],
@@ -34,7 +35,8 @@ export function useAgentChat(track: string) {
     try {
       const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null });
       const used = r.tools_used.length ? ` · used ${r.tools_used.map((x) => x.tool).join(", ")}` : "";
-      setMessages((m) => [...m, { role: "agent", content: r.reply, proposals: r.proposals, actions: r.actions, meta: `${r.route?.kind ? `${r.route.kind} → ` : ""}${r.provider}${used}` }]);
+      setMessages((m) => [...m, { role: "agent", content: r.reply, proposals: r.proposals, actions: r.actions, meta: `${r.route?.kind ? `${r.route.kind} → ` : ""}${r.provider}${used}`,
+        trace: { route: r.route, model: r.model, provider: r.provider, tools: r.tools_used, tokens_in: r.usage?.input_tokens ?? 0, tokens_out: r.usage?.output_tokens ?? 0 } }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "agent", content: e instanceof ApiError ? e.message : "The agent couldn't answer.", error: true }]);
     } finally { setBusy(false); }
@@ -65,6 +67,28 @@ async function applyProposal(p: AgentProposal): Promise<string> {
   }
   await postJson(ENDPOINT[p.type], p.data); return "Added.";
 }
+const TIER_NAME: Record<string, string> = { google: "Gemini", openai: "OpenAI", anthropic: "Claude" };
+
+/** "How it answered": which model, why that tier, what it read, what it cost in tokens. Nothing hidden. */
+function Trace({ t }: { t: NonNullable<AgentMsg["trace"]> }) {
+  return (
+    <details className="mt-2 text-xs text-muted">
+      <summary className="cursor-pointer select-none">How it answered</summary>
+      <div className="mt-1 space-y-1">
+        <p><b>Model:</b> {TIER_NAME[t.provider] ?? t.provider} ({t.model || "unknown"}). <b>Why:</b> {t.route ? (t.route.forced ? "you chose it" : `a ${t.route.kind} question (${t.route.reason})`) : "n/a"}.</p>
+        <p><b>Tokens:</b> {t.tokens_in.toLocaleString()} in, {t.tokens_out.toLocaleString()} out.</p>
+        {t.tools.length === 0 ? <p>It answered without reading your data or the manual.</p> : (
+          <ol className="list-decimal space-y-0.5 pl-5">
+            {t.tools.map((x, i) => (
+              <li key={i}><code>{x.tool}</code>{x.error ? " (failed)" : ""}{x.what ? <>: <code className="break-all">{x.what}</code></> : ""} <span>({x.chars.toLocaleString()} characters read)</span></li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function Proposal({ p }: { p: AgentProposal }) {
   const [state, setState] = useState<{ s: "idle" | "busy" | "ok" | "err"; msg?: string }>({ s: "idle" });
   const title = String(p.data.title ?? p.data.name ?? p.data.kr ?? p.type);
@@ -119,9 +143,12 @@ export function AgentPanel({ track, chat, onAction }: { track: string; chat: Ret
         {chat.messages.map((m, i) => (
           <div key={i} className={`max-w-full rounded-lg p-3 text-sm ${m.role === "user" ? "ml-8 bg-panel2" : m.error ? "border border-red-500/40" : "border border-line"}`}>
             <div className="mb-1 text-xs text-muted">{m.role === "user" ? "You" : info.name}{m.meta ? ` · ${m.meta}` : ""}</div>
-            <div className="whitespace-pre-wrap break-words">{m.content}</div>
+            {m.role === "agent" && !m.error
+              ? <Markdown text={m.content} onTab={(tab, label) => onAction({ tab, label })} />
+              : <div className="whitespace-pre-wrap break-words">{m.content}</div>}
             {m.actions?.map((a, j) => <button key={j} className="btn mt-2 mr-2 text-xs" onClick={() => onAction(a)}>{a.label}</button>)}
             {m.proposals?.map((p, j) => <Proposal key={j} p={p} />)}
+            {m.trace && <Trace t={m.trace} />}
           </div>
         ))}
         {chat.busy && <p className="text-sm text-muted">Thinking…</p>}

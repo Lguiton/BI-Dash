@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import cors_origins
-from app.routers import ai, analytics, apache, charts, data as data_router, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks, workspaces as workspaces_router, sources as sources_router, backups as backups_router, audit as audit_router, pm as pm_router, sysanalyst as sa_router, dba as dba_router, fullstack as fs_router, company as company_router, agents as agents_router
+from app.routers import ai, analytics, apache, charts, data as data_router, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks, workspaces as workspaces_router, sources as sources_router, backups as backups_router, audit as audit_router, pm as pm_router, sysanalyst as sa_router, dba as dba_router, fullstack as fs_router, company as company_router, agents as agents_router, alerts as alerts_router, compare as compare_router, search as search_router
 from app.services import sources, state, workspaces
 from app.services.db import close_connection
 
@@ -59,6 +59,9 @@ app.include_router(dba_router.router)
 app.include_router(fs_router.router)
 app.include_router(company_router.router)
 app.include_router(agents_router.router)
+app.include_router(alerts_router.router)
+app.include_router(compare_router.router)
+app.include_router(search_router.router)
 
 
 @app.get("/health")

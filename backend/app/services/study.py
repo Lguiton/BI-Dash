@@ -48,9 +48,9 @@ def ml_runs(limit: int = 12) -> list[dict]:
 
 
 # ---- AI question log ----
-def log_ai(question: str, provider: str, model: str, kind: str, tin: int, tout: int, ok: bool, charted: bool) -> None:
-    state.run("INSERT INTO ai_log (created_at, question, provider, model, kind, input_tokens, output_tokens, ok, charted, workspace) VALUES (?,?,?,?,?,?,?,?,?,?)",
-              (state.now(), question[:500], provider, model, kind, tin, tout, 1 if ok else 0, 1 if charted else 0, _ws()))
+def log_ai(question: str, provider: str, model: str, kind: str, tin: int, tout: int, ok: bool, charted: bool, tier: str = "", track: str = "") -> None:
+    state.run("INSERT INTO ai_log (created_at, question, provider, model, kind, input_tokens, output_tokens, ok, charted, workspace, tier, track) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+              (state.now(), question[:500], provider, model, kind, tin, tout, 1 if ok else 0, 1 if charted else 0, _ws(), tier or None, track or None))
     state.run("DELETE FROM ai_log WHERE id NOT IN (SELECT id FROM ai_log ORDER BY id DESC LIMIT 2000)")
 
 

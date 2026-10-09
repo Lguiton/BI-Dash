@@ -3,18 +3,20 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, putJson } from "@/lib/api";
 import type { Manual, ManualStep } from "@/lib/types";
+import { QuizSection } from "./OpsPanels";
 import { errMsg } from "./kit";
 
-export function ManualPanel({ track, onGo, onAsk }: { track: string; onGo: (tool: NonNullable<ManualStep["tool"]>) => void; onAsk: (s: ManualStep) => void }) {
+export function ManualPanel({ track, focus, onGo, onAsk }: { track: string; focus?: string; onGo: (tool: NonNullable<ManualStep["tool"]>) => void; onAsk: (s: ManualStep) => void }) {
   const [m, setM] = useState<Manual | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
     const ctl = new AbortController();
-    getJson<Manual>(`/api/manuals/${track}`, ctl.signal).then((r) => { setM(r); setOpen(r.steps.find((s) => !r.done.includes(s.id))?.id ?? r.steps[0].id); })
+    getJson<Manual>(`/api/manuals/${track}`, ctl.signal).then((r) => { setM(r); setOpen(focus && r.steps.some((s) => s.id === focus) ? focus : r.steps.find((s) => !r.done.includes(s.id))?.id ?? r.steps[0].id); })
       .catch((e) => { if (!ctl.signal.aborted) setErr(errMsg(e, "Couldn't load the manual.")); });
     return () => ctl.abort();
-  }, [track]);
+  }, [track, focus]);
+  useEffect(() => { if (open) document.getElementById(`step-${open}`)?.scrollIntoView?.({ block: "nearest" }); }, [open]);
   if (err) return <ErrorBanner message={err} />;
   if (!m) return <p className="text-sm text-muted">Loading the manual…</p>;
   const tick = async (s: ManualStep, done: boolean) => {
@@ -41,7 +43,7 @@ export function ManualPanel({ track, onGo, onAsk }: { track: string; onGo: (tool
         {m.steps.map((s, i) => {
           const isDone = m.done.includes(s.id), isOpen = open === s.id;
           return (
-            <li key={s.id} className="card min-w-0">
+            <li key={s.id} id={`step-${s.id}`} className="card min-w-0">
               <div className="flex items-start gap-3 p-4">
                 <input type="checkbox" className="mt-1" checked={isDone} aria-label={`Step ${i + 1} done: ${s.title}`} onChange={(e) => tick(s, e.target.checked)} />
                 <button className="min-w-0 flex-1 text-left" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : s.id)}>
@@ -68,6 +70,7 @@ export function ManualPanel({ track, onGo, onAsk }: { track: string; onGo: (tool
           );
         })}
       </ol>
+      <QuizSection track={track} onReview={(sid) => { setOpen(sid); }} />
     </div>
   );
 }
