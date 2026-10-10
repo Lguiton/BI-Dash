@@ -56,12 +56,13 @@ def ask(body: AskIn):
         raise HTTPException(503, "No AI provider is ready. Put GOOGLE_API_KEY, OPENAI_API_KEY and/or ANTHROPIC_API_KEY in "
                                  "backend/.env, install the SDKs (pip install -r requirements.txt) and restart the backend.")
     _check_rate()
+    t0 = time.perf_counter()
     try:
         r = llm_router.ask(body.question, body.provider, body.effort)
     except AiError as e:
         raise HTTPException(e.status, str(e))
     state.audit("ai_ask", f"[{pol['mode']}] {r.provider}: {body.question[:200]}")
-    study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None, (r.route or {}).get("kind", ""), "")
+    study.log_ai(body.question, r.provider, r.model, (r.route or {}).get("kind", ""), r.input_tokens, r.output_tokens, True, r.chart is not None, (r.route or {}).get("kind", ""), "", round(time.perf_counter() - t0, 2))
     return {"answer": r.answer, "model": r.model, "provider": r.provider, "stopped_early": r.stopped_early, "chart": r.chart,
             "route": getattr(r, "route", None), "attempts": r.attempts,
             "steps": [{"tool": s.tool, "input": s.input, "output": s.output, "is_error": s.is_error} for s in r.steps],

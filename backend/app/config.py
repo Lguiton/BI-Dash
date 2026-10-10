@@ -36,6 +36,10 @@ def backups_dir() -> Path:
     return Path(os.environ.get("BI_BACKUP_DIR", db_path().parent / "backups"))
 
 
+def models_dir() -> Path:
+    return Path(os.environ.get("BI_MODELS_DIR", db_path().parent / "models"))
+
+
 def source_dirs() -> list[Path]:
     """Folders the file connector may read. The inbox is always allowed; add more with BI_SOURCE_DIRS (separated by ':' or ';')."""
     inbox = Path(os.environ.get("BI_INBOX_DIR", db_path().parent / "inbox"))

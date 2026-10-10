@@ -13,6 +13,10 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { KpiCard } from "@/components/KpiCard";
 import { CommandPalette, SearchButton } from "@/components/CommandPalette";
 import { NavBar } from "@/components/NavBar";
+import { WebDock } from "@/components/WebDock";
+import { SetupChecklist } from "@/components/SetupChecklist";
+import { ViewsBar, type Layout } from "@/components/ViewsBar";
+import { WeeklyCard } from "@/components/WeeklyCard";
 import { RecordsPanel } from "@/components/RecordsPanel";
 import { CompanyCard } from "@/components/CompanyCard";
 import { AlertsCard } from "@/components/panels/OpsPanels";
@@ -28,6 +32,21 @@ import {
   type ScatterData, type Summary, type TrendPoint,
 } from "@/lib/types";
 
+const SECTIONS = [
+  { id: "setup", label: "Getting started" },
+  { id: "alerts", label: "Alerts" },
+  { id: "weekly", label: "What changed this week" },
+  { id: "company", label: "Company plan" },
+  { id: "study", label: "Study progress" },
+  { id: "upload", label: "Upload data" },
+  { id: "dataset", label: "Dataset card" },
+  { id: "metrics", label: "Key metrics" },
+  { id: "charts", label: "Trend, entity and insights" },
+  { id: "more", label: "Scatter and heatmap" },
+  { id: "entities", label: "Entity table" },
+  { id: "records", label: "Records" },
+];
+
 export default function Dashboard() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [meta, setMeta] = useState<Meta | null>(null);
@@ -39,6 +58,7 @@ export default function Dashboard() {
   const [showForecast, setShowForecast] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [layout, setLayout] = useState<Layout>({ hidden: [], order: [] });
   const refresh = useCallback(() => setRefreshKey((n) => n + 1), []);
   const requestKey = `${filterQuery(filters)}|${refreshKey}`;
 
@@ -92,6 +112,13 @@ export default function Dashboard() {
   const d = summary?.deltas;
   const empty = summary != null && summary.record_count === 0;
 
+  // Sections can be hidden and re-ordered by a saved view. CSS `order` does the re-ordering without remounting anything.
+  const sec = (id: string, node: React.ReactNode) => {
+    if (layout.hidden.includes(id)) return null;
+    const i = layout.order.indexOf(id);
+    return <div key={id} style={{ order: i === -1 ? SECTIONS.findIndex((x) => x.id === id) + 100 : i }}>{node}</div>;
+  };
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -120,15 +147,7 @@ export default function Dashboard() {
 
       <ReportButtons filters={filters} />
 
-      <AlertsCard />
-
-      <CompanyCard />
-
-      <StudyWidget />
-
-      <UploadPanel onLoaded={() => { setFilters(EMPTY_FILTERS); refresh(); }} />
-
-      <DatasetCard refreshKey={refreshKey} />
+      <ViewsBar filters={filters} setFilters={setFilters} sections={SECTIONS} layout={layout} setLayout={setLayout} />
 
       <Filters meta={meta} filters={filters} onChange={setFilters} />
 
@@ -144,7 +163,15 @@ export default function Dashboard() {
         </div>
       )}
 
-      <section aria-label="Key metrics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-col gap-6">
+      {sec("setup", <SetupChecklist refreshKey={refreshKey} />)}
+      {sec("alerts", <AlertsCard />)}
+      {sec("weekly", <WeeklyCard refreshKey={refreshKey} />)}
+      {sec("company", <CompanyCard />)}
+      {sec("study", <StudyWidget />)}
+      {sec("upload", <UploadPanel onLoaded={() => { setFilters(EMPTY_FILTERS); refresh(); }} />)}
+      {sec("dataset", <DatasetCard refreshKey={refreshKey} />)}
+      {sec("metrics", <section aria-label="Key metrics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard label="Revenue" icon={<DollarSign className="h-4 w-4 text-[var(--c-revenue)]" />} loading={loading}
                  value={money(summary?.total_revenue)} caption={summary ? `Cost ${money(summary.total_cost)}` : ""}
                  delta={d?.total_revenue} spark={spark.revenue} sparkColor="var(--c-revenue)" />
@@ -158,9 +185,9 @@ export default function Dashboard() {
                  value={num(summary?.total_units)}
                  caption={summary?.rev_per_unit != null ? `${money(summary.rev_per_unit)} revenue / unit` : ""}
                  delta={d?.total_units} spark={spark.units} sparkColor="var(--muted)" />
-      </section>
+      </section>)}
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {sec("charts", <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <div className="card p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -188,9 +215,9 @@ export default function Dashboard() {
           <ChartGallery filters={filters} refreshKey={refreshKey} />
         </div>
         <InsightsPanel insights={insights} loading={loading} />
-      </section>
+      </section>)}
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-2" aria-label="More views">
+      {sec("more", <section className="grid grid-cols-1 gap-6 lg:grid-cols-2" aria-label="More views">
         <div className="card p-5">
           <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide">Cost vs revenue per record</h2>
           <p className="mb-3 text-xs text-muted">Each dot is one record. Dots far from the rest of their category are worth a look.</p>
@@ -201,11 +228,13 @@ export default function Dashboard() {
           <p className="mb-3 text-xs text-muted">Which entities earn more on which days.</p>
           <HeatmapView data={data?.heatmap ?? null} />
         </div>
-      </section>
+      </section>)}
 
-      <EntityTable rows={entities} selectedId={filters.entity_id} onSelect={(id) => setFilters({ ...filters, entity_id: id })} />
+      {sec("entities", <EntityTable rows={entities} selectedId={filters.entity_id} onSelect={(id) => setFilters({ ...filters, entity_id: id })} />)}
 
-      <RecordsPanel filters={filters} refreshKey={refreshKey} />
+      {sec("records", <RecordsPanel filters={filters} refreshKey={refreshKey} />)}
+      </div>
+      <WebDock />
     </div>
   );
 }

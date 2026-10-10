@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Bar, BarChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { MlExtras } from "@/components/MlExtras";
 import { PageShell } from "@/components/PageShell";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { MlOptions, MlResult } from "@/lib/types";
@@ -206,6 +207,7 @@ export default function MlPage() {
           )}
         </section>
       </div>
+      <MlExtras cfg={{ task, model, features, testFraction: testPct / 100, balance, threshold }} />
     </PageShell>
   );
 }

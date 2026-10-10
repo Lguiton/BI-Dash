@@ -3,6 +3,7 @@
 import { CheckCircle2, Lightbulb, Play, Eye, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DataFilesPanel } from "@/components/DataFilesPanel";
+import { NotebookButton } from "@/components/NotebookButton";
 import { PageShell } from "@/components/PageShell";
 import { SavedQueries } from "@/components/SavedQueries";
 import { ResultTable } from "@/components/ResultTable";
@@ -184,6 +185,7 @@ export default function SqlLab() {
                   <CheckCircle2 className="h-4 w-4" aria-hidden /> Check answer
                 </button>
               )}
+              <NotebookButton kind="sql" body={() => ({ sql, title: "SQL Lab query" })} disabled={!sql.trim()} />
               <span className="text-xs text-muted">Ctrl/⌘ + Enter to {mode === "exercises" ? "check" : "run"}</span>
             </div>
           </section>

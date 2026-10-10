@@ -38,4 +38,14 @@ def tick() -> list[str]:
             ran.append("alerts")
     except Exception:  # noqa: BLE001
         pass
+    try:
+        from app.services import weekly
+        ran += weekly.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import pipelines
+        ran += pipelines.tick()
+    except Exception:  # noqa: BLE001
+        pass
     return ran

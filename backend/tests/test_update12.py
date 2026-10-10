@@ -209,7 +209,7 @@ def test_company_exports_open_as_real_files(client):
     wb = load_workbook(io.BytesIO(x.content))
     assert wb.sheetnames == ["Summary", "Deliverables", "Disciplines", "Snapshots"]
     rows = list(wb["Deliverables"].iter_rows(values_only=True))
-    assert len(rows) == 23 and any(r[3] == "OVERDUE" for r in rows[1:])
+    assert len(rows) == 29 and any(r[3] == "OVERDUE" for r in rows[1:])
     p = client.get("/api/company/export?format=pdf")
     assert p.content[:4] == b"%PDF" and p.headers["content-type"] == "application/pdf"
     assert client.get("/api/company/export?format=doc").status_code == 400
@@ -257,7 +257,8 @@ def test_alerts_see_red_kpis_and_missing_backup(client):
     ids = {a["id"].split(":")[0] for a in alerts.current()}
     assert "kpi" in ids and "backup" in ids
     s = client.get("/api/alerts").json()
-    assert s["red"] >= 2 and s["config"]["enabled"] is False and s["email_ready"] in (True, False)
+    assert s["red"] >= 1 and s["config"]["enabled"] is False and s["email_ready"] in (True, False)
+    assert next(a for a in s["alerts"] if a["id"] == "backup:none")["level"] == "warn"   # Practice: reminder only
 
 
 def test_alert_config_validates_and_email_needs_smtp(client, monkeypatch):

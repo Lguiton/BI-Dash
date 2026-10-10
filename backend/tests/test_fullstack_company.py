@@ -53,7 +53,7 @@ def test_codebase_and_stack(client):
 def test_company_plan_detects_progress_from_data(client):
     d = client.get("/api/company").json()
     assert [p["id"] for p in d["phases"]] == ["discover", "design", "build", "operate"]
-    assert len(d["disciplines"]) == 8 and d["total"] == sum(p["total"] for p in d["phases"]) 
+    assert len(d["disciplines"]) == 11 and d["total"] == sum(p["total"] for p in d["phases"]) 
     # a healthy fresh database already passes its integrity checks; nothing else can be done yet
     assert [i["id"] for p in d["phases"] for i in p["deliverables"] if i["done"]] == ["dba-health"]
     assert d["next"]["id"] == "req-capture"

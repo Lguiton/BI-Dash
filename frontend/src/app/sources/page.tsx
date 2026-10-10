@@ -7,7 +7,7 @@ import { ApiError, deleteJson, getJson, patchJson, postJson } from "@/lib/api";
 import { num } from "@/lib/format";
 import type { DataSource, InboxFiles, SourceKind, SourcePreview, SourceRun } from "@/lib/types";
 
-const KIND_LABEL: Record<SourceKind, string> = { file: "File in a folder", url: "Web link (CSV / JSON)", sql: "Database query" };
+const KIND_LABEL: Record<SourceKind, string> = { file: "File in a folder", url: "Web link (CSV / JSON)", sql: "Database query", html_table: "Table on a web page" };
 const EVERY = [[0, "Only when I click"], [15, "Every 15 minutes"], [60, "Every hour"], [360, "Every 6 hours"], [1440, "Every day"]] as const;
 
 export default function SourcesPage() {
@@ -84,6 +84,7 @@ function NewSource({ files, onSaved }: { files: InboxFiles | null; onSaved: () =
   const [name, setName] = useState("");
   const [path, setPath] = useState("");
   const [url, setUrl] = useState("");
+  const [tableNo, setTableNo] = useState(0);
   const [authEnv, setAuthEnv] = useState("");
   const [driver, setDriver] = useState<"postgres" | "sqlite">("postgres");
   const [dsnEnv, setDsnEnv] = useState("");
@@ -96,7 +97,7 @@ function NewSource({ files, onSaved }: { files: InboxFiles | null; onSaved: () =
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const config = () => kind === "file" ? { path } : kind === "url" ? { url, auth_env: authEnv || null } : driver === "postgres" ? { driver, dsn_env: dsnEnv, query } : { driver, path, query };
+  const config = () => kind === "file" ? { path } : kind === "html_table" ? { url, table: tableNo } : kind === "url" ? { url, auth_env: authEnv || null } : driver === "postgres" ? { driver, dsn_env: dsnEnv, query } : { driver, path, query };
   const fail = (e: unknown) => setErr(e instanceof ApiError ? e.message : "Failed.");
 
   async function test() {
@@ -129,6 +130,10 @@ function NewSource({ files, onSaved }: { files: InboxFiles | null; onSaved: () =
           <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">Link<input className="field" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/export.csv" /></label>
           <label className="flex flex-col gap-1 text-xs text-muted">Token variable (optional)<input className="field" value={authEnv} onChange={(e) => setAuthEnv(e.target.value.toUpperCase())} placeholder="MY_API_TOKEN" /></label>
         </>)}
+        {kind === "html_table" && (<>
+          <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">Page link (https, public sites only)<input className="field" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/prices" /></label>
+          <label className="flex flex-col gap-1 text-xs text-muted">Table number (0 = first)<input className="field" type="number" min={0} value={tableNo} onChange={(e) => setTableNo(Math.max(0, Number(e.target.value) || 0))} /></label>
+        </>)}
         {kind === "sql" && (<>
           <label className="flex flex-col gap-1 text-xs text-muted">Database
             <select className="field" value={driver} onChange={(e) => setDriver(e.target.value as "postgres" | "sqlite")}><option value="postgres">Postgres</option><option value="sqlite">SQLite file</option></select></label>
@@ -139,7 +144,8 @@ function NewSource({ files, onSaved }: { files: InboxFiles | null; onSaved: () =
             <textarea className="field font-mono" rows={3} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="SELECT order_date, amount FROM orders" /></label>
         </>)}
       </div>
-      {kind !== "file" && <p className="text-xs text-muted">Passwords and tokens are never typed here. Put them in <code>backend/.env</code> (for example <code>PG_URL=postgresql://user:pw@host/db</code>) and enter only the variable name.</p>}
+      {kind === "html_table" && <p className="text-xs text-muted">Reads one table from a public page. Pages that build their tables with JavaScript, redirect, or sit on private addresses are refused. Respect each site&apos;s terms of use.</p>}
+      {kind !== "file" && kind !== "html_table" && <p className="text-xs text-muted">Passwords and tokens are never typed here. Put them in <code>backend/.env</code> (for example <code>PG_URL=postgresql://user:pw@host/db</code>) and enter only the variable name.</p>}
       {kind === "file" && <p className="text-xs text-muted">Folders the app may read: {files?.folders.join(", ") ?? "…"}. Drop files in the first one; add more with <code>BI_SOURCE_DIRS</code>.</p>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-xs text-muted">Load into

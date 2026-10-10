@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
+import { PacksCard } from "@/components/DataExtras";
 import { ImportPanel } from "@/components/data/ImportPanel";
 import { TableExplorer } from "@/components/data/TableExplorer";
 import { ApiError, getJson } from "@/lib/api";
@@ -25,6 +26,7 @@ export default function DataPage() {
     <PageShell title="My data" subtitle="Bring in any spreadsheet or export, look at it, chart it. Nothing leaves this computer.">
       {error && <ErrorBanner message={error} onRetry={() => load()} />}
       <ImportPanel onLoaded={() => load()} />
+      <PacksCard onLoaded={() => load()} />
       <section aria-label="Your tables" className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your tables</h2>
         {tables && tables.length === 0 && <p className="card p-5 text-sm text-muted">Nothing here yet. Import a file above and it shows up as a table you can chart.</p>}

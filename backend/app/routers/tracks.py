@@ -262,6 +262,96 @@ TRACKS = [
         "files": ["docs/FULL_STACK_DEVELOPMENT.md", "backend/app/main.py", "backend/app/routers/pm.py", "backend/app/services/pm.py",
                   "backend/tests/conftest.py", "frontend/src/lib/api.ts", "frontend/src/components/panels/PmPanel.tsx"],
     },
+    {
+        "id": "security", "name": "Cybersecurity",
+        "role": "Protect your own systems: find weaknesses, read the logs, respond to incidents. Defence and learning, on things you own.",
+        "summary": "Security work is mostly habits: keep secrets out of git, check what you expose, read logs for patterns, "
+                   "store passwords as hashes, and have a written plan for when something goes wrong. The tools here only look at "
+                   "your own app and public sites; offensive tools (exploits, scanners against other people) are explained, not built.",
+        "tools": [
+            {"name": "Self-audit (built in)", "install": "Open the Cybersecurity dashboard, tab Self-audit. Checks .env, permissions, secrets in files, CORS and backups."},
+            {"name": "Log analysis (built in)", "install": "Paste or upload a web or auth log in the Logs tab. Detections are leads to check, not verdicts."},
+            {"name": "Web header and TLS checks (built in)", "install": "Public hosts only. Private addresses are refused on purpose."},
+            {"name": "Hashing, password and 2FA labs (built in)", "install": "Crypto tab: SHA-256 and verify, password strength, a TOTP authenticator lab."},
+            {"name": "pip-audit and Dependabot", "install": "pip install pip-audit, then pip-audit -r backend/requirements.txt. Turn on Dependabot alerts in GitHub."},
+            {"name": "Wireshark, Nmap, Burp, Metasploit, Kali", "install": "Not embedded. Learn them in a lab you own (a VM, or a deliberately vulnerable app); never point them at systems you don't have written permission to test."},
+        ],
+        "path": [
+            file("docs/CYBERSECURITY.md", "Vocabulary, the CIA triad, and the limits of these tools."),
+            page("Investigate a log file", "/logs", "Load the practice log and read each detection with its evidence."),
+            page("Read the activity log", "/activity", "What the app recorded: the raw material for investigations."),
+            page("Check configuration and backups", "/settings", "A tested backup is your best ransomware defence."),
+            file("backend/app/services/seclogs.py", "How log lines become detections: brute force, probing, injection patterns."),
+            file("backend/app/services/security.py", "Hashing, password strength and TOTP in plain code."),
+            file("backend/app/services/selfaudit.py", "The checks behind the self-audit, and what each one means."),
+        ],
+        "projects": [
+            "Run the self-audit, fix every red item, and run it again.",
+            "Paste the sample auth log, find the brute-force attempt, and write the incident report.",
+            "Check the security headers of your own public site and list the three that matter most.",
+            "Write an incident playbook for 'laptop lost' and run it as a tabletop exercise.",
+        ],
+        "files": ["docs/CYBERSECURITY.md", "backend/app/services/seclogs.py", "backend/app/services/security.py", "backend/app/services/selfaudit.py", "backend/tests/test_update13.py"],
+    },
+    {
+        "id": "network", "name": "Network Engineer",
+        "role": "Design, build and fix the paths data takes between machines.",
+        "summary": "Network work is addressing, segmentation and disciplined fault-finding. Learn to subnet in your head, read a config for mistakes, "
+                   "recognise what traffic looks like, and walk the layers from the cable up. The tools here run on text you paste and on public hosts; "
+                   "they don't touch your network, and scanners are explained, not built.",
+        "tools": [
+            {"name": "Subnet and VLSM planner (built in)", "install": "Open the Network dashboard, tab Subnet and VLSM. Subnet, split, plan, check overlaps, summarise routes."},
+            {"name": "Config review (built in)", "install": "Paste a router or switch config in the Config review tab. Pattern checks, not a CIS audit."},
+            {"name": "Packet capture reader (built in)", "install": "Paste tcpdump -nn text in the Packet capture tab. It reads text; it never captures."},
+            {"name": "DNS and TCP reachability (built in)", "install": "Public hosts only, one port at a time, 12 checks a minute."},
+            {"name": "Wireshark and tcpdump", "install": "Wireshark is free (wireshark.org). Capture only on networks you own."},
+            {"name": "Cisco Packet Tracer, GNS3, EVE-NG", "install": "Not embedded. Free virtual labs for routing, VLANs and trunking."},
+            {"name": "iperf3, Nmap, Zabbix, Nagios, Ansible, pfSense", "install": "Not embedded. Run them in a lab you own; never scan networks you don't have written permission to test."},
+        ],
+        "path": [
+            file("docs/NETWORK_ENGINEERING.md", "The five ideas, what is built in, and what isn't."),
+            page("Watch your own app's traffic", "/ops", "Request counts and timings for this app: a first taste of monitoring."),
+            file("backend/app/services/netlab.py", "Subnetting, config checks and capture parsing in plain Python."),
+            page("Read the activity log", "/activity", "A timeline of what changed: the habit behind change management."),
+            file("backend/app/routers/net.py", "The endpoints behind the Network tools, with the rate limit on outbound checks."),
+        ],
+        "projects": [
+            "Plan a small office in one /22: 60 staff, 20 guest Wi-Fi, 10 servers and two point-to-point links. Check for overlaps.",
+            "Paste the sample switch config, fix every high finding, and explain each in one sentence.",
+            "Read the sample capture and decide: scan, monitoring or a broken client? List the next two things you'd check.",
+            "Write a one-page troubleshooting runbook for 'the internet is down' that walks the layers.",
+        ],
+        "files": ["docs/NETWORK_ENGINEERING.md", "backend/app/services/netlab.py", "backend/app/routers/net.py", "backend/tests/test_network_it.py"],
+    },
+    {
+        "id": "itsupport", "name": "IT Specialist",
+        "role": "Keep people productive: fix the problem, protect the data, know what you own, write it down.",
+        "summary": "IT support is method more than magic: ask what changed, check the cheap causes first, change one thing at a time and confirm the fix. "
+                   "The trackers here are personal-scale versions of a helpdesk and an asset system, and the readers work on exports you paste.",
+        "tools": [
+            {"name": "Helpdesk tickets with SLA clocks (built in)", "install": "Open the IT dashboard, tab Helpdesk. Each category has a first-line checklist."},
+            {"name": "Asset inventory (built in)", "install": "Inventory tab: owner, serial, warranty, status. Flags warranties ending within 90 days."},
+            {"name": "Windows event log reader (built in)", "install": "Export from Event Viewer as CSV, or paste lines with Event IDs. Findings are leads."},
+            {"name": "Checklists, capacity and RAID calculators (built in)", "install": "Onboarding, offboarding, new PC and outage checklists; disk-full forecast; availability; RAID."},
+            {"name": "PowerShell, Bash, Active Directory, Group Policy", "install": "The cheat sheet tab lists safe starting commands. Practise Active Directory in a Windows Server evaluation VM."},
+            {"name": "osTicket, GLPI, Snipe-IT, Zabbix", "install": "Not embedded. Free open-source helpdesk, asset and monitoring systems to try in a VM."},
+            {"name": "Intune, Entra ID, Microsoft 365 admin", "install": "Not embedded: cloud services are out of scope here."},
+        ],
+        "path": [
+            file("docs/IT_SPECIALIST.md", "The habits that matter, what is built in, and what isn't."),
+            page("Check settings and backups", "/settings", "A tested backup is the best fix for most disasters."),
+            file("backend/app/services/itlab.py", "Ticket SLA clocks, the event-ID table and the calculators in plain code."),
+            page("Read the activity log", "/activity", "An audit trail: who changed what and when."),
+            file("backend/app/routers/it.py", "The endpoints behind the IT tools."),
+        ],
+        "projects": [
+            "Log five realistic tickets, work each checklist, resolve them, and read the mean time to resolve.",
+            "Enter your own devices in the inventory and list the warranties that end this year.",
+            "Paste the sample event log, rank the findings, and write what you'd do first.",
+            "Write your own onboarding and offboarding checklist for a five-person business and run both once.",
+        ],
+        "files": ["docs/IT_SPECIALIST.md", "backend/app/services/itlab.py", "backend/app/routers/it.py", "backend/tests/test_network_it.py"],
+    },
 ]
 
 def _slug(text: str) -> str:

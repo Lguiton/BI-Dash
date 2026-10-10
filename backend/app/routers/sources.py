@@ -23,6 +23,20 @@ class TestBody(BaseModel):
     config: dict
 
 
+class WebBody(BaseModel):
+    url: str
+
+
+@router.post("/web-tables")
+def web_tables(body: WebBody):
+    """List the tables found on a public https page, so you can pick the table number."""
+    from app.services import webtable
+    try:
+        return webtable.preview(body.url)
+    except webtable.WebTableError as e:
+        raise HTTPException(e.status, e.message) from e
+
+
 class PatchBody(BaseModel):
     name: str | None = None
     enabled: bool | None = None

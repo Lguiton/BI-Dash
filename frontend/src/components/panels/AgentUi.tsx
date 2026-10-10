@@ -17,6 +17,9 @@ const DIRECT_EXAMPLES: Record<string, string[]> = {
   scientist: ["Is my weekend result real?", "What confounders could explain it?", "Which test fits two groups with unequal spread?"],
   ml: ["What baseline should I beat?", "Compare my last runs", "Why is my train score better than test?"],
   ai: ["Which privacy mode fits my real data?", "Why did this question go to that model?", "Write an eval for my data agent"],
+  security: ["What should I fix first in my self-audit?", "I committed an API key. What now?", "Take me to the logs tab"],
+  network: ["How many hosts fit in a /27?", "Ping to an IP works but the name fails. What next?", "Take me to the subnet tab"],
+  itsupport: ["A user says the printer is broken. Where do I start?", "Is RAID a backup?", "Take me to the helpdesk tab"],
   fullstack: ["Review the SQL safety of a generated router", "What should I test for a POST endpoint?", "Take me to the scaffold tab"],
 };
 

@@ -2,6 +2,7 @@
 import { Download, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { ExportEverything } from "@/components/DataExtras";
 import { PageShell } from "@/components/PageShell";
 import { AlertsSettings } from "@/components/panels/OpsPanels";
 import { API_BASE, ApiError, deleteJson, getJson, postJson, putJson } from "@/lib/api";
@@ -29,6 +30,7 @@ export default function SettingsPage() {
       {ws?.workspaces.map((w) => <WorkspaceCard key={w.name} w={w} onSaved={() => load()} />)}
       {ws && <Backups workspace={ws.active} />}
       {ws && <AlertsSettings key={ws.active} />}
+      <ExportEverything />
       <section className="card space-y-2 p-5 text-sm text-muted" aria-label="About privacy">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-fg">What these settings do and don&apos;t do</h2>
         <p>The AI settings are guardrails, not a vault. They stop the assistant from reading what you blocked through its normal tools, and they stop accidents. Anything it is allowed to see is sent to the provider you chose (Gemini, OpenAI or Claude). For data you can&apos;t share at all, keep AI off.</p>

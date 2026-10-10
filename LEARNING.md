@@ -93,3 +93,26 @@ Typical flow: **Airflow** schedules the pipeline, **Spark** transforms, **Supers
 - Log a few hours on the PM Time tab, then watch Earned value use hours x rate instead of the planned cost.
 - Run the DBA restore drill: a backup you have never restored is a hope, not a backup.
 - Take a manual quiz, then run Agent evals before and after changing a model or routing rule.
+
+## Update 13 practice ideas
+- Compare all models on revenue, then star the two closest and open the run comparison. Is the gap bigger than the 0.02 tie rule?
+- Register a model, promote it to production, then press Check drift. Which input moved the most, and would you retrain?
+- Import a table, open it in the Dataset hub, add three quality rules, then break one on purpose and watch the alert appear.
+- Build a workflow: filter, group, sort. Read the SQL and the pandas and say which you would rather maintain.
+- Chain two tasks in Pipelines with a retry, then make the first fail and read why the second was skipped.
+- Cybersecurity: load the practice log, find the takeover, open an incident and work the checklist. Then run the self-audit on your own setup.
+- Type a three-step process into the Diagram studio, then add a decision with a loop back.
+- In the Tool map, pick a tool from a job ad and read what we cover, what we don't, and why.
+
+
+## Update 14 practice ideas
+- Load the retail pack, ask SQL Lab for revenue by store and weekday, then send the query to a notebook and plot it with pandas.
+- Load the SaaS pack and compute monthly churn and MRR by plan; save a dashboard view for it.
+- Open a KPI's lineage, then add a quality rule on the column it reads and watch the lineage update.
+- Register a model, run the drift check on 7, 14 and 30 days, and read the history chart: what changed first?
+- Compare the weekly "what changed" paragraph with your own reading of the numbers. What did the rules miss?
+
+## Network and IT practice ideas
+* Network: subnet a /24 into five VLSM blocks, paste the sample router config into the review tab and fix each finding, then read the sample capture and explain the handshake.
+* IT: log five tickets, work each checklist, then run the sample event log and write what you would do first.
+See docs/NETWORK_ENGINEERING.md and docs/IT_SPECIALIST.md.

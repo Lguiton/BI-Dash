@@ -35,6 +35,22 @@ CREATE TABLE IF NOT EXISTS dba_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, 
 CREATE TABLE IF NOT EXISTS gov_assets (workspace TEXT, asset TEXT, owner TEXT, steward TEXT, description TEXT, classification TEXT, retention_days INTEGER, retention_column TEXT, PRIMARY KEY (workspace, asset));
 CREATE TABLE IF NOT EXISTS pm_time (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, item_id INTEGER, day TEXT, hours REAL, note TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS company_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, kind TEXT, done INTEGER, total INTEGER, pct INTEGER, data TEXT, brief TEXT);
+CREATE TABLE IF NOT EXISTS pm_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, trigger TEXT, days INTEGER, action TEXT, value TEXT, enabled INTEGER DEFAULT 1, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dataset_notes (workspace TEXT, table_name TEXT, note TEXT, tags TEXT, updated_at TEXT, PRIMARY KEY (workspace, table_name));
+CREATE TABLE IF NOT EXISTS workflows (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, steps TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS dq_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, table_name TEXT, kind TEXT, params TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dq_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, table_name TEXT, total INTEGER, failed INTEGER, detail TEXT, trigger TEXT);
+CREATE TABLE IF NOT EXISTS pipelines (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, tasks TEXT, every_minutes INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, created_at TEXT, last_run_at TEXT, last_ok INTEGER);
+CREATE TABLE IF NOT EXISTS pipeline_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, pipeline_id INTEGER, workspace TEXT, at TEXT, ok INTEGER, seconds REAL, trigger TEXT, detail TEXT);
+CREATE TABLE IF NOT EXISTS models (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, version INTEGER, stage TEXT, task TEXT, kind TEXT, model TEXT,
+    features TEXT, params TEXT, metrics TEXT, baseline TEXT, train_stats TEXT, note TEXT, created_at TEXT, file TEXT);
+CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, severity TEXT, status TEXT, detected_at TEXT,
+    resolved_at TEXT, timeline TEXT, checklist TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS it_tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, priority TEXT, status TEXT, requester TEXT,
+    opened_at TEXT, resolved_at TEXT, timeline TEXT, checklist TEXT);
+CREATE TABLE IF NOT EXISTS it_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, hostname TEXT, kind TEXT, os TEXT, owner TEXT, serial TEXT, purchased TEXT,
+    warranty_end TEXT, status TEXT, notes TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS drift_history (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, model TEXT, version INTEGER, overall TEXT, worst_feature TEXT, worst_psi REAL, recent_rows INTEGER, detail TEXT);
 CREATE TABLE IF NOT EXISTS source_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER, at TEXT, ok INTEGER, rows INTEGER, message TEXT, seconds REAL);
 """
 
@@ -65,6 +81,13 @@ def _migrate(c: sqlite3.Connection) -> None:
     for col in ("tier", "track"):
         if col not in have:
             c.execute(f"ALTER TABLE ai_log ADD COLUMN {col} TEXT")
+    if "seconds" not in have:
+        c.execute("ALTER TABLE ai_log ADD COLUMN seconds REAL")
+    have = {r[1] for r in c.execute("PRAGMA table_info(ml_runs)").fetchall()}
+    for col, typ in (("note", "TEXT"), ("starred", "INTEGER DEFAULT 0"), ("params", "TEXT"), ("metrics", "TEXT"),
+                     ("cv_mean", "REAL"), ("seconds", "REAL"), ("batch", "TEXT")):
+        if col not in have:
+            c.execute(f"ALTER TABLE ml_runs ADD COLUMN {col} {typ}")
 
 
 def close_all() -> None:

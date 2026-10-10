@@ -15,6 +15,7 @@ reads is sent to the AI provider you configured.
 from __future__ import annotations
 
 import json
+import time
 import re
 from dataclasses import dataclass, field
 
@@ -45,6 +46,12 @@ AGENTS = {
     "sysanalyst": {"name": "Systems Analyst agent", "focus": "testable requirements, data and process models, sizing, cost-benefit and feasibility",
                    "knows": "A good requirement is one testable statement. Keep utilisation under about 80%. NPV discounts future benefits. TELOS = technical, economic, legal, operational, schedule.",
                    "propose": ["requirement"]},
+    "security": {"name": "Cybersecurity agent", "focus": "hardening your own setup, log investigation, passwords and 2FA, and incident response",
+                 "knows": "Detections are leads, not verdicts. Rotate any leaked key; deleting a commit is not enough. A hash is not encryption. Defensive help only: no exploits, no scanning other people's systems.", "propose": []},
+    "network": {"name": "Network Engineer agent", "focus": "addressing and subnetting, VLSM plans, config review, reading traffic, and layered troubleshooting",
+                "knows": "A /N IPv4 subnet has 2^(32-N) addresses, 2 fewer usable. If an IP works but a name doesn't, it's DNS. Change one thing at a time. Defensive help only: no scanning networks the user doesn't own.", "propose": []},
+    "itsupport": {"name": "IT Specialist agent", "focus": "helpdesk method, asset tracking, event logs, onboarding and offboarding, capacity and backups",
+                  "knows": "Ask what changed first. Disable a leaver's account before deleting. RAID is not a backup. Treat log findings as leads. Tell the user to test commands before running them on production.", "propose": []},
     "fullstack": {"name": "Full Stack agent", "focus": "API design, SQL safety, scaffolds, tests, UI states and release checks",
                   "knows": "Bind SQL values with ? placeholders. 422 means the body failed validation. Each feature needs a happy-path and a failing-path test.", "propose": []},
 }
@@ -117,7 +124,7 @@ def context(track: str) -> dict:
     done = manuals._all_done().get(track, [])
     out["manual_steps_ticked"] = f"{len(done)}/{len(manuals.MANUALS[track]['steps'])}"
     builder = {"pm": _ctx_pm, "sysanalyst": _ctx_sa, "engineering": _ctx_eng, "fullstack": _ctx_fs, "analyst": _ctx_data, "scientist": _ctx_data,
-               "ml": _ctx_ml, "ai": _ctx_ai}[track]
+               "ml": _ctx_ml, "ai": _ctx_ai, "security": _ctx_sec, "network": _ctx_net, "itsupport": _ctx_it}[track]
     out.update(_safe(lambda: builder(txt), {"note": "context unavailable"}) or {})
     return out
 
@@ -175,6 +182,31 @@ def _ctx_fs(txt: bool) -> dict:
     s = fullstack.stack()
     return {"python": s["python"], "tests": c["tests"], "route_functions": c["route_functions"], "test_to_python_ratio": c["test_to_python_ratio"],
             "largest_files": c["largest"][:3] if txt else len(c["largest"]), "config_facts": [{f["area"]: f["value"]} for f in s["facts"] if f["area"] != "AI keys present (names only)"]}
+
+
+def _ctx_sec(txt: bool) -> dict:
+    from app.services import security, selfaudit
+    a = selfaudit.run()
+    inc = security.incidents()
+    d = {"audit_score_pct": a["score"]["pct"], "audit_fails": a["fails"], "audit_warnings": a["warns"], "open_incidents": inc["stats"]["open"]}
+    if txt:
+        d["audit_items_to_fix"] = [i["title"] for i in a["items"] if i["status"] in ("fail", "warn")][:8]
+    return d
+
+
+def _ctx_net(txt: bool) -> dict:
+    return {"note": "The network tools run on text the user pastes, so there is no stored network data to read.",
+            "tools": ["subnet and VLSM", "config review", "packet capture reader", "DNS and reachability", "calculators", "reference"]}
+
+
+def _ctx_it(txt: bool) -> dict:
+    from app.services import itlab
+    t, a = itlab.tickets(), itlab.assets()
+    d = {"open_tickets": t["stats"]["open"], "tickets_past_sla": t["stats"]["breached_open"], "assets": a["stats"]["total"],
+         "warranties_expiring": a["stats"]["warranty_expiring"], "warranties_expired": a["stats"]["warranty_expired"]}
+    if txt:
+        d["open_ticket_titles"] = [x["title"] for x in t["tickets"] if x["is_open"]][:8]
+    return d
 
 
 def _ctx_data(txt: bool) -> dict:
@@ -334,6 +366,7 @@ def chat(track: str, message: str, history: list[dict] | None = None, step_id: s
             last = f"{providers.INFO[p]['label']} SDK isn't installed."
             continue
         llm_router._count(p)
+        t0 = time.perf_counter()
         try:
             res = _loop(track, adapter, system, tools, question)
         except AiError as e:
@@ -342,7 +375,7 @@ def chat(track: str, message: str, history: list[dict] | None = None, step_id: s
         res.provider, res.model = p, adapter.model
         res.route = {"kind": pl["kind"], "reason": pl["reason"], "forced": pl["forced"]}
         state.audit("agent_chat", f"[{pol['mode']}] {track}/{p}: {message[:160]}")
-        study.log_ai(f"[{track} agent] {message}", p, adapter.model, "agent", res.input_tokens, res.output_tokens, True, False, pl["kind"], track)
+        study.log_ai(f"[{track} agent] {message}", p, adapter.model, "agent", res.input_tokens, res.output_tokens, True, False, pl["kind"], track, round(time.perf_counter() - t0, 2))
         return res
     raise AgentError(last or "Every provider failed.", 502)
 

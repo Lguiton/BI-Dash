@@ -6,11 +6,13 @@ import { deleteJson, getJson, patchJson, postJson } from "@/lib/api";
 import { useChartColors } from "@/lib/useChartColors";
 import type { PmOverview, PmProduct } from "@/lib/types";
 import { TimePanel } from "./OpsPanels";
+import { CalendarTab, RulesTab } from "./PmExtras";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg, num, useIsPractice, usd } from "./kit";
 
 const TABS = [
   { id: "board", label: "Board" }, { id: "prio", label: "Prioritisation" }, { id: "sprint", label: "Sprints" }, { id: "flow", label: "Flow" },
   { id: "schedule", label: "Schedule" }, { id: "evm", label: "Earned value" }, { id: "risk", label: "Risks" }, { id: "okr", label: "OKRs" }, { id: "product", label: "Product analytics" }, { id: "time", label: "Time" },
+  { id: "calendar", label: "Calendar" }, { id: "rules", label: "Automations" },
 ];
 
 export function PmPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
@@ -47,6 +49,8 @@ export function PmPanel({ tab, onTab }: { tab: string; onTab: (t: string) => voi
       {tab === "okr" && <Okrs d={d} act={act} />}
       {tab === "product" && <Product />}
       {tab === "time" && <TimePanel items={d.items} onChanged={load} />}
+      {tab === "calendar" && <CalendarTab />}
+      {tab === "rules" && <RulesTab onChanged={load} />}
     </div>
   );
 }

@@ -8,7 +8,7 @@ from app.services import agents, manuals, providers
 from app.services.providers import Call, Turn
 
 APP = Path(__file__).resolve().parents[2] / "frontend" / "src" / "app"
-IDS = ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack"]
+IDS = ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport"]
 
 
 def test_every_track_has_a_manual_and_an_agent():

@@ -344,7 +344,7 @@ export interface TableHistogram { column: string; n: number; bins: { start: numb
 export interface TableBox { column: string; by: string | null; boxes: { name: string; mn: number; q1: number; med: number; q3: number; mx: number; mean: number; n: number }[] }
 export interface TableScatter { x: string; y: string; n: number; shown: number; correlation: number | null; points: { x: number; y: number }[] }
 
-export type SourceKind = "file" | "url" | "sql";
+export type SourceKind = "file" | "url" | "sql" | "html_table";
 export interface DataSource {
   id: number; workspace: WorkspaceName; name: string; kind: SourceKind; config: Record<string, string | null>; target: string;
   interval_minutes: number; enabled: boolean; last_run_at: string | null; last_status: "ok" | "error" | null; last_message: string | null;

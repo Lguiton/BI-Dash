@@ -3,7 +3,7 @@ import csv
 
 def test_dataset_overview_has_five_careers(client):
     d = client.get("/api/dataset").json()
-    assert d["rows"] > 0 and [c["id"] for c in d["careers"]] == ["analyst", "scientist", "ml", "engineering", "pm", "sysanalyst", "fullstack", "ai"]
+    assert d["rows"] > 0 and [c["id"] for c in d["careers"]] == ["analyst", "scientist", "ml", "engineering", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport", "ai"]
     by = {c["id"]: c for c in d["careers"]}
     assert by["analyst"]["ready"] is True
     assert by["ml"]["ready"] is False        # 6 demo rows are too few for the ML Lab

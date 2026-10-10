@@ -3,6 +3,7 @@
 Kinds
   file  a CSV/Excel/JSON file in an allowed folder (the inbox by default; more via BI_SOURCE_DIRS)
   url   an https CSV/JSON link; an optional bearer token is read from an environment variable, never stored
+  html_table  a table on a public https web page (see webtable.py for the safety rules)
   sql   a read-only SELECT against Postgres (password in an environment variable) or a SQLite file
 
 Safety: loads are staged and swapped in one transaction; a replace that would shrink a table below 50% of its old row
@@ -24,7 +25,7 @@ import os
 from app.config import MAX_TABLE_UPLOAD_BYTES, MAX_TABLE_ROWS, scheduler_enabled, source_dirs
 from app.services import backups, datasets, state, workspaces
 
-KINDS = ("file", "url", "sql")
+KINDS = ("file", "url", "sql", "html_table")
 ENV_RE = re.compile(r"^[A-Z_][A-Z0-9_]{0,63}$")
 SQL_START = re.compile(r"^\s*(select|with)\b", re.I)
 SQL_BAD = re.compile(r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|copy|call|do|vacuum|attach)\b", re.I)
@@ -69,6 +70,17 @@ def validate_config(kind: str, cfg: dict) -> dict:
         if env and not ENV_RE.match(str(env)):
             raise SourceError("auth_env must be an environment variable name like MY_API_TOKEN (the token itself is never stored).")
         return {"url": str(cfg["url"]), "auth_env": env or None, "format": cfg.get("format") or None}
+    if kind == "html_table":
+        from app.services import webtable
+        try:
+            webtable._target(str(cfg.get("url", "")))
+        except webtable.WebTableError as e:
+            raise SourceError(e.message, e.status) from e
+        try:
+            idx = int(cfg.get("table") or 0)
+        except (TypeError, ValueError):
+            raise SourceError("table must be a number like 0 (the first table on the page).") from None
+        return {"url": str(cfg["url"]).strip(), "table": max(0, idx)}
     driver = cfg.get("driver")
     query = str(cfg.get("query", ""))
     if driver not in ("postgres", "sqlite"):
@@ -130,6 +142,12 @@ def fetch(kind: str, cfg: dict) -> tuple[list[str], list[list], str]:
         fmt = cfg.get("format") or ("json" if "json" in ctype or path.endswith(".json") else "xlsx" if path.endswith((".xlsx", ".xlsm")) else "csv")
         h, r, _ = datasets.read_table(raw, f"download.{fmt}")
         return h, r, urlparse(cfg["url"]).netloc
+    if kind == "html_table":
+        from app.services import webtable
+        try:
+            return webtable.table(cfg["url"], int(cfg.get("table") or 0))
+        except webtable.WebTableError as e:
+            raise SourceError(e.message, e.status) from e
     return _fetch_sql(cfg)
 
 

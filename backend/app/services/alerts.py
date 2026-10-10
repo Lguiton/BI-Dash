@@ -75,7 +75,10 @@ def _backup(cfg):
     if not real_like:
         return []
     if not bl:
-        return [_a("backup:none", "red", "No backup exists", f"The {ws} workspace holds {n:,} records and has never been backed up.", "/tracks/engineering")]
+        # Practice data is rebuildable, so it only nudges (yellow); Real data is the thing you can't regenerate (red).
+        return [_a("backup:none", "red" if ws == "real" else "warn", "No backup exists" if ws == "real" else "No backup yet (Practice)",
+                   f"The {ws} workspace holds {n:,} records and has never been backed up." + ("" if ws == "real" else " Practice data can be regenerated, so this is only a reminder."),
+                   "/tracks/engineering")]
     age = datetime.now(timezone.utc) - datetime.strptime(bl[0]["created_at"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     if age > timedelta(days=cfg["backup_days"]):
         return [_a("backup:stale", "warn", "Backup is out of date", f"The newest backup is {age.days} day(s) old (limit {cfg['backup_days']}).", "/tracks/engineering")]
@@ -127,10 +130,16 @@ def _overdue(cfg):
             for p in company.overview()["phases"] for i in p["deliverables"] if i["overdue"]]
 
 
+def _dq(cfg):
+    from app.services import expectations
+    return [_a(f"dq:{f['table']}", "warn", f"Data quality rules failing on {f['table']}", f"{f['failed']} of {f['total']} rule(s) failed at the last check: " + "; ".join(f["rules"][:3]), "/hub")
+            for f in expectations.latest_failures()]
+
+
 def current() -> list[dict]:
     cfg = config()
     out: list[dict] = []
-    for fn in (_kpis, _backup, _drill, _integrity, _sources, _stale, _overdue):
+    for fn in (_kpis, _backup, _drill, _integrity, _sources, _stale, _overdue, _dq):
         out += _safe(lambda fn=fn: fn(cfg))
     return sorted(out, key=lambda a: 0 if a["level"] == "red" else 1)
 

@@ -59,6 +59,21 @@ CASES: dict[str, list[dict]] = {
         {"id": "post-tests", "ask": "What should I test for a POST endpoint?", "tier": "simple"},
         {"id": "nav-scaffold", "ask": "Take me to the scaffold tab", "tier": "simple", "nav": True},
     ],
+    "security": [
+        {"id": "audit-first", "ask": "What should I fix first in my self-audit?", "tier": "simple", "tools": ["get_context"]},
+        {"id": "key-leak", "ask": "I committed an API key. What now?", "tier": "simple"},
+        {"id": "nav-logs", "ask": "Take me to the logs tab", "tier": "simple", "nav": True},
+    ],
+    "network": [
+        {"id": "subnet-sizes", "ask": "How many hosts fit in a /27?", "tier": "simple"},
+        {"id": "dns-vs-link", "ask": "Ping to an IP works but the name fails. What do I check?", "tier": "simple"},
+        {"id": "nav-subnet", "ask": "Take me to the subnet tab", "tier": "simple", "nav": True},
+    ],
+    "itsupport": [
+        {"id": "first-ticket", "ask": "A user says the printer is broken. What do I check first?", "tier": "simple"},
+        {"id": "raid-backup", "ask": "Is RAID a backup?", "tier": "simple"},
+        {"id": "nav-tickets", "ask": "Take me to the helpdesk tab", "tier": "simple", "nav": True},
+    ],
 }
 MAX_LIVE_CASES = 6
 KEEP_RUNS = 20

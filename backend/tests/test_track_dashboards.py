@@ -63,7 +63,7 @@ def test_ai_dashboard_counts_questions(client, monkeypatch):
 
 def test_progress_flow(client):
     p = client.get("/api/progress").json()
-    assert p["overall_pct"] == 0 and len(p["tracks"]) == 8 and p["continue"]["track"] == "analyst"
+    assert p["overall_pct"] == 0 and len(p["tracks"]) == 11 and p["continue"]["track"] == "analyst"
     first = p["tracks"][0]["next"]["id"]
     assert client.put("/api/progress", json={"item": first, "done": True}).status_code == 200
     p = client.get("/api/progress").json()

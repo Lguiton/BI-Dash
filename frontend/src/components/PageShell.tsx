@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { CommandPalette, SearchButton } from "./CommandPalette";
 import { NavBar } from "./NavBar";
+import { WebDock } from "./WebDock";
 import { ThemeToggle } from "./ThemeToggle";
 import { RealBanner, WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
@@ -18,6 +19,7 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
       <CommandPalette />
       <RealBanner />
       {children}
+      <WebDock />
     </div>
   );
 }

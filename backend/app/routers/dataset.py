@@ -49,6 +49,12 @@ def dataset():
          "checks": [check(info["with_duration"] >= 10, "10+ records with duration_minutes for process analysis", f"{info['with_duration']:,} with a duration")]},
         {"id": "fullstack", "name": "Full Stack Developer", "uses": "API map and tester, scaffolds from your tables, codebase and stack facts",
          "checks": [check(n > 0, "at least 1 record so the scaffolds have a table to work on", f"{n:,} records")]},
+        {"id": "security", "name": "Cybersecurity", "uses": "Self-audit, log analysis, web/TLS checks, crypto labs, incident tracker (these need no business data)",
+         "checks": [check(True, "no business data needed", "ready")]},
+        {"id": "network", "name": "Network Engineer", "uses": "Subnet and VLSM planner, config review, packet-capture reader, DNS and reachability checks (these need no business data)",
+         "checks": [check(True, "no business data needed", "ready")]},
+        {"id": "itsupport", "name": "IT Specialist", "uses": "Helpdesk, inventory, event-log reader, checklists, calculators (these need no business data)",
+         "checks": [check(True, "no business data needed", "ready")]},
         {"id": "ai", "name": "AI Engineering", "uses": "AI Lab questions and charts over your tables",
          "checks": [check(n > 0, "at least 1 record", f"{n:,} records"), check(_ai_ready(), "an API key in backend/.env", "key found" if _ai_ready() else "no key yet")]},
     ]

@@ -14,9 +14,12 @@ import json
 from app.services import state
 
 VALID_TABS = {
-    "pm": {"board", "prio", "sprint", "flow", "schedule", "evm", "risk", "okr", "product", "time"},
+    "pm": {"board", "prio", "sprint", "flow", "schedule", "evm", "risk", "okr", "product", "time", "calendar", "rules"},
     "sysanalyst": {"req", "dict", "process", "calc", "feas"},
     "fullstack": {"api", "scaffold", "code", "stack"},
+    "security": {"audit", "logs", "web", "ports", "crypto", "incident"},
+    "network": {"subnet", "config", "capture", "diag", "calc", "ref"},
+    "itsupport": {"tickets", "assets", "events", "checklists", "capacity", "cheats"},
     "engineering": {"pipeline", "dba", "gov", "gov/catalog", "gov/pii", "gov/lineage", "gov/controls", "gov/access"},
 }
 
@@ -270,6 +273,86 @@ MANUALS["fullstack"] = {
         S("review", "Review code health", "Look for the file doing too many jobs.", ["Open Codebase: largest files and test ratio."], ("Codebase", None, "code"), "You noted the largest file and one split.", ["Ignoring a 1,000-line file."], "How could I split my largest file?"),
         S("release", "Run the release checklist", "Ship on purpose.", ["Open Stack & config; read each fact.", "Tests green, backup taken, .env ignored, CORS has no wildcard."],
           ("Stack & config", None, "stack"), "Every item checked.", ["Releasing with failing tests."], "Walk me through a release checklist."),
+    ],
+}
+
+
+MANUALS["security"] = {
+    "title": "Cybersecurity: secure what you own, then learn to spot and handle trouble",
+    "intro": "Security is risk reduction, not perfection. Fix the cheap, common problems first, watch the logs, and have a plan for the day something goes wrong. Everything here is defensive and runs against your own app or public sites.",
+    "outcome": "A clean self-audit, one log investigation written up as an incident, and a short playbook you could follow under stress.",
+    "steps": [
+        S("audit", "Audit your own setup", "Most breaches start with a leaked key or an open door you forgot about.",
+          ["Open the Self-audit tab and run it.", "Fix every red item: .env in .gitignore, no secrets in tracked files, tight CORS.", "Run it again and note the score."],
+          ("Self-audit", None, "audit"), "Score is up and no red item is left unexplained.", ["Fixing nothing because 'it is only personal'.", "Committing a key, then deleting it (it stays in history; rotate it)."], "Which self-audit failures matter most for me?"),
+        S("logs", "Read the logs for patterns", "Attacks leave repeated, boring traces.",
+          ["Open the Logs tab and load the sample.", "Read each detection and the lines behind it.", "Decide for each: attack, noise or a mistake by a real user."],
+          ("Log analysis", None, "logs"), "You can explain one detection and the evidence for it.", ["Treating a detection as proof.", "Ignoring a success after many failures from the same address."], "Explain this brute-force detection and what I should check."),
+        S("web", "Check what a site shows the world", "Headers and certificates are the cheapest protections.",
+          ["Open Web checks and enter a public site you own.", "Read the missing headers and what each one prevents.", "Note the certificate expiry date."],
+          ("Web checks", None, "web"), "You have a list of missing headers ranked by importance.", ["Testing sites you don't own."], "Which missing header should I add first?"),
+        S("ports", "Know what your machine exposes", "A service you forgot about is an open door.",
+          ["Open Ports and run the local check.", "For each open port, name the program and why it is needed.", "Close or firewall the rest."],
+          ("Local ports", None, "ports"), "Every open port has a reason.", ["Assuming a database port is only reachable locally."], "What does an open port 5432 mean?"),
+        S("crypto", "Understand hashes, passwords and 2FA", "Never store passwords; store salted slow hashes. Add a second factor.",
+          ["Hash a word in the Crypto tab and change one letter.", "Test a few passwords for strength and read the assumption behind the crack time.", "Set up the TOTP lab and match the code."],
+          ("Crypto labs", None, "crypto"), "You can say why a hash is not encryption.", ["Believing a long common phrase is strong.", "Using SHA-256 alone for passwords."], "Why are fast hashes bad for passwords?"),
+        S("incident", "Handle an incident on paper", "In a real incident you won't think clearly; the checklist thinks for you.",
+          ["Open Incidents and log one from the sample log.", "Work through the playbook checklist for its category.", "Close it with a note on what you would change."],
+          ("Incidents", None, "incident"), "A closed incident with lessons learned.", ["Deleting evidence while cleaning up.", "No written timeline."], "Walk me through the first hour of a suspected key leak."),
+    ],
+}
+
+
+MANUALS["network"] = {
+    "title": "Network Engineer: addressing, segmentation and layered fault-finding",
+    "intro": "Networks fail in predictable layers. Learn to address and segment cleanly, read a config for mistakes, recognise normal and odd traffic, and walk the layers in order. Everything here runs on text you paste or on public hosts.",
+    "outcome": "A clean addressing plan with no overlaps, a reviewed config, one capture explained, and a layered troubleshooting runbook.",
+    "steps": [
+        S("subnet", "Plan the addressing", "Good addressing is boring: no overlaps, room to grow, one block per purpose.",
+          ["Open Subnet and VLSM and subnet 192.168.10.0/26: read the usable hosts and the broadcast address.", "Plan an office in 10.20.0.0/22 with the VLSM planner: 60 staff, 20 guests, 10 servers, two point-to-point links.", "Paste your planned networks into the overlap check, then summarise the routes."],
+          ("Subnet and VLSM", None, "subnet"), "A plan whose subnets don't overlap and each has spare room.", ["Sizing a subnet to exactly today's hosts.", "Forgetting the network and broadcast addresses."], "How many hosts fit in a /27 and why is it 30, not 32?"),
+        S("config", "Review a device config", "Most breaches of network gear are default passwords, telnet and open management.",
+          ["Open Config review and load the sample.", "Read each high finding and say what an attacker would do with it.", "Write the fix for each, then paste your fixed version and run it again."],
+          ("Config review", None, "config"), "No high findings, and you can explain each fix.", ["Treating 'no findings' as 'secure'.", "Fixing the symptom and not the habit that caused it."], "Why is SNMP community 'public' a problem?"),
+        S("capture", "Read what is on the wire", "Traffic has shapes: handshakes, resets, scans, ARP chatter.",
+          ["Open Packet capture and load the sample.", "Find the completed TCP handshake, then the burst of SYNs to many ports.", "Decide: scan, monitoring or a broken client, and what you'd check next."],
+          ("Packet capture", None, "capture"), "You can explain the finding and one alternative explanation.", ["Calling one pattern an attack without context.", "Capturing on a network you don't own."], "What does a SYN without a SYN-ACK tell me?"),
+        S("diag", "Test the path", "Names, then addresses, then ports: one layer at a time.",
+          ["Open DNS and reachability and look up a site you use.", "Test TCP 443 on it, then a closed port, and compare the results.", "Say which layer each result rules in or out."],
+          ("DNS and reachability", None, "diag"), "You can say what 'open', 'closed' and 'filtered' mean.", ["Testing hosts you don't own at scale.", "Blaming the network for a DNS problem."], "If ping to an IP works but the name fails, what is wrong?"),
+        S("calc", "Size the pipe", "Bandwidth isn't throughput: window, latency and overhead decide the speed.",
+          ["Open Calculators and find how long 200 GB takes over 100 Mbps at 85% efficiency.", "Enter 1000 Mbps and 80 ms with a 64 KB window and read the limit.", "Decide what you'd change to fill the link."],
+          ("Calculators", None, "calc"), "You can explain why a fast link can still be slow.", ["Using megabits and megabytes interchangeably."], "Why can one TCP stream fail to fill a long fast link?"),
+        S("ref", "Keep a method and a reference", "The method is the skill; the table is just memory.",
+          ["Open Reference and read the troubleshooting method.", "Write your own one-page runbook for 'the internet is down', layer by layer.", "Look up five ports and what each should never be exposed for."],
+          ("Reference", None, "ref"), "A runbook someone else could follow.", ["Skipping the physical layer.", "Changing three things at once."], "Walk me through troubleshooting 'I can't reach the file server'."),
+    ],
+}
+
+MANUALS["itsupport"] = {
+    "title": "IT Specialist: fix it, protect it, know what you own, write it down",
+    "intro": "Support work is a method: ask what changed, check the cheap causes first, change one thing at a time, confirm with the person and document. These trackers let you practise that loop and the admin routines around it.",
+    "outcome": "A worked ticket history, an inventory with warranty dates, one event log read, completed checklists and a storage forecast.",
+    "steps": [
+        S("tickets", "Work a ticket properly", "A ticket is a short story: symptom, checks, fix, confirmation.",
+          ["Open Helpdesk and log a Wi-Fi ticket. Tick the checklist items as you try them.", "Add a note for each thing you change, then resolve it.", "Open an urgent ticket and watch the SLA clock."],
+          ("Helpdesk", None, "tickets"), "A resolved ticket with a timeline someone else could follow.", ["Closing without confirming with the person.", "No notes on what was changed."], "A user can't print: what do I check first?"),
+        S("assets", "Know what you own", "You can't patch, insure or retire what you haven't listed.",
+          ["Open Inventory and add every computer, phone and printer you manage.", "Enter warranty end dates and read which are expiring.", "Mark retired devices instead of deleting them."],
+          ("Inventory", None, "assets"), "Every device is listed with an owner and a warranty date.", ["Keeping the list in your head.", "Deleting retired devices so there's no history."], "Which fields matter most in an asset record?"),
+        S("events", "Read the event log", "The log shows the story: who signed in, from where, and what changed.",
+          ["Open Event log reader and load the sample.", "Read the failed-logon burst and the success after it.", "Rank the findings and write what you would do first."],
+          ("Event log reader", None, "events"), "You can explain the top finding and the evidence for it.", ["Ignoring a success that follows many failures.", "Clearing logs while investigating."], "What does event 4625 followed by 4624 from the same address mean?"),
+        S("checklists", "Use checklists for routines", "Onboarding and offboarding are where access mistakes hide.",
+          ["Open Checklists and run Onboard for an imaginary new hire.", "Run Offboard for a leaver and note which step people forget.", "Adapt one list to your own environment."],
+          ("Checklists", None, "checklists"), "Both lists run to the end and you've edited one for your world.", ["Deleting a leaver's account on day one instead of disabling it."], "What should happen first when someone leaves?"),
+        S("capacity", "Forecast and protect", "Disks fill and hardware fails on a schedule you can estimate.",
+          ["Open Capacity and RAID and forecast a 1 TB disk at 70% used growing 25 GB a month.", "Work out the downtime allowed at 99.9% availability.", "Compare RAID 1, 5, 6 and 10 for four 4 TB disks."],
+          ("Capacity and RAID", None, "capacity"), "You can say when to order storage and why RAID is not a backup.", ["Treating RAID as a backup.", "Ordering storage when the disk is already full."], "Why isn't RAID a backup?"),
+        S("cheats", "Build your own toolbox", "A short list of safe, tested commands beats memory at 2 a.m.",
+          ["Open Cheat sheets and read the PowerShell and Active Directory lists.", "Try three read-only commands on your own machine.", "Start a personal notes file of fixes that worked."],
+          ("Cheat sheets", None, "cheats"), "A notes file with five fixes and the commands behind them.", ["Pasting a command you don't understand into a production machine."], "Which commands are safe to run first when a PC is slow?"),
     ],
 }
 

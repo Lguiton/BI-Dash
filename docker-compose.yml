@@ -2,6 +2,7 @@
 # Stop: docker compose down        Wipe the data too: docker compose down -v
 # There is no login, so both ports are bound to 127.0.0.1 (this computer only). Do not change that unless you add your own protection.
 # Your AI keys and email settings go in backend/.env (copy backend/.env.example); the file is optional and never baked into an image.
+# Optional notebooks (JupyterLab):   docker compose --profile notebooks up -d notebooks    then http://localhost:8888 (token below)
 # Optional real PostgreSQL for the practice labs:   docker compose --profile postgres up -d db
 services:
   backend:
@@ -53,6 +54,21 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  notebooks:
+    build:
+      context: .
+      dockerfile: python_practice/Dockerfile.jupyter
+    profiles: ["notebooks"]
+    environment:
+      # Change this: anyone who can reach port 8888 AND knows the token can run code on this container. It is bound to this computer only.
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN:-bi-notebooks}
+    ports:
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - ./python_practice/notebooks:/work/notebooks
+      - ./data_samples:/work/data_samples:ro
+      - bi_data:/work/warehouse:ro      # your dashboard's database, read-only: notebooks can look but not change it
 
 volumes:
   bi_data:

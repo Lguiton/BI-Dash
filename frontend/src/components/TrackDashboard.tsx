@@ -15,6 +15,9 @@ import { SaPanel } from "@/components/panels/SaPanel";
 import { DbaPanel, GovernancePanel } from "@/components/panels/DbaGovPanels";
 import { Tabs } from "@/components/panels/kit";
 import { AgentPanel, CommandBar, useAgentChat } from "@/components/panels/AgentUi";
+import { SecPanel } from "@/components/panels/SecPanel";
+import { NetPanel } from "@/components/panels/NetPanel";
+import { ItPanel } from "@/components/panels/ItPanel";
 import { ManualPanel } from "@/components/panels/ManualPanel";
 import { ApiError, getJson, putJson } from "@/lib/api";
 import { money, pct } from "@/lib/format";
@@ -22,7 +25,7 @@ import { useChartColors } from "@/lib/useChartColors";
 import type { AgentAction, ManualStep, AiDash, AnalystDash, EngineeringDash, MlDash, Progress, ScientistDash, Track, TrackStep } from "@/lib/types";
 
 type Dash = { ideas: string[] } & Record<string, unknown>;
-const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", engineering: "pipeline" };
+const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", security: "audit", network: "subnet", itsupport: "tickets", engineering: "pipeline" };
 const OPEN_LAB: Record<string, { href: string; label: string }[]> = {
   analyst: [{ href: "/lab", label: "SQL Lab" }, { href: "/kpis", label: "KPI builder" }, { href: "/quality", label: "Data quality" }],
   scientist: [{ href: "/python", label: "Notebooks" }, { href: "/ml", label: "ML Lab" }],
@@ -30,6 +33,9 @@ const OPEN_LAB: Record<string, { href: string; label: string }[]> = {
   engineering: [{ href: "/pipeline", label: "Pipeline monitor" }, { href: "/apache", label: "Apache lab" }],
   ai: [{ href: "/ai", label: "AI Lab" }, { href: "/glossary", label: "Glossary" }],
   fullstack: [{ href: "/lab", label: "SQL Lab" }, { href: "/schema", label: "Schema" }, { href: "/activity", label: "Activity log" }],
+  security: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
+  network: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
+  itsupport: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
   pm: [{ href: "/kpis", label: "KPI builder" }, { href: "/activity", label: "Activity log" }],
   sysanalyst: [{ href: "/schema", label: "Schema" }, { href: "/quality", label: "Data quality" }, { href: "/lab", label: "SQL Lab" }],
 };
@@ -216,7 +222,7 @@ function EngineeringTabs({ d, tab, onTab }: { d: EngineeringDash; tab: string; o
   );
 }
 
-type TrackId = "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack";
+type TrackId = "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack" | "security" | "network" | "itsupport";
 const parseView = (v: string | null): "manual" | "tools" | "agent" | null => (v === "manual" || v === "tools" || v === "agent" ? v : null);
 
 /** Search results and agent links can open a track straight on a view, tab or manual step: /tracks/pm?view=manual&step=okr */
@@ -317,6 +323,9 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "pm" && <PmPanel tab={tab} onTab={setTab} />}
               {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
               {dash && id === "fullstack" && <FullStackPanel tab={tab} onTab={setTab} />}
+              {dash && id === "security" && <SecPanel tab={tab} onTab={setTab} />}
+              {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
+              {dash && id === "itsupport" && <ItPanel tab={tab} onTab={setTab} />}
               {dash && id === "ai" && <AiPanels d={dash as unknown as AiDash} />}
               {dash && (
                 <section className="card p-4">

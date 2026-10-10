@@ -3,6 +3,7 @@
 import { AlertTriangle, CheckCircle2, MinusCircle, Trash2, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { LineageButton } from "@/components/Lineage";
 import { PageShell } from "@/components/PageShell";
 import { ApiError, deleteJson, getJson, postJson } from "@/lib/api";
 import type { Kpi, KpiStatus, MetricInfo } from "@/lib/types";
@@ -131,6 +132,7 @@ export default function KpiPage() {
                   <dt className="text-muted">Gap to target</dt><dd className="text-right font-medium tabular-nums">{k.gap === null ? "n/a" : `${k.gap > 0 ? "+" : k.gap < 0 ? "−" : ""}${fmt(k.unit, Math.abs(k.gap))}`}</dd>
                   {k.window_days > 0 && (<><dt className="text-muted">Previous window</dt><dd className="text-right tabular-nums">{fmt(k.unit, k.previous_value)}{delta !== null && ` (${delta > 0 ? "+" : ""}${delta.toFixed(1)}%)`}</dd></>)}
                 </dl>
+                <LineageButton kpiId={k.id} />
                 <button className="btn mt-auto self-start !px-2 !py-1 text-xs" disabled={busy} onClick={() => run(() => deleteJson(`/api/kpis/${k.id}`))} aria-label={`Delete ${k.name}`}>
                   <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
                 </button>

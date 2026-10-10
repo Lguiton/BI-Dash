@@ -162,4 +162,31 @@ def fullstack_ideas() -> dict:
     ]}
 
 
-BUILDERS = {"analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai, "pm": pm_ideas, "sysanalyst": sysanalyst_ideas, "fullstack": fullstack_ideas}
+def security_ideas() -> dict:
+    return {"ideas": [
+        "Run the self-audit, fix one item, and run it again to see the score move.",
+        "Paste a log with 10 failed logins and a success. Write the incident in three sentences.",
+        "Hash the same password with two different salts. What does that tell you about rainbow tables?",
+        "Check a public site you own for missing headers. Which one would an attacker use first?",
+    ]}
+
+
+def network_ideas() -> dict:
+    return {"ideas": [
+        "Subnet 192.168.10.0/26 by hand, then check it in the calculator. Where did you slip?",
+        "Plan an office in 10.20.0.0/22 with VLSM and list the spare addresses in each subnet.",
+        "Paste the sample switch config and fix the three findings you'd worry about most.",
+        "Read the sample capture and write what you'd check before calling it a scan.",
+    ]}
+
+
+def it_ideas() -> dict:
+    return {"ideas": [
+        "Log three tickets of different priority and compare how fast the SLA clocks run out.",
+        "Add every device you own to the inventory. Which warranty ends first?",
+        "Paste the sample event log and write the first three things you'd do.",
+        "Forecast when a disk you own reaches 80% and decide when to buy storage.",
+    ]}
+
+
+BUILDERS = {"network": network_ideas, "itsupport": it_ideas, "security": security_ideas, "analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai, "pm": pm_ideas, "sysanalyst": sysanalyst_ideas, "fullstack": fullstack_ideas}

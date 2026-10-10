@@ -30,11 +30,17 @@ def set_done(item_id: str, done: bool) -> None:
 
 
 # ---- ML experiment log ----
-def log_ml_run(res: dict) -> None:
+def log_ml_run(res: dict, batch: str | None = None) -> int:
+    """Record one training run. Besides the headline score it keeps the settings and every metric, so a run can be compared or repeated later."""
     pm = res["primary_metric"]
-    state.run("INSERT INTO ml_runs (created_at, task, model, features, metric, model_score, baseline_score, test_rows, workspace) VALUES (?,?,?,?,?,?,?,?,?)",
-              (state.now(), res["task"], res["model"], json.dumps(res["features"]), pm["name"], pm["model"], pm["baseline"], res["split"]["test_rows"], _ws()))
+    params = {"test_fraction": res.get("test_fraction"), "balance_classes": res.get("balance_classes"), "threshold": res.get("threshold"),
+              "split": res["split"]}
+    cur = state.run("INSERT INTO ml_runs (created_at, task, model, features, metric, model_score, baseline_score, test_rows, workspace, params, metrics, cv_mean, seconds, batch) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (state.now(), res["task"], res["model"], json.dumps(res["features"]), pm["name"], pm["model"], pm["baseline"], res["split"]["test_rows"], _ws(),
+                     json.dumps(params), json.dumps(res["metrics"]), (res.get("cv") or {}).get("mean"), res.get("seconds"), batch))
     state.run("DELETE FROM ml_runs WHERE id NOT IN (SELECT id FROM ml_runs ORDER BY id DESC LIMIT 500)")
+    return int(cur.lastrowid)
 
 
 def ml_runs(limit: int = 12) -> list[dict]:
@@ -48,9 +54,9 @@ def ml_runs(limit: int = 12) -> list[dict]:
 
 
 # ---- AI question log ----
-def log_ai(question: str, provider: str, model: str, kind: str, tin: int, tout: int, ok: bool, charted: bool, tier: str = "", track: str = "") -> None:
-    state.run("INSERT INTO ai_log (created_at, question, provider, model, kind, input_tokens, output_tokens, ok, charted, workspace, tier, track) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-              (state.now(), question[:500], provider, model, kind, tin, tout, 1 if ok else 0, 1 if charted else 0, _ws(), tier or None, track or None))
+def log_ai(question: str, provider: str, model: str, kind: str, tin: int, tout: int, ok: bool, charted: bool, tier: str = "", track: str = "", seconds: float | None = None) -> None:
+    state.run("INSERT INTO ai_log (created_at, question, provider, model, kind, input_tokens, output_tokens, ok, charted, workspace, tier, track, seconds) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+              (state.now(), question[:500], provider, model, kind, tin, tout, 1 if ok else 0, 1 if charted else 0, _ws(), tier or None, track or None, seconds))
     state.run("DELETE FROM ai_log WHERE id NOT IN (SELECT id FROM ai_log ORDER BY id DESC LIMIT 2000)")
 
 

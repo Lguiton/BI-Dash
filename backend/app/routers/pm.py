@@ -3,7 +3,7 @@ from datetime import date, datetime
 
 from fastapi import APIRouter, Body, HTTPException, Query
 
-from app.services import pm
+from app.services import pm, pm_extra
 
 router = APIRouter(prefix="/api/pm", tags=["project-product"])
 
@@ -124,3 +124,35 @@ def time_del(tid: int):
 def rate_put(body: dict = Body(...)):
     _g(pm.set_rate, body.get("rate"))
     return pm.time_view()
+
+
+@router.get("/calendar")
+def calendar_view(month: str | None = Query(None, max_length=7)):
+    return _g(pm_extra.calendar_view, month)
+
+
+@router.get("/rules")
+def rules():
+    return pm_extra.list_rules()
+
+
+@router.post("/rules")
+def rule_add(body: dict = Body(...)):
+    return _g(pm_extra.add_rule, body.get("name"), body.get("trigger"), body.get("action"), body.get("value"), body.get("days") or 0)
+
+
+@router.patch("/rules/{rid}")
+def rule_toggle(rid: int, body: dict = Body(...)):
+    _g(pm_extra.set_enabled, rid, bool(body.get("enabled")))
+    return {"id": rid, "enabled": bool(body.get("enabled"))}
+
+
+@router.delete("/rules/{rid}")
+def rule_delete(rid: int):
+    _g(pm_extra.delete_rule, rid)
+    return {"deleted": rid}
+
+
+@router.post("/rules/run")
+def rules_run(body: dict = Body(default={})):
+    return _g(pm_extra.evaluate, bool(body.get("apply")))

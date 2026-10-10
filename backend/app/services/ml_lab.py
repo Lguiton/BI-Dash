@@ -53,11 +53,15 @@ MODELS = {
         "ridge": "Ridge regression",
         "random_forest": "Random forest",
         "gradient_boosting": "Gradient boosting",
+        "neural_net": "Small neural network (MLP)",
+        "hist_gradient_boosting": "Histogram gradient boosting (XGBoost-style)",
     },
     "classification": {
         "logistic": "Logistic regression",
         "random_forest": "Random forest",
         "gradient_boosting": "Gradient boosting",
+        "neural_net": "Small neural network (MLP)",
+        "hist_gradient_boosting": "Histogram gradient boosting (XGBoost-style)",
     },
 }
 
@@ -110,10 +114,11 @@ def _time_split(df, test_fraction: float):
 
 def _build_model(kind: str, name: str, num: list[str], cat: list[str], balance: bool):
     from sklearn.compose import ColumnTransformer
-    from sklearn.ensemble import (GradientBoostingClassifier, GradientBoostingRegressor,
+    from sklearn.ensemble import (HistGradientBoostingClassifier, HistGradientBoostingRegressor, GradientBoostingClassifier, GradientBoostingRegressor,
                                   RandomForestClassifier, RandomForestRegressor)
     from sklearn.impute import SimpleImputer
     from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
+    from sklearn.neural_network import MLPClassifier, MLPRegressor
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -122,13 +127,18 @@ def _build_model(kind: str, name: str, num: list[str], cat: list[str], balance: 
         parts.append(("num", Pipeline([("impute", SimpleImputer(strategy="median")), ("scale", StandardScaler())]), num))
     if cat:
         parts.append(("cat", OneHotEncoder(handle_unknown="ignore"), cat))
-    pre = ColumnTransformer(parts)
+    pre = ColumnTransformer(parts, sparse_threshold=0)       # dense output: some models (histogram boosting) can't take sparse input
     cw = "balanced" if balance else None
     est = {
         ("regression", "linear"): lambda: LinearRegression(),
         ("regression", "ridge"): lambda: Ridge(alpha=1.0),
         ("regression", "random_forest"): lambda: RandomForestRegressor(n_estimators=100, max_depth=8, random_state=RANDOM_STATE, n_jobs=1),
         ("regression", "gradient_boosting"): lambda: GradientBoostingRegressor(n_estimators=100, max_depth=3, random_state=RANDOM_STATE),
+        # a small neural network: two hidden layers. scikit-learn's MLP runs on the CPU and needs no extra install.
+        ("regression", "hist_gradient_boosting"): lambda: HistGradientBoostingRegressor(max_iter=150, random_state=RANDOM_STATE),
+        ("classification", "hist_gradient_boosting"): lambda: HistGradientBoostingClassifier(max_iter=150, random_state=RANDOM_STATE, class_weight=cw),
+        ("regression", "neural_net"): lambda: MLPRegressor(hidden_layer_sizes=(32, 16), max_iter=400, random_state=RANDOM_STATE),
+        ("classification", "neural_net"): lambda: MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=400, random_state=RANDOM_STATE),
         ("classification", "logistic"): lambda: LogisticRegression(max_iter=1000, class_weight=cw),
         ("classification", "random_forest"): lambda: RandomForestClassifier(n_estimators=100, max_depth=8, random_state=RANDOM_STATE, class_weight=cw, n_jobs=1),
         ("classification", "gradient_boosting"): lambda: GradientBoostingClassifier(n_estimators=100, max_depth=3, random_state=RANDOM_STATE),
@@ -141,8 +151,11 @@ def _r(x, nd=4):
 
 
 def train(task: str, model: str, feature_ids: list[str], test_fraction: float = 0.2,
-          balance_classes: bool = False, threshold: float = 0.5) -> dict:
+          balance_classes: bool = False, threshold: float = 0.5, light: bool = False, keep_model: bool = False) -> dict:
+    """`light=True` skips the slow extras (time-ordered cross-validation and permutation importance); used when comparing many models."""
+    import time
     import numpy as np
+    t0 = time.perf_counter()
     from sklearn.inspection import permutation_importance
     from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score, mean_absolute_error,
                                  mean_squared_error, precision_score, r2_score, recall_score, roc_auc_score)
@@ -224,19 +237,28 @@ def train(task: str, model: str, feature_ids: list[str], test_fraction: float = 
                            "That is fine if you will know it at prediction time, and leakage if you won't.")
         sample = [{"actual": _r(a, 2), "predicted": _r(p, 2)} for a, p in list(zip(y_te, pred))[::max(1, -(-len(y_te) // 300))]]
 
+    if kind == "classification" and balance_classes and model == "neural_net":
+        warnings.append("The neural network has no class-weight option, so 'Balance classes' does nothing for it. Lower the threshold instead.")
+
     # time-ordered cross-validation on the training period only: shows how stable the score is
     cv = []
     try:
+        if light:
+            raise StopIteration
         cv = [_r(s) for s in cross_val_score(_build_model(kind, model, num, cat, balance_classes), X_tr, y_tr,
                                               cv=TimeSeriesSplit(n_splits=4), scoring=cv_scoring)]
+    except StopIteration:
+        pass
     except Exception:
         warnings.append("Cross-validation could not run on this selection (a fold had too little data).")
 
     # permutation importance on the test set: how much does the score drop when one feature is shuffled?
-    imp = permutation_importance(pipe, X_te.head(3000), y_te[:3000], n_repeats=5, random_state=RANDOM_STATE,
-                                 scoring=cv_scoring, n_jobs=1)
-    importance = sorted(({"feature": f, "label": FEATURES[f].label, "importance": _r(m, 4)}
-                         for f, m in zip(feature_ids, imp.importances_mean)), key=lambda x: -x["importance"])
+    importance = []
+    if not light:
+        imp = permutation_importance(pipe, X_te.head(3000), y_te[:3000], n_repeats=5, random_state=RANDOM_STATE,
+                                     scoring=cv_scoring, n_jobs=1)
+        importance = sorted(({"feature": f, "label": FEATURES[f].label, "importance": _r(m, 4)}
+                             for f, m in zip(feature_ids, imp.importances_mean)), key=lambda x: -x["importance"])
 
     dates = lambda d: (str(d["record_date"].min())[:10], str(d["record_date"].max())[:10])
     return {
@@ -248,4 +270,44 @@ def train(task: str, model: str, feature_ids: list[str], test_fraction: float = 
         "cv": {"metric": cv_scoring, "scores": cv, "mean": _r(np.mean(cv)) if cv else None, "std": _r(np.std(cv)) if cv else None},
         "confusion": confusion, "importance": importance, "sample": sample,
         "warnings": warnings, "lessons": lessons,
+        "test_fraction": test_fraction, "seconds": round(time.perf_counter() - t0, 2),
+        **({"_pipe": pipe, "_train_df": train_df[feature_ids]} if keep_model else {}),
     }
+
+
+def compare(task: str, feature_ids: list[str], test_fraction: float = 0.2, balance_classes: bool = False,
+            threshold: float = 0.5) -> dict:
+    """Train every model that fits the task on the SAME split and rank them by the task's main score.
+
+    Honest limits: it is one time-split, so a small gap between two models is noise, not a winner. The ranking tells you which
+    family of model suits this data; it does not prove the top model will keep winning on next month's data.
+    """
+    if task not in TASKS:
+        raise MlError(f"Unknown task '{task}'.")
+    kind = TASKS[task][1]
+    rows, failed = [], []
+    for mid, label in MODELS[kind].items():
+        try:
+            res = train(task, mid, feature_ids, test_fraction, balance_classes, threshold, light=True)
+        except MlError as e:
+            if not rows and not failed:
+                raise            # the same data problem would hit every model: say it once, plainly
+            failed.append({"model": mid, "label": label, "error": str(e)})
+            continue
+        rows.append({"model": mid, "label": label, "result": res})
+    # a higher R2 / F1 is better for every model here
+    rows.sort(key=lambda r: (r["result"]["primary_metric"]["model"] is None, -(r["result"]["primary_metric"]["model"] or 0)))
+    first = rows[0]["result"]
+    pm = first["primary_metric"]
+    out = []
+    for i, r in enumerate(rows):
+        res = r["result"]
+        out.append({"rank": i + 1, "model": r["model"], "label": r["label"], "metrics": res["metrics"],
+                    "score": res["primary_metric"]["model"], "seconds": res["seconds"], "result": res})
+    best, second = out[0], out[1] if len(out) > 1 else None
+    note = None
+    if second and best["score"] is not None and second["score"] is not None and abs(best["score"] - second["score"]) < 0.02:
+        note = (f"{best['label']} and {second['label']} are within 0.02 on {pm['name']}. With one time split that is a tie, "
+                "not a winner: prefer the simpler or faster one.")
+    return {"task": task, "kind": kind, "metric": pm["name"], "baseline": pm["baseline"], "features": first["features"],
+            "split": first["split"], "models": out, "failed": failed, "note": note}

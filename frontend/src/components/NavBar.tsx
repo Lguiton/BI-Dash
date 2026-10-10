@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Activity, ArrowLeftRight, BarChart3, Building2, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow } from "lucide-react";
+import { Activity, ArrowLeftRight, BarChart3, Building2, BookA, DatabaseBackup, Settings2, Table2, Plug, BrainCircuit, ChevronDown, Compass, Database, FlaskConical, GraduationCap, History, Workflow as Pipe, Network, ShieldCheck, Sparkles, Target, Terminal, Workflow, FileSearch, GitBranch, Gauge, LibraryBig, Map, Shapes, ScrollText, Boxes } from "lucide-react";
 
 const MAIN = [
   { href: "/", label: "Dashboard", Icon: BarChart3 },
@@ -23,11 +23,19 @@ const LABS = [
   { href: "/glossary", label: "Glossary", Icon: BookA },
   { href: "/scd", label: "SCD lab", Icon: History },
   { href: "/quiz", label: "Quiz", Icon: GraduationCap },
+  { href: "/hub", label: "Dataset hub", Icon: Boxes },
+  { href: "/workflow", label: "Workflow builder", Icon: GitBranch },
+  { href: "/diagrams", label: "Diagram studio", Icon: Shapes },
+  { href: "/knowledge", label: "Knowledge search", Icon: FileSearch },
+  { href: "/toolmap", label: "Tool map", Icon: Map },
 ];
 
 const MANAGE = [
   { href: "/sources", label: "Sources", Icon: Plug },
   { href: "/compare", label: "Practice vs Real", Icon: ArrowLeftRight },
+  { href: "/pipelines", label: "Pipelines", Icon: LibraryBig },
+  { href: "/ops", label: "Ops monitor", Icon: Gauge },
+  { href: "/logs", label: "Log explorer", Icon: ScrollText },
   { href: "/settings", label: "Settings & backups", Icon: Settings2 },
   { href: "/activity", label: "Activity log", Icon: Activity },
 ];

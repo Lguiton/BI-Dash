@@ -28,6 +28,14 @@ PAGES = [
     ("/activity", "Activity log", "audit history changes", "Manage"),
     ("/tracks/engineering", "Restore drill and database admin", "restore drill backup verify dba health integrity checkpoint governance", "Page"),
     ("/ai", "AI usage and agent evals", "usage tokens cost caps tiers evals regression", "Lab"),
+    ("/hub", "Dataset hub", "tables catalogue notes tags health quality rules great expectations", "Lab"),
+    ("/workflow", "Workflow builder", "knime alteryx power query steps filter group sql pandas visual", "Lab"),
+    ("/diagrams", "Diagram studio", "mermaid flowchart diagram draw process map", "Lab"),
+    ("/knowledge", "Knowledge search", "docs search manuals find help tf-idf", "Lab"),
+    ("/toolmap", "Tool map", "tools tableau power bi snowflake databricks airflow wireshark nmap equivalent free", "Lab"),
+    ("/pipelines", "Pipelines", "airflow prefect orchestration schedule tasks retries dependencies", "Manage"),
+    ("/ops", "Ops monitor", "prometheus metrics latency errors llm monitoring uptime slow endpoints", "Manage"),
+    ("/logs", "Log explorer", "logs splunk security brute force detections search auth access", "Manage"),
     ("/compare", "Practice vs Real", "compare workspaces side by side differences", "Page"),
 ]
 
