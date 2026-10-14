@@ -14,3 +14,7 @@ backend/data/inbox/
 apache_practice/**/_out/
 apache_practice/**/_work/
 data_engineering/landing/
+
+# local safety switch; must never be committed
+computer_control.enabled
+**/computer_control.enabled
