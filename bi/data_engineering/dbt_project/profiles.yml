@@ -1,6 +1,0 @@
-bi_lake:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: ../lake/dbt.duckdb
