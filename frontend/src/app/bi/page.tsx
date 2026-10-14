@@ -22,8 +22,8 @@ import { CompanyCard } from "@/components/CompanyCard";
 import { AlertsCard } from "@/components/panels/OpsPanels";
 import { StudyWidget } from "@/components/StudyWidget";
 import { ReportButtons } from "@/components/ReportButtons";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { RealBanner, WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
+import { ModeToggle } from "@/components/ModeToggle";
+import { RealBanner, SettingsButton } from "@/components/WorkspaceSwitcher";
 import { UploadPanel } from "@/components/UploadPanel";
 import { ApiError, filterQuery, getJson } from "@/lib/api";
 import { money, num, pct } from "@/lib/format";
@@ -133,8 +133,8 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-start gap-2">
           <NavBar />
           <SearchButton />
-          <WorkspaceSwitcher />
-          <ThemeToggle />
+          <ModeToggle />
+          <SettingsButton />
           <button className="btn" onClick={refresh} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden /> Refresh
           </button>
