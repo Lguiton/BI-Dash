@@ -1,0 +1,166 @@
+{
+ "title": "Systems Analyst: what the system must do, and proof that it does",
+ "intro": "An analyst bridges the business and the builders: gathers requirements, models data and process, sizes the system, checks feasibility, and traces every requirement to a test.",
+ "outcome": "A testable requirements list traced to tests, a data dictionary and ER diagram, sizing numbers, a cost-benefit case and a feasibility verdict.",
+ "steps": [
+  {
+   "id": "problem",
+   "title": "Write the problem statement and list stakeholders",
+   "what": "Everything is judged against the problem.",
+   "how": [
+    "One paragraph: who has what problem, and what it costs.",
+    "List stakeholders and what each cares about; use the Source field on requirements for this."
+   ],
+   "tool": {
+    "label": "Requirements",
+    "href": null,
+    "tab": "req"
+   },
+   "done_when": "A reader could tell if a proposal solves the problem.",
+   "mistakes": [
+    "Writing the solution instead of the problem."
+   ],
+   "ask": "Help me write a problem statement."
+  },
+  {
+   "id": "elicit",
+   "title": "Capture requirements",
+   "what": "Each requirement is one testable statement.",
+   "how": [
+    "Open Requirements and add each as 'The system shall...'.",
+    "Mark type (functional, non-functional, constraint) and priority (MoSCoW).",
+    "Write an acceptance criterion someone could check."
+   ],
+   "tool": {
+    "label": "Requirements",
+    "href": null,
+    "tab": "req"
+   },
+   "done_when": "8+ requirements with acceptance criteria.",
+   "mistakes": [
+    "Vague words: fast, easy, user-friendly.",
+    "Two requirements in one."
+   ],
+   "ask": "Draft requirements for this system."
+  },
+  {
+   "id": "data",
+   "title": "Model the data",
+   "what": "The dictionary says what every field means.",
+   "how": [
+    "Open Data dictionary: tables, columns, keys, null % and distinct counts.",
+    "Check relationships and orphans.",
+    "Copy the Mermaid diagram into mermaid.live."
+   ],
+   "tool": {
+    "label": "Data dictionary",
+    "href": null,
+    "tab": "dict"
+   },
+   "done_when": "Every table has a description and orphans are 0.",
+   "mistakes": [
+    "Undocumented columns."
+   ],
+   "ask": "Describe each table in my data dictionary."
+  },
+  {
+   "id": "process",
+   "title": "Model the process",
+   "what": "Find where time goes.",
+   "how": [
+    "Open Process analysis: duration percentiles, variability, bottleneck.",
+    "High variability (CV above 1) means unpredictable delivery."
+   ],
+   "tool": {
+    "label": "Process analysis",
+    "href": null,
+    "tab": "process"
+   },
+   "done_when": "You can name the bottleneck.",
+   "mistakes": [
+    "Optimising a step that isn't the bottleneck."
+   ],
+   "ask": "Where is my process bottleneck and why?"
+  },
+  {
+   "id": "size",
+   "title": "Size the system",
+   "what": "Queueing, availability and capacity.",
+   "how": [
+    "Queueing: enter arrival and service rates; keep utilisation under about 80%.",
+    "Availability: set an SLO; read error budget; combine components serial or parallel.",
+    "Capacity: enter load, capacity, growth; read months to full."
+   ],
+   "tool": {
+    "label": "Calculators",
+    "href": null,
+    "tab": "calc"
+   },
+   "done_when": "You have a number for staffing, uptime and capacity.",
+   "mistakes": [
+    "Rates in different time units.",
+    "Sizing to 100% utilisation."
+   ],
+   "ask": "How many servers or staff do I need?"
+  },
+  {
+   "id": "cba",
+   "title": "Make the cost-benefit case",
+   "what": "Will it pay back?",
+   "how": [
+    "Enter upfront cost, annual benefit and cost, years, discount rate.",
+    "Read NPV, ROI, IRR, payback.",
+    "Test with a lower benefit."
+   ],
+   "tool": {
+    "label": "Calculators",
+    "href": null,
+    "tab": "calc"
+   },
+   "done_when": "NPV is positive even with pessimistic benefit.",
+   "mistakes": [
+    "Counting benefits twice."
+   ],
+   "ask": "Stress-test my cost-benefit numbers."
+  },
+  {
+   "id": "feasible",
+   "title": "Score feasibility (TELOS)",
+   "what": "Technical, Economic, Legal, Operational, Schedule.",
+   "how": [
+    "Score each 1 to 5 with a note of evidence.",
+    "A single score below 3 caps the verdict."
+   ],
+   "tool": {
+    "label": "Feasibility",
+    "href": null,
+    "tab": "feas"
+   },
+   "done_when": "A verdict and a named weakest area.",
+   "mistakes": [
+    "Scoring without evidence."
+   ],
+   "ask": "Challenge my feasibility scores."
+  },
+  {
+   "id": "trace",
+   "title": "Trace requirements to tests",
+   "what": "Proof the system does what was agreed.",
+   "how": [
+    "Set status as items are built then tested.",
+    "Fill the test reference.",
+    "Read the gaps list until empty."
+   ],
+   "tool": {
+    "label": "Requirements",
+    "href": null,
+    "tab": "req"
+   },
+   "done_when": "80%+ of built requirements have a test.",
+   "mistakes": [
+    "Marking tested without a test."
+   ],
+   "ask": "Which requirements lack a test?"
+  }
+ ]
+}

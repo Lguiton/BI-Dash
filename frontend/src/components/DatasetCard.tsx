@@ -73,7 +73,7 @@ export function DatasetStrip({ careerId }: { careerId: string }) {
         </span>
       </div>
       <Checks c={c} />
-      <p className="mt-2 text-xs text-muted">Import a different CSV on the <Link href="/" className="underline">main dashboard</Link> and this page updates.</p>
+      <p className="mt-2 text-xs text-muted">Import a different CSV on the <Link href="/bi" className="underline">main dashboard</Link> and this page updates.</p>
     </div>
   );
 }

@@ -7,7 +7,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
 from app.config import MAX_TABLE_UPLOAD_BYTES
 from app.routers import ingest
-from app.services import backups, datasets, state
+from app.services import backups, datasets, fileformats, state
 
 router = APIRouter(prefix="/api/data", tags=["data"])
 
@@ -51,25 +51,30 @@ def _suggest(header: list[str]) -> dict[str, str]:
 
 
 @router.post("/preview")
-async def preview(file: UploadFile = File(...), sheet: str | None = Form(None)):
+async def preview(file: UploadFile = File(...), sheet: str | None = Form(None), table: str | None = Form(None)):
     raw = await _read(file)
-    res = _guard(datasets.preview, raw, file.filename or "data.csv", sheet)
+    res = _guard(datasets.preview, raw, file.filename or "data.csv", sheet, 15, table)
     res["operations"] = {"fields": OPS_FIELDS, "suggested": _suggest(res["header"])}
     return res
 
 
 @router.post("/import")
-async def import_table(file: UploadFile = File(...), table: str | None = Form(None), mode: str = Form("replace"), sheet: str | None = Form(None)):
+async def import_table(file: UploadFile = File(...), table: str | None = Form(None), mode: str = Form("replace"), sheet: str | None = Form(None),
+                       key: str | None = Form(None), date_column: str | None = Form(None), rescue: bool = Form(False)):
     raw = await _read(file)
     name = file.filename or "data.csv"
     if mode == "replace":
         backups.safety_backup("before-table-replace")
     try:
-        res = _guard(datasets.import_file, raw, name, table, mode, sheet)
+        res = _guard(datasets.import_file, raw, name, table, mode, sheet, "upload", [k.strip() for k in (key or "").split(",") if k.strip()], date_column or None, rescue)
     except HTTPException as e:
         state.audit("import_table", f"{name}: {e.detail}", ok=False)
         raise
-    state.audit("import_table", f"{name} -> {res['table']}: {res['rows']} rows ({mode})")
+    d = res.get("schema_diff")
+    changed = bool(d and not d["identical"])
+    if res.get("rescued_columns"):
+        state.audit("import_rescue", f"{name} -> {res['table']}: kept {', '.join(res['rescued_columns'])} in _rescued")
+    state.audit("import_table", f"{name} -> {res['table']}: {res['rows']} rows ({mode})" + (f"; schema changed (+{len(d['added'])} -{len(d['removed'])} ~{len(d['type_changed'])})" if changed else ""))
     return res
 
 
@@ -114,6 +119,12 @@ async def map_operations(file: UploadFile = File(...), mapping: str = Form(...),
         raise HTTPException(400, {"message": e.message, "errors": e.errors, "truncated": e.truncated}) from e
     state.audit("import_operations", f"{name} (mapped): {res['rows_loaded']} rows ({mode})")
     return res
+
+
+@router.get("/formats")
+def get_formats():
+    """The guide to common file formats and which ones this app reads."""
+    return {"formats": fileformats.FORMATS}
 
 
 @router.get("/tables")

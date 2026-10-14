@@ -1,0 +1,386 @@
+[
+ {
+  "step": "tickets",
+  "q": "A user says 'the printer is broken'. What do you do first?",
+  "options": [
+   "Reinstall the driver",
+   "Ask what changed, when it last worked, and whether others are affected",
+   "Replace the printer",
+   "Close the ticket"
+  ],
+  "answer": 1,
+  "why": "Context narrows the cause cheaply. Most problems follow a change or affect only one machine."
+ },
+ {
+  "step": "assets",
+  "q": "Why record a warranty end date in the inventory?",
+  "options": [
+   "It is required by law",
+   "So you can plan replacement or repair cover before it lapses",
+   "It speeds up the computer",
+   "Printers need it"
+  ],
+  "answer": 1,
+  "why": "Knowing expiry dates lets you budget and act before a failure becomes expensive."
+ },
+ {
+  "step": "events",
+  "q": "The log shows 30 failed logons for one account, then a successful logon from the same address. Best reading?",
+  "options": [
+   "Normal behaviour",
+   "Possible takeover: check the account, reset it and see what it did afterwards",
+   "A printer problem",
+   "Clock drift"
+  ],
+  "answer": 1,
+  "why": "Many failures followed by a success from the same source is a classic password-guessing pattern. It is a lead to investigate."
+ },
+ {
+  "step": "checklists",
+  "q": "When someone leaves, what should you do with their account on day one?",
+  "options": [
+   "Delete it immediately",
+   "Disable it, reset the password and sign out sessions, then delete after the retention period",
+   "Leave it as is",
+   "Give it to a colleague"
+  ],
+  "answer": 1,
+  "why": "Disabling keeps data and evidence available while stopping access. Deleting first can destroy what you later need."
+ },
+ {
+  "step": "capacity",
+  "q": "Why is RAID not a backup?",
+  "options": [
+   "It is too slow",
+   "It protects against a disk failing, not against deletion, ransomware or a fire",
+   "It uses too much space",
+   "Backups are always faster"
+  ],
+  "answer": 1,
+  "why": "RAID copies mistakes instantly. A backup is a separate, restorable copy, ideally off-site and tested."
+ },
+ {
+  "step": "itfund",
+  "q": "A new 1 TB drive shows about 931 GB in the operating system. What explains it?",
+  "options": [
+   "The drive is faulty",
+   "The maker counts in powers of 1000 and the OS in powers of 1024",
+   "Formatting always removes 7%",
+   "The drive is partly reserved for backups"
+  ],
+  "answer": 1,
+  "why": "1 TB is 10^12 bytes. Divided by 1024^3 that is about 931 GiB, which many systems label GB. Nothing is missing."
+ },
+ {
+  "step": "itfund",
+  "q": "What is the decimal value of binary 01010111?",
+  "options": [
+   "57",
+   "87",
+   "103",
+   "127"
+  ],
+  "answer": 1,
+  "why": "64 + 16 + 4 + 2 + 1 = 87. Hex 57 is the same bits written compactly, which is why 57 is a tempting wrong answer."
+ },
+ {
+  "step": "itfund",
+  "q": "What does chmod 640 on a file allow?",
+  "options": [
+   "Owner read and write, group read, others nothing",
+   "Owner read only, others read and write",
+   "Everyone read and write",
+   "Owner execute only"
+  ],
+  "answer": 0,
+  "why": "6 = read+write for the owner, 4 = read for the group, 0 = nothing for others."
+ },
+ {
+  "step": "itfund",
+  "q": "Which mode makes a shared directory sticky so users can only delete their own files?",
+  "options": [
+   "175",
+   "1775",
+   "0775",
+   "7775 is the only one"
+  ],
+  "answer": 1,
+  "why": "The leading 1 is the sticky bit; 1777 or 1775 are typical. 175 has no special bit at all."
+ },
+ {
+  "step": "itfund",
+  "q": "Which logic gate outputs 1 only when its two inputs differ?",
+  "options": [
+   "AND",
+   "NAND",
+   "XOR",
+   "XNOR"
+  ],
+  "answer": 2,
+  "why": "XOR means exclusive or: different inputs give 1. XNOR is the opposite."
+ },
+ {
+  "step": "itfund",
+  "q": "A TCP test to a port says 'connection refused' instantly, but another port just times out. What does that suggest?",
+  "options": [
+   "Both are blocked the same way",
+   "Refused means the host answered and nothing listens; a timeout suggests a firewall or no route",
+   "Refused means the firewall dropped it",
+   "A timeout means the service is running"
+  ],
+  "answer": 1,
+  "why": "A refusal comes from the host itself. A silent timeout usually means packets are dropped on the way or the host is unreachable."
+ },
+ {
+  "step": "cheats",
+  "q": "Before running a command you found online on a production server, you should:",
+  "options": [
+   "Run it immediately",
+   "Understand what it does and try it on a test machine or with a dry run first",
+   "Ask nobody",
+   "Run it as administrator to be safe"
+  ],
+  "answer": 1,
+  "why": "Commands like mirror-copy or delete flags can destroy data. Read it, test it, and keep a backup."
+ },
+ {
+  "step": "aplus1",
+  "q": "A PC gets 169.254.20.5 and cannot reach anything. What is the most likely cause?",
+  "options": [
+   "The DNS server is down",
+   "It could not reach a DHCP server and gave itself an APIPA address",
+   "The subnet mask is too large",
+   "The monitor cable is loose"
+  ],
+  "answer": 1,
+  "why": "169.254.0.0/16 is APIPA. Check the link, the DHCP server and its scope."
+ },
+ {
+  "step": "aplus1",
+  "q": "A hard drive is clicking and the PC reports 'bootable device not found'. What comes first?",
+  "options": [
+   "Defragment it",
+   "Back up what you can, then replace the drive",
+   "Reinstall the OS on it",
+   "Format it to clear the errors"
+  ],
+  "answer": 1,
+  "why": "Clicking means mechanical failure. Protect the data before anything else."
+ },
+ {
+  "step": "aplus2",
+  "q": "In the SOHO malware removal order, what follows verifying the symptoms?",
+  "options": [
+   "Educate the user",
+   "Quarantine the infected system",
+   "Reinstall Windows",
+   "Schedule scans"
+  ],
+  "answer": 1,
+  "why": "Isolate it first so it can't spread; remediate and educate later."
+ },
+ {
+  "step": "aplus2",
+  "q": "A backup copies only what changed since the last full backup. Which type is it?",
+  "options": [
+   "Incremental",
+   "Differential",
+   "Synthetic full",
+   "Mirror"
+  ],
+  "answer": 1,
+  "why": "Differential grows each day but restores with just the full and the latest differential; incremental needs the whole chain."
+ },
+ {
+  "step": "aplus2",
+  "q": "You find a script online that fixes your problem. What should you do before running it?",
+  "options": [
+   "Run it as administrator so it works",
+   "Read it, test it away from production and back up first",
+   "Disable antivirus so it is not blocked",
+   "Run it at night so nobody notices"
+  ],
+  "answer": 1,
+  "why": "Scripts can introduce malware or change settings. Read, test, back up."
+ },
+ {
+  "step": "aplus2",
+  "q": "Which change type is for an urgent fix that cannot wait for the usual approval cycle?",
+  "options": [
+   "Standard change",
+   "Normal change",
+   "Emergency change",
+   "Change freeze"
+  ],
+  "answer": 2,
+  "why": "Emergency changes are expedited but still documented and reviewed afterwards."
+ },
+ {
+  "step": "itfund",
+  "q": "A headset's microphone doesn't work on a laptop, but it works on an old phone. What is the likely cause?",
+  "options": [
+   "The headphones are too quiet",
+   "A CTIA versus OMTP wiring mismatch on the 4-contact plug",
+   "The laptop has no sound card",
+   "The cable is too long"
+  ],
+  "answer": 1,
+  "why": "The two layouts swap the ground and microphone contacts. An adapter converts between them."
+ },
+ {
+  "step": "itfund",
+  "q": "You run 'parted /dev/sdb mklabel gpt'. When does the change happen?",
+  "options": [
+   "After you type w",
+   "Immediately, with no save step",
+   "On the next reboot",
+   "Only if you confirm twice"
+  ],
+  "answer": 1,
+  "why": "parted writes as you go, unlike fdisk which keeps changes in memory until w. mklabel replaces the whole partition table, so check the device name first."
+ },
+ {
+  "step": "infra-gpo",
+  "q": "A domain GPO sets a wallpaper and an OU GPO sets a different one. Neither is Enforced. Which applies to a computer in that OU?",
+  "options": [
+   "The domain one",
+   "The OU one",
+   "Whichever was created first",
+   "Neither; they cancel out"
+  ],
+  "answer": 1,
+  "why": "Local, Site, Domain, then OUs: the last applied wins, so the more specific OU wins unless the domain GPO is Enforced."
+ },
+ {
+  "step": "infra-gpo",
+  "q": "Within one container two GPOs conflict. Which wins?",
+  "options": [
+   "The one with link order 1",
+   "The one with the highest link order number",
+   "The newer one",
+   "The one with fewer settings"
+  ],
+  "answer": 0,
+  "why": "Link order 1 is applied last, so it has the highest precedence."
+ },
+ {
+  "step": "infra-ldap",
+  "q": "Why shouldn't an LDIF file contain userPassword: Summer2024?",
+  "options": [
+   "LDIF cannot hold passwords",
+   "The password sits in plain text in a file that gets copied and logged; use a hash",
+   "It is too short",
+   "It must be base64 and that is enough"
+  ],
+  "answer": 1,
+  "why": "Anyone who sees the file sees the password. Base64 is encoding, not protection."
+ },
+ {
+  "step": "infra-resilience",
+  "q": "Why is RAID 5 with very large disks risky?",
+  "options": [
+   "It is slow to read",
+   "One read error during a long rebuild can lose the array",
+   "It cannot be rebuilt",
+   "It uses two parity disks"
+  ],
+  "answer": 1,
+  "why": "Single parity must read every other disk perfectly during the rebuild, and the more data, the likelier a read error."
+ },
+ {
+  "step": "infra-resilience",
+  "q": "Which backup scheme restores from the fewest sets in a week with a weekly full?",
+  "options": [
+   "Incremental",
+   "Differential",
+   "Neither; both need all sets",
+   "A full backup only"
+  ],
+  "answer": 1,
+  "why": "A differential restore needs the last full plus one differential; incrementals need the full plus every incremental since."
+ },
+ {
+  "step": "infra-web",
+  "q": "A user gets a 502 Bad Gateway. Where do you look first?",
+  "options": [
+   "The user's browser cache",
+   "The server behind the proxy or load balancer",
+   "The user's DNS",
+   "The certificate"
+  ],
+  "answer": 1,
+  "why": "502 means a gateway got an invalid reply from the upstream server, so check that upstream and the proxy's timeouts."
+ },
+ {
+  "step": "infra-web",
+  "q": "Does a load balancer by itself make a service highly available?",
+  "options": [
+   "Yes, always",
+   "No; it is a single point of failure unless it is redundant and uses health checks",
+   "Only with round robin",
+   "Only for HTTPS"
+  ],
+  "answer": 1,
+  "why": "Without health checks it keeps sending traffic to a dead server, and one balancer is a single point of failure."
+ },
+ {
+  "step": "ticket-coach",
+  "q": "Which title is best for a support ticket?",
+  "options": [
+   "Help!!",
+   "Outlook not working",
+   "Outlook crashes when opening PDF attachments (Windows 11)",
+   "URGENT please fix my computer"
+  ],
+  "answer": 2,
+  "why": "It names the program, the symptom and the setting. The others do not say what is wrong or where."
+ },
+ {
+  "step": "ticket-coach",
+  "q": "You fix a problem by restarting the PC and do not know why it failed. What is the best closing note?",
+  "options": [
+   "Fixed",
+   "Restarted, works now; cause unknown, will raise a problem ticket if it returns",
+   "Resolved by IT",
+   "Done"
+  ],
+  "answer": 1,
+  "why": "It is honest about the cause and tells the next person what to do if the problem comes back."
+ },
+ {
+  "step": "ticket-coach",
+  "q": "Why should you never write a password in a ticket?",
+  "options": [
+   "Tickets are limited in length",
+   "Many people can read tickets and they are kept, so the password is exposed",
+   "It makes the ticket low priority",
+   "Passwords are case sensitive"
+  ],
+  "answer": 1,
+  "why": "A ticket is a shared, stored record. Say you can give the password by phone if it is needed."
+ },
+ {
+  "step": "virt",
+  "q": "In a vSphere build, why give management, vMotion and storage traffic separate networks or VLANs?",
+  "options": [
+   "It is required by Windows",
+   "They have different security and performance needs and should not interfere",
+   "It saves licences",
+   "To use fewer cables"
+  ],
+  "answer": 1,
+  "why": "Mixing traffic types lets heavy migration or storage traffic disturb management, and widens the blast radius of a problem."
+ },
+ {
+  "step": "software",
+  "q": "Which is a sound way to choose a software tool?",
+  "options": [
+   "Pick the highest rating",
+   "Know your stack and gaps, shortlist, trial it, and plan how to get your data out",
+   "Pick the cheapest",
+   "Pick whatever a vendor ranking says is first"
+  ],
+  "answer": 1,
+  "why": "Ratings are one input. A trial shows fit, and an exit plan avoids lock-in. Vendor-published rankings are not neutral."
+ }
+]

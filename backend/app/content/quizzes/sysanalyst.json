@@ -1,0 +1,170 @@
+[
+ {
+  "step": "elicit",
+  "q": "Which requirement is testable?",
+  "options": [
+   "The system should be fast",
+   "The report loads in under 3 seconds for 100,000 rows",
+   "The interface must be user friendly",
+   "The system must be robust"
+  ],
+  "answer": 1,
+  "why": "A testable requirement has a measurable condition. 'Fast' and 'friendly' can't fail a test."
+ },
+ {
+  "step": "data",
+  "q": "In a data model, a foreign key:",
+  "options": [
+   "Encrypts a column",
+   "Links a row in one table to a row in another",
+   "Makes a column unique",
+   "Speeds up every query"
+  ],
+  "answer": 1,
+  "why": "It expresses a relationship, such as each record belonging to an entity, and lets the database reject orphans."
+ },
+ {
+  "step": "size",
+  "q": "As server utilisation approaches 100%, average waiting time in a queue:",
+  "options": [
+   "Grows slowly and linearly",
+   "Stays the same",
+   "Rises sharply, without a limit",
+   "Drops"
+  ],
+  "answer": 2,
+  "why": "Queues are non-linear. Running at 95% utilisation produces long waits, which is why you size for headroom."
+ },
+ {
+  "step": "cba",
+  "q": "Net present value discounts future cash flows because:",
+  "options": [
+   "Inflation is always zero",
+   "Money received later is worth less than money today",
+   "Future costs don't count",
+   "It makes the project look worse on purpose"
+  ],
+  "answer": 1,
+  "why": "A dollar today can be invested. Discounting puts all cash flows on the same footing."
+ },
+ {
+  "step": "feasible",
+  "q": "TELOS feasibility covers which five dimensions?",
+  "options": [
+   "Time, Effort, Labour, Output, Scope",
+   "Technical, Economic, Legal, Operational, Schedule",
+   "Test, Estimate, Launch, Operate, Support",
+   "Tools, Equipment, Law, Org, Security"
+  ],
+  "answer": 1,
+  "why": "Scoring each dimension shows the weakest one before you commit."
+ },
+ {
+  "step": "trace",
+  "q": "A traceability matrix links each requirement to:",
+  "options": [
+   "The person who wrote it",
+   "The design and test that prove it was met",
+   "The invoice",
+   "The release date only"
+  ],
+  "answer": 1,
+  "why": "It shows which requirements have no test and which tests cover no requirement."
+ },
+ {
+  "step": "problem",
+  "q": "What should a problem statement describe?",
+  "options": [
+   "The solution you plan to build",
+   "The problem and who is affected, so any proposal can be judged against it",
+   "The team's schedule",
+   "The technology to use"
+  ],
+  "answer": 1,
+  "why": "Writing the solution instead of the problem makes it impossible to tell whether another solution would work better."
+ },
+ {
+  "step": "process",
+  "q": "You can speed up any step of a process. Which one should you work on?",
+  "options": [
+   "The easiest",
+   "The bottleneck, the step that limits the whole flow",
+   "The first",
+   "The last"
+  ],
+  "answer": 1,
+  "why": "Speeding up a step that is not the bottleneck does not change the end-to-end time."
+ },
+ {
+  "step": "sot-systems-metrics",
+  "q": "Three systems all store customer addresses and none is designated the master. What is the problem?",
+  "options": [
+   "Too much storage",
+   "The copies will drift and nobody knows which is right",
+   "It is always fine",
+   "Customers will complain"
+  ],
+  "answer": 1,
+  "why": "Without one system of record, each copy can be changed separately and you cannot say which version to trust."
+ },
+ {
+  "step": "sot-systems-metrics",
+  "q": "Which best describes a single source of truth?",
+  "options": [
+   "One giant database",
+   "One designated owner system per piece of information, with other systems copying from it",
+   "A shared spreadsheet",
+   "A weekly meeting"
+  ],
+  "answer": 1,
+  "why": "It is about ownership of each piece of information, not about putting everything in one product."
+ },
+ {
+  "step": "sot-systems-metrics",
+  "q": "A metric appears in a report but supports no decision and has no owner. What should you do?",
+  "options": [
+   "Keep it",
+   "Name the decision and an owner, or drop it",
+   "Make the chart bigger",
+   "Add more metrics"
+  ],
+  "answer": 1,
+  "why": "Data should support action. A number nobody owns or uses is noise."
+ },
+ {
+  "step": "sot-docs-people",
+  "q": "Which file name is the biggest warning sign?",
+  "options": [
+   "WP-12 welding procedure",
+   "WP-12 final v2 new copy",
+   "WP-12",
+   "Welding procedure WP-12"
+  ],
+  "answer": 1,
+  "why": "Version words in a name mean nobody knows which copy is current. Keep the version in a field."
+ },
+ {
+  "step": "sot-docs-people",
+  "q": "Why ask 'if the compliance manager left tomorrow, what would happen?'",
+  "options": [
+   "To plan a party",
+   "It reveals whether knowledge is documented and shared or held by one person",
+   "To fire them",
+   "It is required by law"
+  ],
+  "answer": 1,
+  "why": "Compliance systems should work without any one individual. The answer shows how fragile they are."
+ },
+ {
+  "step": "sot-docs-people",
+  "q": "40 people each search for documents 3 times a day for 8 minutes. What is wrong with quoting the yearly cost?",
+  "options": [
+   "Nothing",
+   "It is only as good as the guesses; time a real retrieval test first",
+   "Cost cannot be computed",
+   "Searches are free"
+  ],
+  "answer": 1,
+  "why": "The arithmetic is easy, but the inputs are estimates. Measure a sample before presenting the number."
+ }
+]

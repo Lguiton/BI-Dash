@@ -54,6 +54,7 @@ MODELS = {
         "random_forest": "Random forest",
         "gradient_boosting": "Gradient boosting",
         "neural_net": "Small neural network (MLP)",
+        "knn": "Nearest neighbor (k=15)",
         "hist_gradient_boosting": "Histogram gradient boosting (XGBoost-style)",
     },
     "classification": {
@@ -61,6 +62,7 @@ MODELS = {
         "random_forest": "Random forest",
         "gradient_boosting": "Gradient boosting",
         "neural_net": "Small neural network (MLP)",
+        "knn": "Nearest neighbor (k=15)",
         "hist_gradient_boosting": "Histogram gradient boosting (XGBoost-style)",
     },
 }
@@ -118,6 +120,7 @@ def _build_model(kind: str, name: str, num: list[str], cat: list[str], balance: 
                                   RandomForestClassifier, RandomForestRegressor)
     from sklearn.impute import SimpleImputer
     from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
+    from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
     from sklearn.neural_network import MLPClassifier, MLPRegressor
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -137,6 +140,8 @@ def _build_model(kind: str, name: str, num: list[str], cat: list[str], balance: 
         # a small neural network: two hidden layers. scikit-learn's MLP runs on the CPU and needs no extra install.
         ("regression", "hist_gradient_boosting"): lambda: HistGradientBoostingRegressor(max_iter=150, random_state=RANDOM_STATE),
         ("classification", "hist_gradient_boosting"): lambda: HistGradientBoostingClassifier(max_iter=150, random_state=RANDOM_STATE, class_weight=cw),
+        ("regression", "knn"): lambda: KNeighborsRegressor(n_neighbors=15),
+        ("classification", "knn"): lambda: KNeighborsClassifier(n_neighbors=15),
         ("regression", "neural_net"): lambda: MLPRegressor(hidden_layer_sizes=(32, 16), max_iter=400, random_state=RANDOM_STATE),
         ("classification", "neural_net"): lambda: MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=400, random_state=RANDOM_STATE),
         ("classification", "logistic"): lambda: LogisticRegression(max_iter=1000, class_weight=cw),

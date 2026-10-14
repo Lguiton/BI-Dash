@@ -1,0 +1,242 @@
+{
+ "title": "Computer Engineer: from bits and circuits to vehicle electronics",
+ "intro": "Computer engineering joins electrical engineering and computer science. Start with how numbers and logic work, add DC circuits and computer architecture, then apply the same habits to a vehicle: wire, fuse, bus and charging. The tools do arithmetic and show their working; they never replace building the circuit, measuring it, or following a service manual.",
+ "outcome": "Number and logic conversions you can do by hand, a sized and fused circuit, a CAN bus-load estimate, an EV charge plan and a written safety note.",
+ "steps": [
+  {
+   "id": "numbers",
+   "title": "Move between binary, decimal and hex, and see overflow",
+   "what": "Everything a computer stores is bits. Engineers read binary, octal and hex fluently, know that negatives are stored in two's complement, and know that a fixed width overflows. Decimals such as 0.1 cannot be stored exactly in binary, so floating point is always an approximation.",
+   "how": [
+    "Open Numbers > Number systems and convert -45 at 8 bits. Follow the invert-and-add-1 steps by hand first.",
+    "Convert hex FF, then try 200 at 8 bits signed. Read why it does not fit.",
+    "Open Signed add and overflow: add 100 and 50 at 8 bits. What does the stored result say?",
+    "Open Floating point and store 0.1 as float32 and float64. How big is the error?"
+   ],
+   "tool": {
+    "label": "Numbers",
+    "href": null,
+    "tab": "numbers"
+   },
+   "done_when": "You can convert by hand, write -45 in 8 bits, and explain overflow and why you never compare floats with ==.",
+   "mistakes": [
+    "Stopping at the inverted bits and calling it two's complement.",
+    "Forgetting the bit width: the same bits mean different numbers in 8 and 16 bits.",
+    "Comparing floating point values for exact equality."
+   ],
+   "ask": "How do I write -5 in 8-bit two's complement, and what happens if I add 127 and 1?"
+  },
+  {
+   "id": "logic",
+   "title": "Simplify logic and prove two circuits are the same",
+   "what": "Digital circuits are Boolean expressions. Fewer terms mean fewer gates, which means a cheaper and faster circuit. NAND and NOR can build any function. De Morgan's laws let you swap AND and OR by inverting the inputs and output.",
+   "how": [
+    "Open Logic > Truth table and simplify. Enter A AND B OR A AND NOT B and read the simplified form.",
+    "Enter A XOR B and write the two terms it needs.",
+    "Open Are two expressions equal? and test NOT(A AND B) against NOT A OR NOT B, then against NOT A AND NOT B.",
+    "Write the truth table of a three-input alarm (door, window, armed) and simplify it."
+   ],
+   "tool": {
+    "label": "Logic",
+    "href": null,
+    "tab": "logic"
+   },
+   "done_when": "You can simplify a three-variable expression by hand and confirm it with the tool, and state both De Morgan laws.",
+   "mistakes": [
+    "Treating A + B as addition. In logic + means OR.",
+    "Dropping a bracket: NOT(A AND B) is not NOT A AND NOT B.",
+    "Simplifying by eye and not checking every input row."
+   ],
+   "ask": "Is NOT(A OR B) the same as NOT A AND NOT B, and how can I prove it?"
+  },
+  {
+   "id": "circuits",
+   "title": "Size a resistor and read a simple DC circuit",
+   "what": "Ohm's law (V = I x R) and power (P = V x I) explain most of DC electronics. Series resistors add; parallel resistors give less than the smallest branch. A voltage divider is two resistors, but a load changes its output. A circuit's zero volts is a chosen reference, not always the earth.",
+   "how": [
+    "Open Circuits > Ohm's law. Enter 12 V and 4 ohm and read the current and power.",
+    "Open Series and parallel with 100, 220 and 470 ohm in parallel. Is the total below 100?",
+    "Open LED resistor for a 12 V supply, 2 V LED and 20 mA. Why round up to the standard value?",
+    "Open Voltage divider with 10 k and 10 k, then add a 10 k load. What happened to the output?"
+   ],
+   "tool": {
+    "label": "Circuits",
+    "href": null,
+    "tab": "circuits"
+   },
+   "done_when": "You can find the current, power and resistor for a simple circuit and say why a load changes a divider.",
+   "mistakes": [
+    "Using a resistor with too small a power rating, so it overheats.",
+    "Adding parallel resistors like series ones.",
+    "Assuming ground means earth. In a vehicle the reference is the chassis."
+   ],
+   "ask": "What resistor do I need to run a 2 V LED at 20 mA from a 12 V supply?"
+  },
+  {
+   "id": "arch",
+   "title": "Read a cache address and judge a speedup",
+   "what": "A processor's speed depends on memory and instruction flow as much as clock rate. A cache address splits into tag, index and offset. Average memory access time combines hit time and misses. Amdahl's law shows the part you did not speed up limits the whole. Pipelines overlap instructions, but hazards add stalls.",
+   "how": [
+    "Open Architecture > Cache address split with 32 address bits, 32 KB cache, 64 byte blocks and 4 ways. Check the bit counts add to 32.",
+    "Open AMAT with 1 cycle hit, 5% miss and 100 cycle penalty.",
+    "Open Amdahl's law with 90% improved 10 times. What is the limit if that part were instant?",
+    "Open Pipeline speedup: 5 stages, 100 instructions, then add 10 stall cycles."
+   ],
+   "tool": {
+    "label": "Architecture",
+    "href": null,
+    "tab": "arch"
+   },
+   "done_when": "You can split an address into tag, index and offset, and explain why the unimproved part limits speedup.",
+   "mistakes": [
+    "Comparing processors by clock rate alone.",
+    "Believing a deeper pipeline is always faster.",
+    "Treating RAID as a backup."
+   ],
+   "ask": "Why does making 90% of a program ten times faster only give about a 5 times speedup?"
+  },
+  {
+   "id": "wiring",
+   "title": "Choose the wire and fuse for a 12 V circuit",
+   "what": "A vehicle harness is a set of wires, fuses and grounds. Voltage drop is current times wire resistance, and the return path counts. The fuse protects the wire, not the device, so it must be no bigger than the wire can carry. Colours are not a standard: use the vehicle's own wiring diagram.",
+   "how": [
+    "Open Vehicle wiring > Wire, drop and fuse for a 10 A load 3 m away. Read the drop at the next thinner size.",
+    "Open Harness checker, load the sample and find the circuits that could start a fire.",
+    "Open CAN bus load with the sample messages, then double the rates.",
+    "Open CAN termination and enter 60, 120 and 40 ohm. What does each mean?"
+   ],
+   "tool": {
+    "label": "Vehicle wiring",
+    "href": null,
+    "tab": "wiring"
+   },
+   "done_when": "You can size a wire and fuse, find a fuse bigger than its wire, and say what a 60 ohm CAN reading means.",
+   "mistakes": [
+    "A fuse chosen for the device instead of the wire.",
+    "Ignoring the return path in the voltage drop.",
+    "Trusting a diagram's colour key instead of the vehicle's wiring diagram.",
+    "Probing airbag connectors (yellow)."
+   ],
+   "ask": "Can I put a 30 A fuse on a 0.5 mm2 wire if the device needs 8 A?"
+  },
+  {
+   "id": "systems",
+   "title": "Know how the main vehicle electronic systems fit together",
+   "what": "Modern cars are networks: zone controllers, a gateway, CAN and LIN for slow devices, and automotive Ethernet for cameras and radar. Smart keys, airbags and 360 cameras are each a small system of sensors, a controller and actuators, with safety rules of their own.",
+   "how": [
+    "Open Systems reference and read the zonal architecture card. Where does a door switch's signal go?",
+    "Read the airbag, keyless and 360-camera cards. Note the safety line on each.",
+    "Open Vehicle buses compared. Which bus would you use for a camera and which for a window switch?",
+    "Read the mistakes list and find two diagram errors."
+   ],
+   "tool": {
+    "label": "Systems reference",
+    "href": null,
+    "tab": "systems"
+   },
+   "done_when": "You can draw the path from a switch to an actuator, name the bus used, and state the safety limits.",
+   "mistakes": [
+    "Thinking all buses are the same speed.",
+    "Treating a diagram as a service manual.",
+    "Working on airbags or high-voltage cables without training."
+   ],
+   "ask": "Why do cameras use Ethernet when window switches use LIN?"
+  },
+  {
+   "id": "ev",
+   "title": "Plan EV charging and understand high-voltage basics",
+   "what": "AC charging uses the car's on-board charger; DC fast charging bypasses it and slows as the battery fills. Cells in series add voltage, in parallel add capacity. Pre-charge protects the contactor, and insulation monitoring keeps the high voltage off the chassis. Above 60 V DC is high voltage in vehicle standards.",
+   "how": [
+    "Open EV > AC charge time for a 60 kWh battery, 20 to 80%, 230 V 32 A single phase.",
+    "Change to three phase 16 A. Which part limits the speed now?",
+    "Open DC fast charge time: 150 kW station, 120 kW car. Why is the last 20% slow?",
+    "Open Battery pack layout with 96 cells in series and 3 in parallel."
+   ],
+   "tool": {
+    "label": "EV",
+    "href": null,
+    "tab": "ev"
+   },
+   "done_when": "You can estimate charge time, name the limiting part, and work out pack voltage and energy.",
+   "mistakes": [
+    "Using the station's rated power as if the car could take it.",
+    "Assuming charging speed is constant to 100%.",
+    "Thinking orange cables are safe to touch when the car is off."
+   ],
+   "ask": "Why does my EV charge slower than the 150 kW the station advertises?"
+  },
+  {
+   "id": "simulate",
+   "title": "Simulate a circuit, a CPU and a cache",
+   "what": "Build a half adder as a netlist and watch its outputs for every input. Then run a short program on the tiny CPU and see the registers and flags change one step at a time. Finally feed a cache a list of addresses and learn why each miss happened. The models are small on purpose: they show the idea, not a real chip.",
+   "how": [
+    "Open Computer Engineer > Simulators > Logic circuit, click Load sample, and run it. Read the sum and carry for each input row.",
+    "Change one gate and predict the new outputs before you run it again.",
+    "Open Tiny CPU, load the multiply sample, and run it. Find the step where the zero flag turns on and explain why the loop ends.",
+    "Open Cache trace and run the sample. Change the ways from 2 to 1 and find which misses become conflict misses.",
+    "Open Circuit solver, load the bridge sample, and check one node voltage by hand."
+   ],
+   "tool": {
+    "label": "Simulators",
+    "href": null,
+    "tab": "sim"
+   },
+   "done_when": "You can predict a small circuit's output, trace a loop on the CPU, and say why a miss was a first touch, a capacity miss or a conflict miss.",
+   "mistakes": [
+    "Trusting the simulator instead of checking one value by hand.",
+    "Forgetting that a flip-flop only changes on the clock step.",
+    "Calling every miss a capacity miss. A cache with room left can still miss because two addresses share one set.",
+    "Treating the teaching CPU as a real instruction set."
+   ],
+   "ask": "Why can a cache with free space still miss, and how would adding ways change that?"
+  },
+  {
+   "id": "decode",
+   "title": "Decode what a vehicle says on its network",
+   "what": "A CAN frame is eight bytes with no labels. A signal definition says which bits, in which byte order, with what scale. Practice reading engine speed from raw bytes, splitting a heavy-vehicle ID into its parts, turning a trouble code into its structure, and reading a charging-signal duty cycle. Use the maker's definitions for real work: guessed scales give wrong numbers.",
+   "how": [
+    "Open Computer Engineer > Vehicle decoders > CAN signals, load the sample and read each value. Check the engine speed by hand: raw x 0.25.",
+    "Change the byte order of a signal from intel to motorola and see why the value changes.",
+    "Decode a J1939 ID. Which part is the PGN and which is the sender?",
+    "Decode P0301 and then U0100. What does the first letter tell you?",
+    "Enter a charge pilot duty of 53 and check the amps by the rule shown."
+   ],
+   "tool": {
+    "label": "Vehicle decoders",
+    "href": null,
+    "tab": "veh"
+   },
+   "done_when": "You can read a signal from raw bytes by hand and say which byte order and scale you used.",
+   "mistakes": [
+    "Reading a Motorola signal as Intel. The start bit means a different place.",
+    "Forgetting the offset, for example coolant temperature is raw minus 40.",
+    "Replacing a part because of a code. A code names a circuit or condition.",
+    "Sending messages onto a real vehicle bus without a plan and the right interface."
+   ],
+   "ask": "A signal reads 11290 raw with factor 0.25. What is the value, and what could make it wrong?"
+  },
+  {
+   "id": "practice",
+   "title": "Apply it: a small vehicle conversion on paper",
+   "what": "Pick a small project, such as adding auxiliary lights and a fuel pump relay to a vehicle. Calculate each circuit, check the fuse against the wire, and estimate the bus traffic any new module adds. Write what you would measure on a real vehicle.",
+   "how": [
+    "List six circuits with load, length and wire size in the Harness checker. Fix every flagged line.",
+    "Estimate the CAN messages a new module would add and recheck the bus load.",
+    "Write the measurements you would take on the car (supply voltage under load, voltage drop, CAN termination).",
+    "Write a safety note for the job: battery disconnect, airbags and who must do the work."
+   ],
+   "tool": {
+    "label": "Vehicle wiring",
+    "href": null,
+    "tab": "wiring"
+   },
+   "done_when": "A checked harness table, a bus-load estimate and a written safety note.",
+   "mistakes": [
+    "Skipping the measurement step: calculations are not a test.",
+    "Adding a module without checking the bus load.",
+    "Working near airbag circuits without the maker's procedure."
+   ],
+   "ask": "I want to add auxiliary lights and a relay. How do I check the wiring on paper first?"
+  }
+ ]
+}

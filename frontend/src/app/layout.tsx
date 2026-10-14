@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthGate } from "@/components/AuthGate";
+import { PwaSetup } from "@/components/PwaSetup";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -8,10 +10,14 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "BI Dashboard",
   description: "Operations analytics: revenue, cost, margin, trends and insights.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "BI Dash", statusBarStyle: "black-translucent" },
 };
+export const viewport = { themeColor: "#0f172a" };
 
 // Apply a saved theme before first paint to avoid a light/dark flash.
-const themeScript = `try{var t=localStorage.getItem("bi-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("bi-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);if(localStorage.getItem("bi-ws")==="real")document.documentElement.setAttribute("data-workspace","real")}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -19,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col"><AuthGate>{children}</AuthGate><PwaSetup /></body>
     </html>
   );
 }

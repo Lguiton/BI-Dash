@@ -55,6 +55,8 @@ def dataset():
          "checks": [check(True, "no business data needed", "ready")]},
         {"id": "itsupport", "name": "IT Specialist", "uses": "Helpdesk, inventory, event-log reader, checklists, calculators (these need no business data)",
          "checks": [check(True, "no business data needed", "ready")]},
+        {"id": "cpe", "name": "Computer Engineer", "uses": "Number-system, logic, circuit, architecture and vehicle-electronics calculators (these need no business data)",
+         "checks": [check(True, "no business data needed", "ready")]},
         {"id": "ai", "name": "AI Engineering", "uses": "AI Lab questions and charts over your tables",
          "checks": [check(n > 0, "at least 1 record", f"{n:,} records"), check(_ai_ready(), "an API key in backend/.env", "key found" if _ai_ready() else "no key yet")]},
     ]

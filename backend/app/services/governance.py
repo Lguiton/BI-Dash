@@ -279,3 +279,122 @@ def access_summary() -> dict:
     return {"since": since, "by_action": rows, "failed_total": sum(r["failed"] or 0 for r in rows), "data_leaving": leaving,
             "ai": {"mode": workspaces.settings(_ws())["ai_mode"], "blocked_columns": workspaces.settings(_ws())["blocked_columns"]},
             "note": "'Data leaving' counts exports, emailed reports and AI questions: the three ways data goes beyond this computer."}
+
+
+# ------------------------------------------------------------------ de-identification and erasure
+METHODS = {"mask": "Keep only the last 2 characters, hide the rest with *", "pseudonym": "Replace with a stable artificial id (the same value always gets the same id)",
+           "generalize": "Make less precise (dates to the year, numbers to a band, text to its first letter)", "drop": "Leave the column out"}
+
+
+def _salt() -> str:
+    key = f"gov_salt:{_ws()}"
+    s = state.kv_get(key)
+    if not s:
+        import secrets
+        s = secrets.token_hex(16)
+        state.kv_set(key, s)
+    return s
+
+
+def deidentify(table: str, columns: dict[str, str], new_table: str) -> dict:
+    """Make a de-identified COPY of a table. The original is never changed.
+
+    Masking and generalizing reduce detail; pseudonyms are stable so tables can still be joined. A copy is NOT proof of
+    anonymity: other columns together can still point to a person.
+    """
+    import json
+    from app.services import datasets
+    from app.services.datasets import q
+    if not (new_table or "").strip():
+        raise GovError("Name the new table.")
+    if not columns:
+        raise GovError("Pick at least one column to de-identify.")
+    bad = [m for m in columns.values() if m not in METHODS]
+    if bad:
+        raise GovError(f"Method must be one of {', '.join(METHODS)}.")
+    try:
+        have = {c["name"]: datasets.kind_of(c["type"]) for c in datasets.table_columns(table)}
+    except datasets.DataError as e:
+        raise GovError(str(e), 404) from e
+    if table in SYSTEM_TABLES:
+        raise GovError("That is a built-in table.")
+    missing = [c for c in columns if c not in have]
+    if missing:
+        raise GovError(f"Not a column in {table}: {', '.join(missing)}.", 404)
+    target = datasets.table_name_for(new_table)
+    if target == table:
+        raise GovError("The new table needs a different name: the original is never changed.")
+    salt = _salt().replace("'", "")
+    parts = []
+    with get_cursor() as cur:
+        for c, k in have.items():
+            m = columns.get(c)
+            qc = q(c)
+            if m == "drop":
+                continue
+            if not m:
+                parts.append(qc)
+            elif m == "mask":
+                parts.append(f"CASE WHEN {qc} IS NULL THEN NULL ELSE repeat('*', GREATEST(LENGTH(CAST({qc} AS VARCHAR)) - 2, 0)) || RIGHT(CAST({qc} AS VARCHAR), 2) END AS {qc}")
+            elif m == "pseudonym":
+                parts.append(f"CASE WHEN {qc} IS NULL THEN NULL ELSE 'P-' || SUBSTR(md5('{salt}' || CAST({qc} AS VARCHAR)), 1, 10) END AS {qc}")
+            elif k == "date":
+                parts.append(f"CAST(DATE_TRUNC('year', {qc}) AS DATE) AS {qc}")
+            elif k == "number":
+                top = cur.execute(f"SELECT MAX(ABS({qc})) FROM {q(table)}").fetchone()[0] or 1
+                width = 10 ** max(int(len(str(int(top)))) - 1, 0)
+                parts.append(f"FLOOR({qc} / {width}) * {width} AS {qc}")
+            else:
+                parts.append(f"CASE WHEN {qc} IS NULL THEN NULL ELSE SUBSTR(CAST({qc} AS VARCHAR), 1, 1) || '*' END AS {qc}")
+        if not parts:
+            raise GovError("Every column would be dropped.")
+        datasets.ensure_registry()
+        registered = cur.execute("SELECT 1 FROM user_tables WHERE table_name = ?", [target]).fetchone()
+        exists = cur.execute("SELECT 1 FROM information_schema.tables WHERE table_schema='main' AND table_name = ?", [target]).fetchone()
+        if exists and not registered:
+            raise GovError(f"'{target}' is a built-in table. Pick another name.")
+        cur.execute("BEGIN")
+        try:
+            cur.execute(f"CREATE OR REPLACE TABLE {q(target)} AS SELECT {', '.join(parts)} FROM {q(table)}")
+            n = cur.execute(f"SELECT COUNT(*) FROM {q(target)}").fetchone()[0]
+            meta = fetch_all(cur, "SELECT column_name AS name, data_type AS type FROM information_schema.columns WHERE table_schema='main' AND table_name = ? ORDER BY ordinal_position", [target])
+            cur.execute("DELETE FROM user_tables WHERE table_name = ?", [target])
+            cur.execute("INSERT INTO user_tables VALUES (?, ?, ?, ?, ?, now(), now())", [target, new_table.strip()[:80], f"de-identified copy of {table}", n, json.dumps(meta)])
+            cur.execute("COMMIT")
+        except Exception:
+            cur.execute("ROLLBACK")
+            raise
+    state.audit("gov_deidentify", f"{table} -> {target}: {', '.join(f'{c}={m}' for c, m in columns.items())[:200]}")
+    return {"table": target, "rows": n, "original_untouched": table,
+            "note": "The original table is unchanged and still holds the personal data. A copy is not proof of anonymity: a combination of the remaining columns can still identify someone. Protect the original from AI and limit who can open it."}
+
+
+def purge_expired(name: str, confirm: bool = False) -> dict:
+    """Delete rows older than the table's retention rule. Without confirm it only counts them.
+
+    With confirm: a safety backup (Real data), DELETE, then CHECKPOINT. This is ordinary deletion, not secure overwriting:
+    the rows can still exist in older backups and on disk until files are overwritten.
+    """
+    from app.services import dba
+    c = next((a for a in catalog()["assets"] if a["name"] == name and not a["system"] and a["kind"] == "table"), None)
+    if not c:
+        raise GovError("That isn't one of your tables.", 404)
+    if not (c["retention_days"] and c["retention_column"]):
+        raise GovError("Set a retention rule for this table in the catalog first (days to keep, and which date column).")
+    eligible = c["retention_eligible_rows"] or 0
+    if not confirm:
+        return {"table": name, "eligible_rows": eligible, "deleted": 0, "confirmed": False,
+                "note": f"{eligible} rows are older than {c['retention_days']} days by {c['retention_column']}. Press Delete to remove them."}
+    if eligible == 0:
+        return {"table": name, "eligible_rows": 0, "deleted": 0, "confirmed": True, "note": "Nothing is past its retention date."}
+    backups.safety_backup("purge")
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=c["retention_days"])).date().isoformat()
+    with get_cursor() as cur:
+        cur.execute(f"DELETE FROM {_q(name)} WHERE {_q(c['retention_column'])} < CAST(? AS DATE)", [cutoff])
+    try:
+        dba.checkpoint()
+    except Exception:  # noqa: BLE001
+        pass
+    state.audit("gov_purge", f"{name}: {eligible} rows past {c['retention_days']} days")
+    return {"table": name, "eligible_rows": eligible, "deleted": eligible, "confirmed": True,
+            "note": "Deleted. This is ordinary deletion, not secure overwriting: copies in backups and old files keep the data until they are removed too."}

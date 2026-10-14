@@ -1,0 +1,446 @@
+[
+ {
+  "step": "layers",
+  "q": "In a medallion architecture, what belongs in the bronze layer?",
+  "options": [
+   "Cleaned and joined tables",
+   "Raw data exactly as received",
+   "Final reports",
+   "Only the rows that passed validation"
+  ],
+  "answer": 1,
+  "why": "Bronze is the untouched copy. Keeping it lets you rebuild silver and gold after fixing a bug."
+ },
+ {
+  "step": "quarantine",
+  "q": "A row fails validation (negative units). What is good practice?",
+  "options": [
+   "Drop it silently",
+   "Fail the whole pipeline",
+   "Fix the value by guessing",
+   "Move it to a quarantine table with the reason, and keep the pipeline running"
+  ],
+  "answer": 3,
+  "why": "Quarantine keeps good data flowing and keeps the bad rows, with reasons, so they can be reviewed and fixed at the source."
+ },
+ {
+  "step": "idempotent",
+  "q": "What does it mean that a pipeline is idempotent?",
+  "options": [
+   "It runs very fast",
+   "Running it twice gives the same result as running it once",
+   "It never fails",
+   "It only runs once per day"
+  ],
+  "answer": 1,
+  "why": "Re-runs after a failure must not create duplicates. Idempotency is what makes retries safe."
+ },
+ {
+  "step": "dba-backup",
+  "q": "RPO (recovery point objective) is:",
+  "options": [
+   "How fast you can restore",
+   "How much recent work you can afford to lose, measured in time",
+   "The size of the backup",
+   "The number of backups kept"
+  ],
+  "answer": 1,
+  "why": "If you back up daily, your RPO is up to 24 hours of changes. RTO is the separate question of how long a restore takes."
+ },
+ {
+  "step": "dba-backup",
+  "q": "A backup you have never restored is:",
+  "options": [
+   "As good as any other",
+   "Unproven: only a successful test restore shows it works",
+   "Better than a restored one",
+   "Automatically verified by the file size"
+  ],
+  "answer": 1,
+  "why": "Files can be empty, truncated or corrupt. A restore drill turns a hope into evidence."
+ },
+ {
+  "step": "gov-lineage",
+  "q": "Data lineage answers:",
+  "options": [
+   "Who logged in last",
+   "Where a number came from and what depends on it",
+   "How big the file is",
+   "Which chart is most popular"
+  ],
+  "answer": 1,
+  "why": "Lineage lets you trace a wrong number back to its source and see what breaks if you change a column."
+ },
+ {
+  "step": "run",
+  "q": "A pipeline run finishes without an error. What should you still check?",
+  "options": [
+   "Nothing; no error means it worked",
+   "That the row counts in and out make sense",
+   "Only how long it took",
+   "The name of the output file"
+  ],
+  "answer": 1,
+  "why": "A run can succeed technically and still lose or duplicate rows. Counts are the quickest check."
+ },
+ {
+  "step": "import",
+  "q": "Where should you import your own business data?",
+  "options": [
+   "Into Practice, next to the sample data",
+   "Into the Real workspace, kept apart from Practice",
+   "Into any workspace; they are the same",
+   "Into a spreadsheet first"
+  ],
+  "answer": 1,
+  "why": "Practice and Real are separate databases so sample data and real data never mix."
+ },
+ {
+  "step": "dba-baseline",
+  "q": "Your health baseline lists 'no backups'. What is the right response?",
+  "options": [
+   "Ignore it until something fails",
+   "Treat it as a priority: set up a backup and test a restore",
+   "Delete old data to reduce risk",
+   "Wait for the next baseline"
+  ],
+  "answer": 1,
+  "why": "No backup means one failure loses everything. A backup counts only once you have restored from it."
+ },
+ {
+  "step": "dba-perf",
+  "q": "A query is slow. What do you do first?",
+  "options": [
+   "Rewrite it at random",
+   "Measure it and read the query plan to see where the time goes",
+   "Add indexes to every column",
+   "Buy a bigger server"
+  ],
+  "answer": 1,
+  "why": "Optimising without measuring wastes effort and can make things worse. The plan shows where the time is spent."
+ },
+ {
+  "step": "dba-maintain",
+  "q": "What does a checkpoint do for a DuckDB database?",
+  "options": [
+   "Deletes old tables",
+   "Writes the write-ahead log into the main database file, keeping the log small",
+   "Encrypts the file",
+   "Copies the database to a backup"
+  ],
+  "answer": 1,
+  "why": "Changes are first written to the write-ahead log. A checkpoint merges them into the database file, so the log does not keep growing."
+ },
+ {
+  "step": "arch-plan",
+  "q": "Where should designing a data flow start?",
+  "options": [
+   "With choosing a tool",
+   "With the business need, then sources, storage, organising and delivery",
+   "With the largest data source",
+   "With the dashboard colours"
+  ],
+  "answer": 1,
+  "why": "Tools come last. The need decides which data, storage and delivery you require."
+ },
+ {
+  "step": "arch-store",
+  "q": "Which store suits large amounts of raw, mixed-format files you may want later?",
+  "options": [
+   "A data lake",
+   "A single-row cache",
+   "A spreadsheet",
+   "A reporting dashboard"
+  ],
+  "answer": 0,
+  "why": "A lake keeps raw data in its original form cheaply. A warehouse holds cleaned, modelled data for reporting."
+ },
+ {
+  "step": "wh-star",
+  "q": "What do you decide first when designing a star schema?",
+  "options": [
+   "The colour of the dashboard",
+   "The grain: what one fact row means",
+   "The number of dimensions",
+   "The database engine"
+  ],
+  "answer": 1,
+  "why": "Facts, measures and dimensions all follow from the grain. Without it, joins and totals give wrong answers."
+ },
+ {
+  "step": "wh-load",
+  "q": "What should a warehouse load do after it finishes?",
+  "options": [
+   "Nothing; loads are reliable",
+   "Reconcile counts and totals back to the source",
+   "Delete the source data",
+   "Rebuild all indexes"
+  ],
+  "answer": 1,
+  "why": "A warehouse is only as good as its last load. Reconciling to the source shows whether anything was lost or doubled."
+ },
+ {
+  "step": "mgr-plan",
+  "q": "What makes a data management plan useful?",
+  "options": [
+   "It is long and detailed",
+   "Every rule has an accountable owner and the plan has a review date",
+   "It is kept private",
+   "It lists only tools"
+  ],
+  "answer": 1,
+  "why": "Rules nobody owns are not followed, and a plan without a review date goes stale."
+ },
+ {
+  "step": "ready",
+  "q": "Which four words describe analytics-ready data?",
+  "options": [
+   "Fast, cheap, big, recent",
+   "Accurate, reliable, compliant, available",
+   "Raw, stored, backed up, archived",
+   "Clean, small, public, free"
+  ],
+  "answer": 1,
+  "why": "The data engineer's job is data that is accurate, reliable, compliant with the rules that govern it, and available when consumers need it."
+ },
+ {
+  "step": "meta",
+  "q": "Which kind of metadata says what a column means and who owns it?",
+  "options": [
+   "Technical metadata",
+   "Process metadata",
+   "Business metadata",
+   "Storage metadata"
+  ],
+  "answer": 2,
+  "why": "Technical metadata describes structures, process metadata describes what ran, and business metadata gives meaning and ownership."
+ },
+ {
+  "step": "etl-elt",
+  "q": "What is the difference between ETL and ELT?",
+  "options": [
+   "ETL is faster in every case",
+   "ETL transforms before loading; ELT loads raw data first and transforms it in the destination",
+   "ELT never transforms data",
+   "They are two names for the same thing"
+  ],
+  "answer": 1,
+  "why": "The order of Transform and Load differs. ELT suits destinations that can transform data at scale."
+ },
+ {
+  "step": "wrangle",
+  "q": "What is a wrangling log for?",
+  "options": [
+   "Slowing down the work",
+   "Recording every change so the result can be explained and repeated",
+   "Storing passwords",
+   "Deleting duplicate rows"
+  ],
+  "answer": 1,
+  "why": "Changing data without recording it makes results impossible to explain or reproduce."
+ },
+ {
+  "step": "secure",
+  "q": "At which levels should data security be reviewed?",
+  "options": [
+   "Only the database",
+   "Physical, network, application and data, plus monitoring",
+   "Only the network",
+   "Only user passwords"
+  ],
+  "answer": 1,
+  "why": "A weakness at any level, including backup copies, can expose the data."
+ },
+ {
+  "step": "tune",
+  "q": "What is the right order when tuning performance?",
+  "options": [
+   "Change several things, then measure",
+   "Measure, change one thing, measure again",
+   "Change one thing and do not measure",
+   "Measure once and stop"
+  ],
+  "answer": 1,
+  "why": "Changing one thing at a time, with a before and after measurement, shows what actually helped."
+ },
+ {
+  "step": "query",
+  "q": "You rely on an average order value. What else should you check?",
+  "options": [
+   "Nothing; an average says it all",
+   "The spread and outliers, since an average can hide them",
+   "The table name",
+   "The number of columns"
+  ],
+  "answer": 1,
+  "why": "Two very different sets of values can share an average. Spread and outliers show whether the average is representative."
+ },
+ {
+  "step": "comply",
+  "q": "How should compliance be treated across the data lifecycle?",
+  "options": [
+   "A one-time checklist",
+   "Ongoing: a written basis and an owner for every stage, and a retention rule for personal data",
+   "Only a legal concern",
+   "Only needed at deletion"
+  ],
+  "answer": 1,
+  "why": "Rules apply at every stage, and they change. Each stage needs a basis and someone responsible."
+ },
+ {
+  "step": "dataops",
+  "q": "What does DataOps add to delivering data changes?",
+  "options": [
+   "More meetings",
+   "Small iterations with automated tests and metrics",
+   "A new database",
+   "Fewer owners"
+  ],
+  "answer": 1,
+  "why": "Automated tests and metrics make each small change safe to ship and easy to improve."
+ },
+ {
+  "step": "score",
+  "q": "A table's readiness score is low. What do you do?",
+  "options": [
+   "Edit the score",
+   "Find and fix the cause behind the score",
+   "Hide the table",
+   "Wait a week"
+  ],
+  "answer": 1,
+  "why": "The score is a symptom. Chasing the number without fixing the cause does not make the data better."
+ },
+ {
+  "step": "relational",
+  "q": "A book can have many authors. How should this be stored?",
+  "options": [
+   "A comma-separated list in one column",
+   "A link table with one row per book and author",
+   "One column per author",
+   "Only the first author"
+  ],
+  "answer": 1,
+  "why": "A link table makes each pairing a row that can be keyed, joined and checked. A list in one column cannot be."
+ },
+ {
+  "step": "cdc",
+  "q": "To find what changed between two snapshots you need what?",
+  "options": [
+   "A faster computer",
+   "A unique key to match rows between the two snapshots",
+   "Identical file sizes",
+   "The same column order only"
+  ],
+  "answer": 1,
+  "why": "Without a unique key you cannot tell whether a row changed, is new, or was removed."
+ },
+ {
+  "step": "issues",
+  "q": "Users report a wrong number in a report. Where should the fix be made?",
+  "options": [
+   "In that one report",
+   "At the source of the problem, so every report is right",
+   "Nowhere; explain it away",
+   "In the dashboard colours"
+  ],
+  "answer": 1,
+  "why": "Fixing the report hides the problem and leaves the same error in every other place that uses the data."
+ },
+ {
+  "step": "eco-review",
+  "q": "After reviewing the whole data ecosystem, what should you improve first?",
+  "options": [
+   "The tool you like most",
+   "The weakest link",
+   "The newest part",
+   "The cheapest part"
+  ],
+  "answer": 1,
+  "why": "The system is only as strong as its weakest link, whether that is sources, storage, organising or delivery."
+ },
+ {
+  "step": "gov-catalog",
+  "q": "Why give every table an owner and a class?",
+  "options": [
+   "It looks tidy",
+   "So someone is accountable and the right controls apply",
+   "It speeds up queries",
+   "It is needed to import data"
+  ],
+  "answer": 1,
+  "why": "Unowned data is nobody's problem until it breaks. The class decides what protection it needs."
+ },
+ {
+  "step": "gov-pii",
+  "q": "A scan finds no personal-data columns. What is the right reading?",
+  "options": [
+   "There is definitely none",
+   "It found none it recognises; review the columns yourself, since scans miss things",
+   "The scan is broken",
+   "Personal data is allowed anyway"
+  ],
+  "answer": 1,
+  "why": "Pattern scans miss unusual names and formats. Treat the result as a help, not a guarantee."
+ },
+ {
+  "step": "gov-controls",
+  "q": "Does a high score on the controls checklist certify compliance?",
+  "options": [
+   "Yes, it is a certificate",
+   "No; it is evidence that data is handled on purpose",
+   "Yes, if it is above 5",
+   "Only for personal data"
+  ],
+  "answer": 1,
+  "why": "The checklist helps you see gaps. Compliance is decided against the actual rules that apply to you."
+ },
+ {
+  "step": "dbt-lite",
+  "q": "In a dbt-style project, what decides the order models are built?",
+  "options": [
+   "Alphabetical order",
+   "The ref() calls between models",
+   "File size",
+   "The order they were written"
+  ],
+  "answer": 1,
+  "why": "ref() declares which model a SELECT reads, so the tool builds the dependencies first."
+ },
+ {
+  "step": "formula-engine",
+  "q": "A1 reads B1 and B1 reads A1. The sheet has...",
+  "options": [
+   "A value of 0",
+   "A circular reference with no answer",
+   "A rounding error",
+   "A lookup error"
+  ],
+  "answer": 1,
+  "why": "Each cell needs the other first, so there is no valid calculation order."
+ },
+ {
+  "step": "jobs-streams",
+  "q": "A topic has 3 partitions and a consumer group has 5 members. How many members get work?",
+  "options": [
+   "5",
+   "3",
+   "2",
+   "1"
+  ],
+  "answer": 1,
+  "why": "A partition goes to one member of the group at a time, so extra members sit idle."
+ },
+ {
+  "step": "jobs-streams",
+  "q": "A cron line sets both day-of-month 13 and day-of-week Friday. It runs...",
+  "options": [
+   "Only on Friday the 13th",
+   "On the 13th and on every Friday",
+   "Never",
+   "Every day"
+  ],
+  "answer": 1,
+  "why": "In standard cron, when both fields are restricted either one matching is enough."
+ }
+]

@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services import ai_policy, llm_router, state, study
+from app.services import ai_policy, inference_lab, llm_router, state, study
 from app.services.ai_agent import AiError
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -67,3 +67,55 @@ def ask(body: AskIn):
             "route": getattr(r, "route", None), "attempts": r.attempts,
             "steps": [{"tool": s.tool, "input": s.input, "output": s.output, "is_error": s.is_error} for s in r.steps],
             "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}
+
+
+# ---------------------------------------------------------------- Inference Lab (calculators; nothing here calls a model)
+def _inf(fn, *a, **k):
+    try:
+        return fn(*a, **k)
+    except inference_lab.InfError as e:
+        raise HTTPException(e.status, e.message) from e
+
+
+@router.get("/inference/catalog")
+def inference_catalog():
+    return inference_lab.catalog()
+
+
+@router.post("/inference/fit")
+def inference_fit(body: dict):
+    return _inf(inference_lab.fit, body.get("params_b"), str(body.get("precision", "fp16")), str(body.get("gpu", "h100")), body.get("n_gpus", 1),
+                body.get("custom"), body.get("layers"), body.get("kv_heads"), body.get("head_dim"), body.get("context"), body.get("batch", 1), body.get("kv_precision"))
+
+
+@router.post("/inference/bottleneck")
+def inference_bottleneck(body: dict):
+    return _inf(inference_lab.bottleneck, body.get("params_b"), str(body.get("precision", "fp16")), str(body.get("gpu", "h100")), body.get("custom"),
+                body.get("input_tokens", 1000), body.get("batch", 1), body.get("active_params_b"), body.get("n_gpus", 1))
+
+
+@router.post("/inference/latency")
+def inference_latency(body: dict):
+    return _inf(inference_lab.latency_stats, body.get("text"), None, None, None, body.get("duration_s"))
+
+
+@router.post("/inference/cost")
+def inference_cost(body: dict):
+    return _inf(inference_lab.cost, body.get("input_m"), body.get("output_m"), body.get("price_in"), body.get("price_out"), body.get("gpus", 1),
+                body.get("gpu_hour", 0), body.get("hours", 730), body.get("total_tps"), body.get("utilization_pct", 50), body.get("eng_hours", 0), body.get("eng_rate", 0))
+
+
+@router.post("/inference/speculative")
+def inference_speculative(body: dict):
+    return _inf(inference_lab.speculative, body.get("acceptance"), body.get("draft_len", 4), body.get("draft_cost", 0.1))
+
+
+@router.post("/inference/scaling")
+def inference_scaling(body: dict):
+    return _inf(inference_lab.scaling, body.get("requests_per_s"), body.get("avg_latency_s"), body.get("concurrency"), body.get("target_pct", 70),
+                body.get("spike", 1), body.get("cold_start_s", 0))
+
+
+@router.post("/inference/quantization")
+def inference_quant(body: dict):
+    return _inf(inference_lab.quant_table, body.get("params_b"))

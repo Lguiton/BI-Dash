@@ -1,0 +1,315 @@
+{
+ "title": "Data Analyst: from a business question to a report people act on",
+ "intro": "An analyst turns a vague worry ('are we making money?') into numbers, checks the numbers can be trusted, and tells a short story that ends in a decision.",
+ "outcome": "A one-page report with 3 to 5 KPIs, one clear finding with its evidence, and a recommended action.",
+ "steps": [
+  {
+   "id": "question",
+   "title": "Frame the question",
+   "what": "Write the decision the numbers will support before you open any data.",
+   "how": [
+    "Write: 'We need to decide ___, so we need to know ___.'",
+    "List 3 candidate measures (e.g. net margin, cost vs budget, completion rate).",
+    "Write what result would change your mind."
+   ],
+   "tool": {
+    "label": "Open the dashboard",
+    "href": "/",
+    "tab": null
+   },
+   "done_when": "You can say the decision and the 3 measures in two sentences.",
+   "mistakes": [
+    "Starting with charts and hunting for a story.",
+    "Measuring everything instead of what the decision needs."
+   ],
+   "ask": "Help me turn a vague business worry into a decision and 3 measures."
+  },
+  {
+   "id": "relational",
+   "title": "Understand the tables you query",
+   "what": "Know the keys, the links and what one row means before you join anything.",
+   "how": [
+    "Open Analysis Lab > Data foundations > Relational design.",
+    "Analyze the table you are about to use: its candidate keys tell you what one row is, and its rules show where values repeat.",
+    "Check which columns link to other tables before you join, so you don't multiply rows."
+   ],
+   "tool": {
+    "label": "Analysis Lab",
+    "href": "/analysis",
+    "tab": null
+   },
+   "done_when": "You can say what one row of each table means and which column joins it to the next.",
+   "mistakes": [
+    "Joining on a column that isn't unique and counting twice.",
+    "Assuming a rule holds because it held in a few rows."
+   ],
+   "ask": "What is one row in this table, and what should I join it on?"
+  },
+  {
+   "id": "cookbook",
+   "title": "Use the SQL and pandas cookbook",
+   "what": "Look up a cleaning recipe, practise interview-style SQL, or find the pandas line for a job.",
+   "how": [
+    "Open Analysis Lab > Data foundations > SQL & pandas cookbook.",
+    "Run a recipe on the sample to see before and after, then apply the same idea to your own table with the Data cleaning tab (it makes a copy and logs each step).",
+    "Work through the 50 SQL interview questions: try your own answer in SQL Lab first, then compare."
+   ],
+   "tool": {
+    "label": "Analysis Lab",
+    "href": "/analysis",
+    "tab": null
+   },
+   "done_when": "You can clean a column in SQL and say which rows an UPDATE or DELETE would change before running it.",
+   "mistakes": [
+    "Running UPDATE or DELETE on the only copy of the data.",
+    "Copying MySQL syntax (IFNULL, STR_TO_DATE, LOCATE) into DuckDB.",
+    "Forgetting the 'g' flag in regexp_replace, which cleans only the first match."
+   ],
+   "ask": "Which cleaning recipe fits my messy column, and how do I check it first?"
+  },
+  {
+   "id": "quality",
+   "title": "Check the data can be trusted",
+   "what": "Bad data produces confident wrong answers, so test it before you analyse it.",
+   "how": [
+    "Open Data quality and read every failing check, not only the score.",
+    "For each failure decide: fix at the source, exclude, or note as a caveat.",
+    "Write down the caveats; they go in the report.",
+    "Fix what you can in the Analysis Lab: Data cleaning (placeholder codes like 999, missing values, duplicates, rare categories), Add a column (ratios, month, groups, flags) and One row per entity. Preparation usually takes most of the project."
+   ],
+   "tool": {
+    "label": "Data quality",
+    "href": "/quality",
+    "tab": null
+   },
+   "done_when": "Every failing check has a decision next to it.",
+   "mistakes": [
+    "Ignoring a 'small' failure that affects the KPI you care about.",
+    "Fixing data silently so nobody knows the rule you used."
+   ],
+   "ask": "Look at my data quality results and tell me which failures matter for my KPIs."
+  },
+  {
+   "id": "shape",
+   "title": "Learn the shape of the data",
+   "what": "Know what one row means (the grain) and which columns are measures versus labels.",
+   "how": [
+    "Open the Star schema page: find the fact table and the dimension tables.",
+    "Say the grain in a sentence: 'one row per ___ per ___'.",
+    "Mark which measures are additive (revenue) and which are not (margin, averages)."
+   ],
+   "tool": {
+    "label": "Star schema",
+    "href": "/schema",
+    "tab": null
+   },
+   "done_when": "You can state the grain and name one non-additive measure.",
+   "mistakes": [
+    "Adding percentages together.",
+    "Joining before knowing whether the key is unique."
+   ],
+   "ask": "Explain the grain of my fact table and which measures are additive."
+  },
+  {
+   "id": "kpis",
+   "title": "Define the KPIs",
+   "what": "A KPI is a metric tied to a goal: a target, a direction and a warning band.",
+   "how": [
+    "Open the KPI builder and pick a metric.",
+    "Set direction (higher or lower is better), target, warning % and window.",
+    "Create 3 to 5. Fewer is better than more."
+   ],
+   "tool": {
+    "label": "KPI builder",
+    "href": "/kpis",
+    "tab": null
+   },
+   "done_when": "3+ KPIs exist with targets you can defend.",
+   "mistakes": [
+    "Targets chosen so everything shows green.",
+    "Mixing a total and a ratio in one KPI."
+   ],
+   "ask": "Suggest 3 KPIs with sensible targets for my data."
+  },
+  {
+   "id": "sql",
+   "title": "Investigate with SQL",
+   "what": "Answer the follow-up questions the KPIs raise.",
+   "how": [
+    "Open SQL Lab. Start with SELECT ... GROUP BY on one dimension.",
+    "For ratios, compute SUM(a)/SUM(b), never AVG of a ratio column.",
+    "Save queries you will reuse."
+   ],
+   "tool": {
+    "label": "SQL Lab",
+    "href": "/lab",
+    "tab": null
+   },
+   "done_when": "You have 2 queries that explain why a KPI is off target.",
+   "mistakes": [
+    "AVG of a margin column.",
+    "Forgetting to filter to the period you report on."
+   ],
+   "ask": "Write a SQL query to find which entities drive cost over budget."
+  },
+  {
+   "id": "visual",
+   "title": "Choose the right chart",
+   "what": "Pick the chart that answers the question, not the one that looks impressive.",
+   "how": [
+    "Trend over time: line. Compare categories: bar. Two measures: scatter. Pattern across two categories: heatmap.",
+    "Use the Chart gallery on the main dashboard to try them.",
+    "Remove anything that does not help the reader."
+   ],
+   "tool": {
+    "label": "Chart gallery",
+    "href": "/",
+    "tab": null
+   },
+   "done_when": "Each chart answers one stated question.",
+   "mistakes": [
+    "Pie charts with many slices.",
+    "Truncated axes that exaggerate a change."
+   ],
+   "ask": "Which chart type fits my question about change over time by entity?"
+  },
+  {
+   "id": "bitools",
+   "title": "Practise the BI building blocks: measures, forecasts, variance and documents",
+   "what": "BI work is mostly a handful of repeatable calculations. Practise each with the answer shown, so you can spot a wrong one in a real report.",
+   "how": [
+    "Open the BI toolkit on this page. In the DAX lab run the three starter measures grouped by Country and say why 'USA Sales' repeats on every row (CALCULATE replaces the filter on that column).",
+    "In Forecast methods press Use infographic sample and compare the methods: say why a 3-point moving average loses to a trend method on a steadily rising series.",
+    "In Variance enter your own budget and actual lines; for each flag say whether it is favourable (revenue above budget is good, a cost above budget is not).",
+    "Run the scenario model and name the one driver with the biggest swing before you argue about the others.",
+    "Paste a sample invoice and bank statement into the Document reader; break one total on purpose and watch the check fail."
+   ],
+   "tool": {
+    "label": "BI toolkit",
+    "href": "/tracks/analyst",
+    "tab": null
+   },
+   "done_when": "You can explain one measure, one forecast ranking and one variance in plain words, with the arithmetic.",
+   "mistakes": [
+    "Treating a method's good fit on past data as a promise about the future.",
+    "Reading a YTD or same-period-last-year figure from a function name without knowing the date table behind it.",
+    "Posting OCR output to a ledger without running the totals check."
+   ],
+   "ask": "Walk me through the DAX lab: why does CALCULATE ignore the group row, and what is the SQL equivalent?"
+  },
+  {
+   "id": "story",
+   "title": "Find the finding",
+   "what": "A finding is a claim plus evidence plus 'so what'.",
+   "how": [
+    "Compare to a baseline: budget, last period, or a peer.",
+    "Find the biggest driver: which entity or day explains most of the gap?",
+    "Write: 'X is Y% over budget, driven by Z, costing $N. Recommend ___.'",
+    "Tell it as a story: who it is for, the one takeaway, how things stood, what changed, the evidence, one chart per point, the ask. Ask the agent to draft the story and save it to your Data story notes."
+   ],
+   "tool": {
+    "label": "Insights",
+    "href": "/",
+    "tab": null
+   },
+   "done_when": "Your finding fits in two sentences with a number and a recommendation.",
+   "mistakes": [
+    "Reporting a difference without checking it is not noise (see Data Scientist).",
+    "Burying the finding on page 3."
+   ],
+   "ask": "Draft a two-sentence finding from my current numbers."
+  },
+  {
+   "id": "deliver",
+   "title": "Deliver the report",
+   "what": "The numbers only matter once someone reads them.",
+   "how": [
+    "Use the report buttons on the main dashboard for PDF or Excel.",
+    "Put the finding first, then evidence, then caveats from step 2.",
+    "Say what you want the reader to do."
+   ],
+   "tool": {
+    "label": "Report buttons",
+    "href": "/",
+    "tab": null
+   },
+   "done_when": "A person who was not in the room could act on it.",
+   "mistakes": [
+    "Sending a data dump.",
+    "Hiding caveats."
+   ],
+   "ask": "Draft the opening paragraph of my leadership report."
+  },
+  {
+   "id": "monitor",
+   "title": "Monitor and repeat",
+   "what": "A report is a snapshot; a KPI is a habit.",
+   "how": [
+    "Re-check the KPI page on a schedule.",
+    "When a KPI turns red, go back to step 5 and ask why.",
+    "Revisit targets quarterly.",
+    "After you act on a finding, compare before and after the change (Data cleaning, Add a column, Before/after launch date, then Compare groups) and record a Feedback review note."
+   ],
+   "tool": {
+    "label": "KPI builder",
+    "href": "/kpis",
+    "tab": null
+   },
+   "done_when": "You have a date for the next review.",
+   "mistakes": [
+    "Never re-checking targets.",
+    "Treating every wobble as a crisis."
+   ],
+   "ask": "Help me set a monitoring routine for my KPIs."
+  },
+  {
+   "id": "survey-numbers",
+   "title": "Check a survey percentage before you quote it",
+   "what": "A survey percentage is an estimate from a sample, so it can move. The fewer people behind it, the more it moves. Before you report a gap between two groups, check that the gap is bigger than the noise. Also check whether the answers add to more than 100%, which means people could choose several and 'top' or 'greatest' wording is misleading. These tools assume a simple random sample.",
+   "how": [
+    "Open the Analyst track > Survey numbers and probability tables > How far can this percent move? Keep 57% of 150 and read the range.",
+    "Change the group size to 40. How much wider is the range?",
+    "Open Is this gap real? Compare 57% and 44% with 150 in each, then 44% and 16% with 40 in each.",
+    "Open Pick-one or pick-several, load the sample and read the verdict.",
+    "Open How many people do I need? and find the size for a margin of 5 points."
+   ],
+   "tool": {
+    "label": "Survey numbers",
+    "href": "/tracks/analyst",
+    "tab": null
+   },
+   "done_when": "You can say why 40 people can show a 28-point gap that is still luck, and why answers that add to 155% are not shares of one choice.",
+   "mistakes": [
+    "Quoting a subgroup of 30 as if it were a precise figure.",
+    "Comparing the same people twice with a test built for two separate groups.",
+    "Reading 'significant' in a report as 'important'.",
+    "Treating a margin of error as covering every error: bad questions and non-response are not in it."
+   ],
+   "ask": "Our survey of 150 shows 57% satisfied this year and 44% last year. Can I say satisfaction rose?"
+  },
+  {
+   "id": "joint-marginal",
+   "title": "Read a joint probability table: marginals, conditionals, independence",
+   "what": "A joint table gives the probability of each pair of outcomes. Row and column totals are the marginals. Dividing a cell by its row total gives the conditional probability. X and Y are independent only if every cell equals the product of its two marginals. With numeric values you can also get the covariance, the first step to correlation.",
+   "how": [
+    "Open the Analyst track > Survey numbers and probability tables > Joint and marginal table, and load the sample.",
+    "Find the marginal of X and Y. Do they add to 1?",
+    "Read P(Y=1 given X=0) and P(Y=1 given X=1). Are they equal?",
+    "Change the cells so each equals the product of its marginals. What does the verdict say?",
+    "Make the cells add to 0.9 and read the error."
+   ],
+   "tool": {
+    "label": "Survey numbers",
+    "href": "/tracks/analyst",
+    "tab": null
+   },
+   "done_when": "You can compute a marginal and a conditional by hand from a 2 by 2 table and say why equal conditionals mean independence.",
+   "mistakes": [
+    "Treating the cell value as a conditional probability.",
+    "Saying 'uncorrelated' means independent. Zero covariance does not rule out a dependence.",
+    "Cells that do not add to 1, from rounding or a missing row."
+   ],
+   "ask": "If P(X=1,Y=1) is 0.5 and P(X=1) is 0.7, what is P(Y=1 given X=1)?"
+  }
+ ]
+}

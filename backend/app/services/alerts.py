@@ -12,7 +12,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from app.services import drill, mailer, state, workspaces
 
-DEFAULTS = {"enabled": False, "email": False, "stale_days": 7, "backup_days": 3, "cooldown_hours": 24}
+DEFAULTS = {"enabled": False, "email": False, "stale_days": 7, "backup_days": 3, "cooldown_hours": 24, "biz_change_pct": 15}
 COOLDOWN_CHOICES = (1, 6, 24, 72, 168)
 
 
@@ -31,7 +31,7 @@ def save_config(body: dict) -> dict:
     for k in ("enabled", "email"):
         if k in body:
             cur[k] = bool(body[k])
-    for k, lo, hi in (("stale_days", 1, 365), ("backup_days", 1, 90), ("cooldown_hours", 1, 168)):
+    for k, lo, hi in (("stale_days", 1, 365), ("backup_days", 1, 90), ("cooldown_hours", 1, 168), ("biz_change_pct", 1, 100)):
         if k in body:
             try:
                 v = int(body[k])
@@ -136,10 +136,24 @@ def _dq(cfg):
             for f in expectations.latest_failures()]
 
 
+def _biz(cfg):
+    """Business dashboards (Real workspace only: Practice numbers are made up). Red when a number is 2x the limit the wrong way."""
+    if workspaces.active() != "real":
+        return []
+    from app.services import biz_packs
+    lim = cfg["biz_change_pct"]
+    out = []
+    for a in biz_packs.wrong_way(30, lim):
+        mv = abs(a["change_pct"])
+        out.append(_a(f"biz:{a['pack']}:{a['kpi'][:30]}", "red" if mv >= 2 * lim else "warn", f"{a['dept']}: {a['kpi']} moved the wrong way",
+                      f"{a['kpi']} is {a['change_pct']:+.1f}% versus the previous 30 days ({a['industry']}, {a['dept']}; alert limit {lim}%).", "/packs"))
+    return out
+
+
 def current() -> list[dict]:
     cfg = config()
     out: list[dict] = []
-    for fn in (_kpis, _backup, _drill, _integrity, _sources, _stale, _overdue, _dq):
+    for fn in (_kpis, _backup, _drill, _integrity, _sources, _stale, _overdue, _dq, _biz):
         out += _safe(lambda fn=fn: fn(cfg))
     return sorted(out, key=lambda a: 0 if a["level"] == "red" else 1)
 

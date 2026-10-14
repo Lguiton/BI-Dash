@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS models (id INTEGER PRIMARY KEY AUTOINCREMENT, workspa
     features TEXT, params TEXT, metrics TEXT, baseline TEXT, train_stats TEXT, note TEXT, created_at TEXT, file TEXT);
 CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, severity TEXT, status TEXT, detected_at TEXT,
     resolved_at TEXT, timeline TEXT, checklist TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS sys_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, workspace TEXT, action TEXT, title TEXT, risk TEXT, params TEXT, status TEXT, output TEXT, undo_data TEXT, undone_at TEXT, revert_at REAL, kept INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS it_tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, priority TEXT, status TEXT, requester TEXT,
     opened_at TEXT, resolved_at TEXT, timeline TEXT, checklist TEXT);
 CREATE TABLE IF NOT EXISTS it_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, hostname TEXT, kind TEXT, os TEXT, owner TEXT, serial TEXT, purchased TEXT,
@@ -83,6 +84,10 @@ def _migrate(c: sqlite3.Connection) -> None:
             c.execute(f"ALTER TABLE ai_log ADD COLUMN {col} TEXT")
     if "seconds" not in have:
         c.execute("ALTER TABLE ai_log ADD COLUMN seconds REAL")
+    have = {r[1] for r in c.execute("PRAGMA table_info(audit)").fetchall()}
+    for col in ("prev_hash", "hash"):
+        if have and col not in have:
+            c.execute(f"ALTER TABLE audit ADD COLUMN {col} TEXT")
     have = {r[1] for r in c.execute("PRAGMA table_info(ml_runs)").fetchall()}
     for col, typ in (("note", "TEXT"), ("starred", "INTEGER DEFAULT 0"), ("params", "TEXT"), ("metrics", "TEXT"),
                      ("cv_mean", "REAL"), ("seconds", "REAL"), ("batch", "TEXT")):
@@ -134,13 +139,42 @@ def setting_set(workspace: str, key: str, value) -> None:
 
 
 # ---- audit ----
+def _link(prev: str, at: str, workspace: str, action: str, detail: str, ok: int) -> str:
+    import hashlib
+    return hashlib.sha256("\x1f".join([prev, at, workspace or "", action, detail, str(ok)]).encode()).hexdigest()
+
+
 def audit(action: str, detail: str = "", ok: bool = True, workspace: str | None = None) -> None:
-    """Record something that changed or left the app. Never raises: a logging problem must not break the action itself."""
+    """Record something that changed or left the app. Each entry is hash-chained to the one before, so editing or deleting history is detectable.
+    Never raises: a logging problem must not break the action itself."""
     try:
         if workspace is None:
             from app.services import workspaces
             workspace = workspaces.active()
-        run("INSERT INTO audit (at, workspace, action, detail, ok) VALUES (?,?,?,?,?)", (now(), workspace, action, detail[:500], 1 if ok else 0))
-        run("DELETE FROM audit WHERE id NOT IN (SELECT id FROM audit ORDER BY id DESC LIMIT 5000)")
+        with _lock:
+            last = one("SELECT hash FROM audit ORDER BY id DESC LIMIT 1")
+            prev = (last or {}).get("hash") or ""
+            at, det, okv = now(), detail[:500], 1 if ok else 0
+            run("INSERT INTO audit (at, workspace, action, detail, ok, prev_hash, hash) VALUES (?,?,?,?,?,?,?)",
+                (at, workspace, action, det, okv, prev, _link(prev, at, workspace, action, det, okv)))
+            run("DELETE FROM audit WHERE id NOT IN (SELECT id FROM audit ORDER BY id DESC LIMIT 5000)")
     except Exception:  # noqa: BLE001
         pass
+
+
+def audit_verify() -> dict:
+    """Walk the log oldest to newest. Entries from before the chain existed have no hash and are reported as unchained."""
+    rs = rows("SELECT id, at, workspace, action, detail, ok, prev_hash, hash FROM audit ORDER BY id")
+    unchained = sum(1 for r in rs if not r["hash"])
+    prev, checked, first = None, 0, True
+    for r in rs:
+        if not r["hash"]:
+            prev = None
+            continue
+        if _link(r["prev_hash"] or "", r["at"], r["workspace"], r["action"], r["detail"], r["ok"]) != r["hash"]:
+            return {"ok": False, "checked": checked, "unchained": unchained, "broken_at": r["id"], "message": f"Entry #{r['id']} was changed after it was written."}
+        if prev is not None and r["prev_hash"] != prev:
+            return {"ok": False, "checked": checked, "unchained": unchained, "broken_at": r["id"], "message": f"An entry before #{r['id']} was removed or altered."}
+        prev, checked, first = r["hash"], checked + 1, False
+    return {"ok": True, "checked": checked, "unchained": unchained, "broken_at": None,
+            "message": "The log is intact." if checked else "Nothing to check yet."}

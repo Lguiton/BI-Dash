@@ -1,0 +1,209 @@
+{
+ "title": "Project & Product Management: decide, plan, deliver, measure",
+ "intro": "A PM keeps three things honest: what is worth building (value), when it will be done (schedule), and what it costs (budget), while managing risk and measuring whether the product works.",
+ "outcome": "A prioritised backlog, a sprint plan, a schedule with a critical path, budget tracking with earned value, a risk register, and OKRs.",
+ "steps": [
+  {
+   "id": "okr",
+   "title": "Set the goal as OKRs",
+   "what": "An Objective is the outcome you want; Key Results are the measurable proof.",
+   "how": [
+    "Open OKRs and add an objective with 2 to 4 key results.",
+    "Each KR has a start, a target and a current value.",
+    "KRs measure outcomes, not tasks."
+   ],
+   "tool": {
+    "label": "OKRs",
+    "href": null,
+    "tab": "okr"
+   },
+   "done_when": "Every objective has measurable KRs.",
+   "mistakes": [
+    "KRs written as tasks ('launch X')."
+   ],
+   "ask": "Draft OKRs for my project."
+  },
+  {
+   "id": "backlog",
+   "title": "Build the backlog",
+   "what": "List the work as items: epic, story, task, bug, milestone.",
+   "how": [
+    "Open the Board and add items with a clear title and owner.",
+    "Add points (effort) as a rough size.",
+    "Load the example project in Practice to see a complete one."
+   ],
+   "tool": {
+    "label": "Board",
+    "href": null,
+    "tab": "board"
+   },
+   "done_when": "10+ items exist.",
+   "mistakes": [
+    "Vague titles.",
+    "Epics that never get split."
+   ],
+   "ask": "Break this goal into backlog items."
+  },
+  {
+   "id": "prioritise",
+   "title": "Prioritise by value",
+   "what": "Rank by value per effort, not by who shouts loudest.",
+   "how": [
+    "For each item enter reach, impact, confidence (0 to 1) and effort for RICE.",
+    "Or value, time criticality, risk reduction and points for WSJF.",
+    "Tag Must/Should/Could/Won't; Musts should stay near 60% of points."
+   ],
+   "tool": {
+    "label": "Prioritisation",
+    "href": null,
+    "tab": "prio"
+   },
+   "done_when": "5+ items are scored and ranked.",
+   "mistakes": [
+    "Confidence set to 1 everywhere.",
+    "Everything is a Must."
+   ],
+   "ask": "Which of my items should I do first and why?"
+  },
+  {
+   "id": "schedule",
+   "title": "Plan the schedule and find the critical path",
+   "what": "Dependencies decide the finish date.",
+   "how": [
+    "Give items a start date, duration (days) and dependencies (ids).",
+    "Open Schedule: items with zero float are critical.",
+    "To finish sooner, shorten a critical item, not a slack one."
+   ],
+   "tool": {
+    "label": "Schedule",
+    "href": null,
+    "tab": "schedule"
+   },
+   "done_when": "You can name the critical path.",
+   "mistakes": [
+    "Circular dependencies.",
+    "Ignoring float."
+   ],
+   "ask": "What is on my critical path and what would shorten it?"
+  },
+  {
+   "id": "sprint",
+   "title": "Plan a sprint",
+   "what": "A sprint is a fixed time-box with a goal.",
+   "how": [
+    "Add a sprint (2 weeks is common) with a goal.",
+    "Assign items to it when you add or edit them.",
+    "Do not commit more than your velocity."
+   ],
+   "tool": {
+    "label": "Sprints",
+    "href": null,
+    "tab": "sprint"
+   },
+   "done_when": "A sprint has a goal and assigned items.",
+   "mistakes": [
+    "Committing to 30 points when velocity is 13."
+   ],
+   "ask": "How much should I commit to this sprint?"
+  },
+  {
+   "id": "flow",
+   "title": "Run the work and watch flow",
+   "what": "Move cards across the board and watch cycle time and WIP.",
+   "how": [
+    "Move items from todo to doing to done on the Board.",
+    "Open Flow: cycle time, throughput, cumulative flow, Little's law.",
+    "If WIP is above what Little's law expects, stop starting and start finishing."
+   ],
+   "tool": {
+    "label": "Flow",
+    "href": null,
+    "tab": "flow"
+   },
+   "done_when": "You know your median cycle time and WIP.",
+   "mistakes": [
+    "Too many items in doing."
+   ],
+   "ask": "Is my work in progress too high?"
+  },
+  {
+   "id": "budget",
+   "title": "Track budget with earned value",
+   "what": "Planned value, earned value and actual cost tell you if you are on track.",
+   "how": [
+    "Enter planned and actual cost on items, or log your hours in the Time tab with an hourly rate: logged hours then replace the typed actual cost.",
+    "Open Earned value: CPI under 1 means over budget; SPI under 1 means behind.",
+    "Read EAC for the likely final cost."
+   ],
+   "tool": {
+    "label": "Earned value",
+    "href": null,
+    "tab": "evm"
+   },
+   "done_when": "You can say whether you are over budget and behind.",
+   "mistakes": [
+    "Planned cost missing on most items."
+   ],
+   "ask": "Explain my CPI and SPI in plain words."
+  },
+  {
+   "id": "risk",
+   "title": "Manage risks",
+   "what": "A risk is a possible problem: probability times impact is its expected cost.",
+   "how": [
+    "Open Risks and add each risk with probability (0 to 1) and cost.",
+    "Write a mitigation and an owner.",
+    "Use total exposure as a starting contingency reserve."
+   ],
+   "tool": {
+    "label": "Risks",
+    "href": null,
+    "tab": "risk"
+   },
+   "done_when": "3+ risks with owners and mitigations.",
+   "mistakes": [
+    "Risks with no owner.",
+    "Never revisiting the register."
+   ],
+   "ask": "What risks am I probably missing?"
+  },
+  {
+   "id": "product",
+   "title": "Measure the product",
+   "what": "Is anyone using it, and do they come back?",
+   "how": [
+    "Open Product analytics: stickiness (DAU/MAU), status funnel, retention cohorts.",
+    "Entities stand in for accounts; records for activity."
+   ],
+   "tool": {
+    "label": "Product analytics",
+    "href": null,
+    "tab": "product"
+   },
+   "done_when": "You know retention after month 1.",
+   "mistakes": [
+    "Reading a few rows as a trend."
+   ],
+   "ask": "What does my retention table say about the product?"
+  },
+  {
+   "id": "review",
+   "title": "Review and adjust",
+   "what": "Use the numbers in the retro.",
+   "how": [
+    "Check velocity trend, forecast, and risks.",
+    "Decide one thing to change next sprint."
+   ],
+   "tool": {
+    "label": "Sprints",
+    "href": null,
+    "tab": "sprint"
+   },
+   "done_when": "You wrote one change for next sprint.",
+   "mistakes": [
+    "Retros that change nothing."
+   ],
+   "ask": "Run a retrospective on my last sprint."
+  }
+ ]
+}

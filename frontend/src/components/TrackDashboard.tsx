@@ -13,11 +13,27 @@ import { PmPanel } from "@/components/panels/PmPanel";
 import { FullStackPanel } from "@/components/panels/FullStackPanel";
 import { SaPanel } from "@/components/panels/SaPanel";
 import { DbaPanel, GovernancePanel } from "@/components/panels/DbaGovPanels";
+import { DataLab } from "@/components/panels/DataLab";
+import { MlBuildPanel } from "@/components/panels/MlBuildPanel";
+import { DesignPanel } from "@/components/panels/DesignPanel";
 import { Tabs } from "@/components/panels/kit";
 import { AgentPanel, CommandBar, useAgentChat } from "@/components/panels/AgentUi";
 import { SecPanel } from "@/components/panels/SecPanel";
 import { NetPanel } from "@/components/panels/NetPanel";
 import { ItPanel } from "@/components/panels/ItPanel";
+import { BiToolkit } from "@/components/panels/BiToolkit";
+import { InferencePanel } from "@/components/panels/InferencePanel";
+import { LearnToolkit } from "@/components/panels/LearnToolkit";
+import { AiFundamentalsPanel } from "@/components/panels/AiFundamentalsPanel";
+import { AiWorkbenchPanel } from "@/components/panels/AiWorkbenchPanel";
+import { GovPanel } from "@/components/panels/GovPanel";
+import { PyLibPanel } from "@/components/panels/PyLibPanel";
+import { CpePanel } from "@/components/panels/CpePanel";
+import { SurveyPanel } from "@/components/panels/SurveyPanel";
+import { CoursePanel } from "@/components/panels/CoursePanel";
+import { LeadPanel } from "@/components/panels/LeadPanel";
+import { ImplPanel } from "@/components/panels/ImplPanel";
+import { MlopsPanel } from "@/components/panels/MlopsPanel";
 import { ManualPanel } from "@/components/panels/ManualPanel";
 import { ApiError, getJson, putJson } from "@/lib/api";
 import { money, pct } from "@/lib/format";
@@ -25,10 +41,10 @@ import { useChartColors } from "@/lib/useChartColors";
 import type { AgentAction, ManualStep, AiDash, AnalystDash, EngineeringDash, MlDash, Progress, ScientistDash, Track, TrackStep } from "@/lib/types";
 
 type Dash = { ideas: string[] } & Record<string, unknown>;
-const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", security: "audit", network: "subnet", itsupport: "tickets", engineering: "pipeline" };
+const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", security: "audit", network: "subnet", itsupport: "tickets", engineering: "pipeline", cpe: "numbers" };
 const OPEN_LAB: Record<string, { href: string; label: string }[]> = {
   analyst: [{ href: "/lab", label: "SQL Lab" }, { href: "/kpis", label: "KPI builder" }, { href: "/quality", label: "Data quality" }],
-  scientist: [{ href: "/python", label: "Notebooks" }, { href: "/ml", label: "ML Lab" }],
+  scientist: [{ href: "/analysis", label: "Analysis Lab" }, { href: "/data", label: "Import data" }, { href: "/python", label: "Notebooks" }, { href: "/ml", label: "ML Lab" }],
   ml: [{ href: "/ml", label: "ML Lab" }, { href: "/python", label: "Notebooks 13-15" }],
   engineering: [{ href: "/pipeline", label: "Pipeline monitor" }, { href: "/apache", label: "Apache lab" }],
   ai: [{ href: "/ai", label: "AI Lab" }, { href: "/glossary", label: "Glossary" }],
@@ -36,6 +52,7 @@ const OPEN_LAB: Record<string, { href: string; label: string }[]> = {
   security: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
   network: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
   itsupport: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
+  cpe: [{ href: "/activity", label: "Activity log" }, { href: "/settings", label: "Settings & backups" }],
   pm: [{ href: "/kpis", label: "KPI builder" }, { href: "/activity", label: "Activity log" }],
   sysanalyst: [{ href: "/schema", label: "Schema" }, { href: "/quality", label: "Data quality" }, { href: "/lab", label: "SQL Lab" }],
 };
@@ -214,15 +231,17 @@ function EngineeringTabs({ d, tab, onTab }: { d: EngineeringDash; tab: string; o
   const [top, sub = "catalog"] = tab.split("/");
   return (
     <div className="space-y-4">
-      <Tabs label="Data engineering areas" value={top} onChange={onTab} tabs={[{ id: "pipeline", label: "Pipeline" }, { id: "dba", label: "Database admin" }, { id: "gov", label: "Data governance" }]} />
+      <Tabs label="Data engineering areas" value={top} onChange={onTab} tabs={[{ id: "pipeline", label: "Pipeline" }, { id: "lab", label: "Data tools lab" }, { id: "dba", label: "Database admin" }, { id: "design", label: "Design" }, { id: "gov", label: "Data governance" }]} />
       {top === "pipeline" && <PipelinePanel initial={d.pipeline} key={JSON.stringify(d.pipeline.history[0] ?? 0)} />}
+      {top === "lab" && <DataLab />}
       {top === "dba" && <DbaPanel />}
+      {top === "design" && <DesignPanel />}
       {top === "gov" && <GovernancePanel tab={sub} onTab={(t) => onTab(`gov/${t}`)} />}
     </div>
   );
 }
 
-type TrackId = "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack" | "security" | "network" | "itsupport";
+type TrackId = "analyst" | "scientist" | "ml" | "engineering" | "ai" | "pm" | "sysanalyst" | "fullstack" | "security" | "network" | "itsupport" | "cpe";
 const parseView = (v: string | null): "manual" | "tools" | "agent" | null => (v === "manual" || v === "tools" || v === "agent" ? v : null);
 
 /** Search results and agent links can open a track straight on a view, tab or manual step: /tracks/pm?view=manual&step=okr */
@@ -300,7 +319,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
         {tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
 
-      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} />
+      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
 
       <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
         {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).map(([k, l]) => (
@@ -316,17 +335,18 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
             <>
               <DatasetStrip careerId={id} />
               {!dash && !error && <p className="text-sm text-muted">Loading…</p>}
-              {dash && id === "analyst" && <AnalystPanels d={dash as unknown as AnalystDash} />}
-              {dash && id === "scientist" && <ScientistPanels d={dash as unknown as ScientistDash} />}
-              {dash && id === "ml" && <MlPanels d={dash as unknown as MlDash} />}
+              {dash && id === "analyst" && (<><AnalystPanels d={dash as unknown as AnalystDash} /><BiToolkit /><SurveyPanel /></>)}
+              {dash && id === "scientist" && (<><ScientistPanels d={dash as unknown as ScientistDash} /><BiToolkit /><SurveyPanel /><CoursePanel /></>)}
+              {dash && id === "ml" && (<><MlPanels d={dash as unknown as MlDash} /><LearnToolkit track="ml" /><CoursePanel /><MlopsPanel /><MlBuildPanel /><AiFundamentalsPanel /></>)}
               {dash && id === "engineering" && <EngineeringTabs d={dash as unknown as EngineeringDash} tab={tab} onTab={setTab} />}
-              {dash && id === "pm" && <PmPanel tab={tab} onTab={setTab} />}
+              {dash && id === "pm" && (<><PmPanel tab={tab} onTab={setTab} /><LeadPanel /></>)}
               {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
               {dash && id === "fullstack" && <FullStackPanel tab={tab} onTab={setTab} />}
               {dash && id === "security" && <SecPanel tab={tab} onTab={setTab} />}
               {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
               {dash && id === "itsupport" && <ItPanel tab={tab} onTab={setTab} />}
-              {dash && id === "ai" && <AiPanels d={dash as unknown as AiDash} />}
+              {dash && id === "cpe" && <CpePanel tab={tab} onTab={setTab} />}
+              {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} /><LearnToolkit track="ai" /><AiWorkbenchPanel /><GovPanel /><ImplPanel /><CoursePanel /><PyLibPanel /><MlopsPanel /><MlBuildPanel /><AiFundamentalsPanel /><InferencePanel /></>)}
               {dash && (
                 <section className="card p-4">
                   <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>

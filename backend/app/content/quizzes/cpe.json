@@ -1,0 +1,302 @@
+[
+ {
+  "step": "numbers",
+  "q": "-5 in 8-bit two's complement is...",
+  "options": [
+   "10000101",
+   "11111011",
+   "11111010",
+   "00000101"
+  ],
+  "answer": 1,
+  "why": "Write 5 as 00000101, invert to 11111010, add 1 to get 11111011."
+ },
+ {
+  "step": "numbers",
+  "q": "Adding 127 and 1 in 8-bit signed gives...",
+  "options": [
+   "128",
+   "-128 (overflow)",
+   "0",
+   "127"
+  ],
+  "answer": 1,
+  "why": "The true value 128 does not fit, so the bits wrap to -128."
+ },
+ {
+  "step": "numbers",
+  "q": "Why is 0.1 stored with a small error?",
+  "options": [
+   "A bug",
+   "Binary cannot represent it exactly",
+   "Too many digits",
+   "The CPU is old"
+  ],
+  "answer": 1,
+  "why": "Many decimals are repeating fractions in binary, so the nearest value is stored."
+ },
+ {
+  "step": "logic",
+  "q": "A AND B OR A AND NOT B simplifies to...",
+  "options": [
+   "B",
+   "A",
+   "A OR B",
+   "0"
+  ],
+  "answer": 1,
+  "why": "A(B + B') = A."
+ },
+ {
+  "step": "logic",
+  "q": "NOT(A AND B) equals...",
+  "options": [
+   "NOT A AND NOT B",
+   "NOT A OR NOT B",
+   "A OR B",
+   "A XOR B"
+  ],
+  "answer": 1,
+  "why": "De Morgan: the complement of an AND is the OR of the complements."
+ },
+ {
+  "step": "circuits",
+  "q": "12 V across 4 ohm gives a current of...",
+  "options": [
+   "48 A",
+   "3 A",
+   "0.33 A",
+   "8 A"
+  ],
+  "answer": 1,
+  "why": "I = V / R = 12 / 4 = 3 A."
+ },
+ {
+  "step": "circuits",
+  "q": "Three resistors in parallel have a total that is...",
+  "options": [
+   "The sum",
+   "Smaller than the smallest one",
+   "The average",
+   "Equal to the largest"
+  ],
+  "answer": 1,
+  "why": "Each extra branch adds a path, so total resistance falls."
+ },
+ {
+  "step": "circuits",
+  "q": "A load in parallel with the lower resistor of a divider...",
+  "options": [
+   "Raises the output",
+   "Lowers the output",
+   "Does nothing",
+   "Doubles the current"
+  ],
+  "answer": 1,
+  "why": "The load reduces the lower resistance, so the output falls."
+ },
+ {
+  "step": "arch",
+  "q": "32 address bits, 64 byte blocks, 128 sets: how many tag bits?",
+  "options": [
+   "19",
+   "26",
+   "6",
+   "13"
+  ],
+  "answer": 0,
+  "why": "Offset 6 + index 7 = 13, so the tag is 32 - 13 = 19."
+ },
+ {
+  "step": "arch",
+  "q": "If 90% of a job is made 10 times faster the best overall speedup is about...",
+  "options": [
+   "10",
+   "5.3",
+   "9",
+   "100"
+  ],
+  "answer": 1,
+  "why": "1 / (0.1 + 0.9/10) = 5.26."
+ },
+ {
+  "step": "arch",
+  "q": "RAID 5 protects against...",
+  "options": [
+   "Deleting a file",
+   "One disk failing",
+   "Ransomware",
+   "Fire"
+  ],
+  "answer": 1,
+  "why": "RAID survives a disk failure; it is not a backup."
+ },
+ {
+  "step": "wiring",
+  "q": "The fuse in a circuit mainly protects...",
+  "options": [
+   "The device",
+   "The wire",
+   "The battery",
+   "The driver"
+  ],
+  "answer": 1,
+  "why": "It must blow before the wire overheats, so it cannot exceed the wire's rating."
+ },
+ {
+  "step": "wiring",
+  "q": "A healthy CAN bus measured at rest reads about...",
+  "options": [
+   "0 ohm",
+   "60 ohm",
+   "120 ohm",
+   "Open"
+  ],
+  "answer": 1,
+  "why": "Two 120 ohm terminators in parallel."
+ },
+ {
+  "step": "wiring",
+  "q": "Why must you not rely on a diagram's wire colour key?",
+  "options": [
+   "Colours fade",
+   "Colours differ between makers and even between diagrams",
+   "Wires are all black",
+   "Colours are legal codes"
+  ],
+  "answer": 1,
+  "why": "No universal code: use the vehicle's own wiring diagram."
+ },
+ {
+  "step": "systems",
+  "q": "Which bus suits a rear camera video stream?",
+  "options": [
+   "LIN",
+   "Classic CAN",
+   "Automotive Ethernet",
+   "A single wire"
+  ],
+  "answer": 2,
+  "why": "Video needs tens to hundreds of megabits per second."
+ },
+ {
+  "step": "systems",
+  "q": "Before working near an airbag you should...",
+  "options": [
+   "Probe the yellow connector",
+   "Follow the maker's disconnect and wait procedure",
+   "Apply 12 V to test it",
+   "Ignore the lamp"
+  ],
+  "answer": 1,
+  "why": "Stored energy can fire it; the procedure and wait time are mandatory."
+ },
+ {
+  "step": "ev",
+  "q": "Cells in series mainly add...",
+  "options": [
+   "Capacity",
+   "Voltage",
+   "Current rating",
+   "Weight only"
+  ],
+  "answer": 1,
+  "why": "Series adds voltage; parallel adds capacity."
+ },
+ {
+  "step": "ev",
+  "q": "The slowest part sets the AC charge speed. A 7 kW wall box with a 11 kW on-board charger gives...",
+  "options": [
+   "11 kW",
+   "7 kW",
+   "18 kW",
+   "4 kW"
+  ],
+  "answer": 1,
+  "why": "The wall box is the limit."
+ },
+ {
+  "step": "ev",
+  "q": "In vehicle standards, high voltage means above about...",
+  "options": [
+   "12 V",
+   "60 V DC",
+   "24 V",
+   "5 V"
+  ],
+  "answer": 1,
+  "why": "Above 60 V DC is classed as high voltage and can be lethal."
+ },
+ {
+  "step": "practice",
+  "q": "What should a harness plan end with?",
+  "options": [
+   "A purchase",
+   "Measurements on the real vehicle",
+   "A new colour code",
+   "Nothing"
+  ],
+  "answer": 1,
+  "why": "Calculations predict; measurements confirm."
+ },
+ {
+  "step": "practice",
+  "q": "Before adding a module that sends CAN messages you should...",
+  "options": [
+   "Hope",
+   "Check the bus load",
+   "Swap the terminator",
+   "Use thinner wire"
+  ],
+  "answer": 1,
+  "why": "More traffic can overload the bus."
+ },
+ {
+  "step": "simulate",
+  "q": "A cache has free space but a new address still misses. The most likely reason is...",
+  "options": [
+   "A conflict: other addresses already use the same set",
+   "The cache is broken",
+   "The address is negative",
+   "Misses only happen when the cache is full"
+  ],
+  "answer": 0,
+  "why": "Each address maps to one set. If that set is full, a miss happens even though other sets are empty. More ways reduce this."
+ },
+ {
+  "step": "simulate",
+  "q": "In the logic simulator, when does a flip-flop output change?",
+  "options": [
+   "Whenever any input changes",
+   "On the clock step",
+   "Never",
+   "Only when the output is 0"
+  ],
+  "answer": 1,
+  "why": "A flip-flop copies its input on the clock step and holds it otherwise."
+ },
+ {
+  "step": "decode",
+  "q": "A CAN signal has raw value 11290, factor 0.25 and offset 0. The value is...",
+  "options": [
+   "2822.5",
+   "45160",
+   "11290.25",
+   "282.25"
+  ],
+  "answer": 0,
+  "why": "Value = raw x factor + offset = 11290 x 0.25 = 2822.5."
+ },
+ {
+  "step": "decode",
+  "q": "A trouble code P0301 should lead you to...",
+  "options": [
+   "Replace the spark plug on cylinder 1",
+   "Check the cylinder 1 misfire cause with live data and tests",
+   "Clear it and drive",
+   "Replace the engine computer"
+  ],
+  "answer": 1,
+  "why": "A code names a condition. Causes include plug, coil, injector or compression, so confirm before replacing."
+ }
+]

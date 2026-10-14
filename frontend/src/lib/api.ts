@@ -22,6 +22,13 @@ export function filterQuery(f: FilterState, extra: Record<string, string | numbe
   return s ? `?${s}` : "";
 }
 
+/** fetch that sends the login cookie, and tells the page to show the login form if the server says sign in. */
+export async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const res = await fetch(url, { ...init, credentials: "include" });
+  if (res.status === 401 && typeof window !== "undefined" && !url.includes("/api/auth/")) window.dispatchEvent(new Event("bi-auth-required"));
+  return res;
+}
+
 async function toError(res: Response): Promise<ApiError> {
   let message = `Request failed (${res.status})`;
   let details: string[] = [];
@@ -43,7 +50,7 @@ async function toError(res: Response): Promise<ApiError> {
 export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { signal });
+    res = await apiFetch(`${API_BASE}${path}`, { signal });
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw e;
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
@@ -57,7 +64,7 @@ export async function postFile<T>(path: string, file: File): Promise<T> {
   body.append("file", file);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { method: "POST", body });
+    res = await apiFetch(`${API_BASE}${path}`, { method: "POST", body });
   } catch {
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
   }
@@ -68,7 +75,7 @@ export async function postFile<T>(path: string, file: File): Promise<T> {
 export async function postJson<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await apiFetch(`${API_BASE}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -85,7 +92,7 @@ export async function postJson<T>(path: string, body: unknown, signal?: AbortSig
 export async function deleteJson<T>(path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
+    res = await apiFetch(`${API_BASE}${path}`, { method: "DELETE" });
   } catch {
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
   }
@@ -96,7 +103,7 @@ export async function deleteJson<T>(path: string): Promise<T> {
 export async function putJson<T>(path: string, body: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    res = await apiFetch(`${API_BASE}${path}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   } catch {
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
   }
@@ -107,7 +114,7 @@ export async function putJson<T>(path: string, body: unknown): Promise<T> {
 export async function postForm<T>(path: string, body: FormData): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { method: "POST", body });
+    res = await apiFetch(`${API_BASE}${path}`, { method: "POST", body });
   } catch {
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
   }
@@ -118,7 +125,19 @@ export async function postForm<T>(path: string, body: FormData): Promise<T> {
 export async function patchJson<T>(path: string, body: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    res = await apiFetch(`${API_BASE}${path}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  } catch {
+    throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
+  }
+  if (!res.ok) throw await toError(res);
+  return (await res.json()) as T;
+}
+
+/** POST JSON with extra headers (used by computer control to send its one-time arming token). */
+export async function postJsonH<T>(path: string, body: unknown, headers: Record<string, string> = {}): Promise<T> {
+  let res: Response;
+  try {
+    res = await apiFetch(`${API_BASE}${path}`, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
   } catch {
     throw new ApiError(`Can't reach the analytics API at ${API_BASE}. Is the backend running?`, 0);
   }

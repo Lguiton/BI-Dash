@@ -20,8 +20,8 @@ from datetime import datetime, timezone
 from app.services import ai_agent, providers
 from app.services.ai_agent import AiError, AskResult
 
-ORDER = {"simple": ["google", "openai", "anthropic"], "medium": ["openai", "google", "anthropic"], "complex": ["anthropic", "openai", "google"]}
-DEFAULT_LIMITS = {"google": 200, "openai": 100, "anthropic": 40}   # questions per UTC day, override with BI_LIMIT_<PROVIDER>
+ORDER = {"simple": ["google", "openai", "anthropic", "ollama"], "medium": ["openai", "google", "anthropic", "ollama"], "complex": ["anthropic", "openai", "google", "ollama"]}
+DEFAULT_LIMITS = {"google": 200, "openai": 100, "anthropic": 40, "ollama": 100000}   # questions per UTC day, override with BI_LIMIT_<PROVIDER>
 
 _lock = threading.Lock()
 _usage: dict[str, list] = {}      # provider -> [utc_date, count]
@@ -88,21 +88,23 @@ def status() -> dict:
                      "used_today": used_today(p), "daily_limit": limit_for(p), "pip": info["pip"],
                      "key_env": info["keys"][0],
                      "role": "default for simple questions" if p == "google" else
-                             "backup" if p == "openai" else "complex questions and code"})
+                             "backup" if p == "openai" else "local, free, last resort" if p == "ollama" else "complex questions and code"})
     return {"providers": rows, "ready": [r["id"] for r in rows if r["configured"] and r["sdk_installed"]],
             "max_steps": ai_agent.MAX_STEPS}
 
 
-def plan(question: str, provider: str = "auto", effort: str = "auto") -> dict:
+def plan(question: str, provider: str = "auto", effort: str = "auto", order_map: dict | None = None, complex_hints: "re.Pattern | None" = None) -> dict:
     """Work out the order to try. Pure function of config + counters, so it is easy to test."""
     st = {r["id"]: r for r in status()["providers"]}
     kind, reason = classify(question, effort)
+    if complex_hints and kind != "complex" and effort == "auto" and (m := complex_hints.search(question or "")):
+        kind, reason = "complex", f"needs calculation: '{m.group(0).lower()}'"
     if provider != "auto":
         if provider not in st:
             raise AiError(f"Unknown provider '{provider}'.", 400)
         return {"kind": kind, "reason": reason, "order": [provider], "skipped": [], "forced": True}
     order, skipped = [], []
-    for p in ORDER[kind]:
+    for p in (order_map or ORDER)[kind]:
         r = st[p]
         if not r["configured"]:
             skipped.append({"provider": p, "why": f"no {r['key_env']}"})

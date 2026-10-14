@@ -116,3 +116,120 @@ Typical flow: **Airflow** schedules the pipeline, **Spark** transforms, **Supers
 * Network: subnet a /24 into five VLSM blocks, paste the sample router config into the review tab and fix each finding, then read the sample capture and explain the handshake.
 * IT: log five tickets, work each checklist, then run the sample event log and write what you would do first.
 See docs/NETWORK_ENGINEERING.md and docs/IT_SPECIALIST.md.
+
+## IT Specialist: CompTIA A+ (Core 1 220-1201 and Core 2 220-1202)
+
+| Topic | Practice it here |
+|---|---|
+| **A+ objectives and readiness** | IT dashboard > **CompTIA A+**: rate every objective, read the weighted readiness, and study the domain it names. |
+| **Ports, protocols, acronyms** | The same tab: port and acronym flashcards. |
+| **Addressing, DHCP, DNS mail records** | IP check, DHCP scope planner and mail records checker (SPF, DKIM, DMARC). |
+| **Hardware sizing and backups** | Display calculator, power supply sizer, RAID (Capacity tab) and the backup planner. |
+| **Troubleshooting method** | Symptom finder plus the "Troubleshooting method" checklist. |
+| **Malware removal, change management, disposal** | The matching IT checklists and the Change request template. |
+| **Scripting basics** | Script reviewer: see why a script from the internet is not safe to run blind. |
+
+Details and limits: `docs/COMPTIA_APLUS.md`.
+
+## IT fundamentals (IT Specialist track)
+| You want to learn | Where |
+|---|---|
+| Practise commands safely | IT fundamentals > Practice shell (11 graded tasks) |
+| Graded practice on binary, hex, chmod, umask, gates, drive sizes | IT fundamentals > Drills |
+| Binary, hex, text encoding, logic gates | IT fundamentals > Numbers and Logic |
+| Why a drive shows less space | Storage units |
+| Linux permissions, setuid, sticky, umask | Permissions calculator |
+| IPv6 addresses | IPv6 tool |
+| The Windows and Linux command for a task | Command finder |
+| Connections, wireless, cloud, services, sysadmin habits | Reference |
+
+Details and limits: `docs/IT_FUNDAMENTALS.md`.
+
+## BI toolkit (Data Analyst and Data Scientist tracks)
+| You want to learn | Where |
+|---|---|
+| Write and test DAX measures, see the SQL equivalent | BI toolkit > DAX lab |
+| Which forecasting method fits a series | BI toolkit > Forecast methods |
+| Budget vs actual, favourable or not | BI toolkit > Variance and scenarios |
+| Break-even and which driver matters most | BI toolkit > Variance and scenarios |
+| What shape the data has and the probability of a value | BI toolkit > Distribution finder |
+| Read an invoice or bank statement and check it | BI toolkit > Document reader |
+
+Details, limits and slips found in the source posters: `docs/BI_TOOLKIT.md`. NexusFlow gap map: `docs/NEXUSFLOW_GAP_MAP.md`.
+
+## Network generators and honeypot logs
+| You want to learn | Where |
+|---|---|
+| Write a VLAN, trunk and router-on-a-stick config | Network track > Config generators |
+| Find why two switches won't trunk | Config generators > Trunk checker |
+| How a router picks between routes | Config generators > Route selection |
+| Which Ethernet cable for a speed and distance | Config generators > Cable chooser |
+| Devices, DHCP DORA, OSPF/EIGRP/BGP | Config generators > Devices, DHCP, protocols |
+| Read what attackers did to a honeypot | Cybersecurity track > Honeypot logs |
+| Windows Firewall blocking an app, digital footprint audit | IT track > Checklists |
+| Audio plugs, MBR/GPT, fdisk vs parted | IT fundamentals > Reference |
+
+Details and the slips found in the source posters: `docs/NETWORK_GENERATORS.md`.
+
+## Endpoint hardening
+| You want to learn | Where |
+|---|---|
+| Audit a Windows PC against a baseline (read-only script) | Cybersecurity track > Endpoint hardening |
+| Roll out a security change safely | IT track > Checklists > Harden a Windows endpoint |
+
+Details, limits and slips: `docs/ENDPOINT_HARDENING.md`.
+
+
+## Machine learning and AI engineering paths
+| You want to learn | Where |
+|---|---|
+| A beginner-to-advanced ML path with gate projects and saved progress | ML track > Learning path |
+| Overfitting, learning rates, algorithms from scratch | ML track > ML tools |
+| Thresholds from costs, ROC and PR, leakage | ML track > ML tools > Scores and thresholds, Leakage scan |
+| Your nine-level AI engineering curriculum mapped onto the app | AI Engineering track > Learning path |
+| Retrieval metrics, hybrid search, structured output, agent traces | AI Engineering track > AI tools |
+| Eval statistics, reliability maths, fine-tune data, LoRA size, PII and injection scan | AI Engineering track > AI tools |
+
+Details, limits and what cannot be built: `docs/LEARNING_PATHS.md`.
+
+## IT infrastructure labs (IT Technician part 2)
+
+IT tools > Infrastructure labs: Group Policy precedence, LDIF checker/builder, RBAC audit, RAID rebuild risk, backup and DR maths, a load-balancer simulator, HTTP and website triage, and an access-log summary. Plus five checklists (printing, media sanitisation, BYOD, DR test, Group Policy change) and four cheat-sheet groups. Four manual steps (`infra-*`) with quiz questions. See `docs/IT_INFRASTRUCTURE.md` for what cannot be built and the 15 source mistakes found.
+
+## Spaced review, portfolio, ticket coach, dnsmasq, content files
+
+- **Review** (`/review`): the quiz questions you miss come back soon, the ones you know come back later (1, 3, 7, 14, 30, 60 days). A daily session mixes due questions with new ones from tracks you have started, and a weak-spots list shows which manual steps keep going wrong. Taking a full track quiz feeds the same memory.
+- **Portfolio** (`/portfolio`): per track, the steps you ticked (your record), quiz and review results (graded by the app), and case studies in your own words. Downloads as Markdown. It claims nothing you have not done.
+- **Ticket coach** (IT tools > Ticket coach): checks a ticket for the information a technician asks about first, a closing note for cause, fix, check and prevention, and suggests a priority.
+- **DHCP server (dnsmasq)** (Network > Generators): builds and validates a dnsmasq config, and checks a pasted one.
+- **Content files, consistency check, update script, quick tests**: see `docs/CONTENT_FILES.md`.
+
+## Security frameworks and network design
+
+Cybersecurity > Principles and NIST CSF (principles check, CIA classifier, CSF 2.0 self-check) and Network > Network design (planner, design steps, glossary, ports). Details and the source mistakes: `docs/SECURITY_FRAMEWORKS_NETWORK_DESIGN.md`.
+
+## AI governance and Python libraries
+
+AI Engineering > AI governance lab (asset registry, shadow-AI check, risk tier, policy simulator, spend attribution) and Python libraries behind AI work (19 libraries, install status and offline demos). Details and the source mistakes: `docs/AI_GOVERNANCE.md`.
+
+## Single source of truth audits
+
+Systems analysis > Single source of truth: systems connectivity, metric audit, document inventory, search-time cost and key-person risk. Details and the source mistakes: `docs/SINGLE_SOURCE_OF_TRUTH.md`.
+
+## AI implementation and vendor scorecard
+AI track > AI implementation planner: readiness, seven-stage checklist, exception map, autonomy level, what-can-I-claim, and a vendor scorecard with must-pass gates. Steps: `ai-impl-ready`, `ai-impl-operate`, `ai-vendor-scorecard`. See docs/AI_IMPLEMENTATION.md.
+
+## Survey numbers, free courses, leadership
+Analyst/Scientist: Survey numbers and probability tables. AI/ML: Free AI course catalog. PM: Five leadership disciplines self-review. Steps: `survey-numbers`, `joint-marginal`, `free-courses`, `lead-five`. See docs/LESSONS_OCT13.md.
+
+## Computer Engineer track
+`/tracks/cpe`: numbers, logic, circuits, architecture, vehicle wiring and CAN, EV charging, and a vehicle systems reference. Eight steps in order. See docs/COMPUTER_ENGINEERING.md. Simulators (logic, tiny CPU, circuits, cache) and vehicle decoders (CAN, J1939, OBD-II, ISO-TP, charging signals) are tabs in the same page.
+
+## Oct 13 build-out (since update 19)
+
+- Computer Engineer: Simulators (logic, tiny CPU, circuits, cache) and Vehicle decoders (CAN, J1939, OBD-II, ISO-TP, charging signals). See docs/COMPUTER_ENGINEERING.md.
+- Network: Simulators (switch/VLAN, spanning tree, OSPF, BGP, ACL, NAT) and a saved-capture reader. See docs/NETWORK_ENGINEERING.md.
+- Cybersecurity: Defender tools (JWT, certificate, CVSS, STRIDE, code scanner, rule tester, playbook simulator). See docs/CYBERSECURITY.md.
+- Data engineering: Data tools lab (dbt-style models, formulas, scheduler, cron, streams). See docs/DATA_TOOLS_LAB.md.
+- ML and AI: Build and check ML pieces (drift, automatic search, neural network, attention, BPE, LSA). See docs/AI_ML_FUNDAMENTALS.md.
+- IT and PM: Backup lab, inventory agent, draggable Gantt, free-form diagram canvas. See docs/IT_BUILD_TOOLS.md.

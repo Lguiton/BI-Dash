@@ -14,6 +14,10 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
   const [busy, setBusy] = useState(false);
   const [source, setSource] = useState<"clean" | "messy" | "uploaded">("clean");
   const [reset, setReset] = useState(false);
+  const [gate, setGate] = useState(false);
+  const [onlyNew, setOnlyNew] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<string[] | null>(null);
 
   const load = useCallback((signal?: AbortSignal) =>
     getJson<PipelineStatus>("/api/pipeline", signal).then((s) => { setSt(s); setError(null); })
@@ -26,8 +30,13 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
   }, [initial, load]);
 
   async function run() {
-    setBusy(true); setError(null);
-    try { const r = await postJson<{ status: PipelineStatus }>("/api/pipeline/run", { source, reset }); setSt(r.status); }
+    setBusy(true); setError(null); setBlocked(null); setNote(null);
+    try {
+      const r = await postJson<{ run: { published?: boolean; blocked_reasons?: string[]; skipped?: boolean; message?: string }; status: PipelineStatus }>("/api/pipeline/run", { source, reset, gate, only_if_new: onlyNew });
+      setSt(r.status);
+      if (r.run.skipped) setNote(r.run.message ?? "No new data, so nothing was run.");
+      if (r.run.published === false) setBlocked(r.run.blocked_reasons ?? []);
+    }
     catch (e) { setError(e instanceof ApiError ? e.message : "The run failed."); }
     finally { setBusy(false); }
   }
@@ -35,6 +44,8 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
   return (
     <div className="space-y-4">
       {error && <ErrorBanner message={error} />}
+      {note && <p className="card p-3 text-sm" role="status">{note}</p>}
+      {blocked && <ErrorBanner message={`Not published: the checks failed, so your existing data was left as it was. ${blocked.join(" ")}`} />}
       <div className="card flex flex-wrap items-center gap-3 p-4 text-sm">
         <label className="max-w-full">Source{" "}
           <select className="field max-w-full" value={source} onChange={(e) => setSource(e.target.value as "clean" | "messy" | "uploaded")}>
@@ -44,6 +55,8 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
           </select>
         </label>
         <label className="flex items-center gap-2"><input type="checkbox" checked={reset} onChange={(e) => setReset(e.target.checked)} /> Start over (wipe the lake)</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={gate} onChange={(e) => setGate(e.target.checked)} /> Stop publishing if checks fail</label>
+        <label className="flex items-center gap-2"><input type="checkbox" checked={onlyNew} onChange={(e) => setOnlyNew(e.target.checked)} /> Run only if new data arrived</label>
         <button className="btn btn-primary" onClick={run} disabled={busy}><Play className="h-4 w-4" aria-hidden /> {busy ? "Running…" : "Run pipeline"}</button>
         <span className="text-xs text-muted">Run twice without &quot;start over&quot;: only the newest day is re-read, and the totals don&apos;t change (idempotent).</span>
       </div>
@@ -91,7 +104,7 @@ export function PipelinePanel({ initial }: { initial?: PipelineStatus }) {
             <tbody>
               {st.history.map((h) => (
                 <tr key={h.at + h.seconds} className="border-t border-line">
-                  <td className="px-4 py-2">{h.at}</td><td className="px-4 py-2">{h.source}{h.reset ? " (reset)" : ""}</td>
+                  <td className="px-4 py-2">{h.at}</td><td className="px-4 py-2">{h.source}{h.reset ? " (reset)" : ""}{h.published === false ? " (blocked)" : ""}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{n(h.bronze_rows)}</td><td className="px-4 py-2 text-right tabular-nums">{n(h.silver_rows)}</td>
                   <td className="px-4 py-2 text-right tabular-nums">{n(h.quarantined)}</td><td className="px-4 py-2 text-right tabular-nums">{h.seconds}</td>
                 </tr>

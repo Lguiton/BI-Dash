@@ -5,11 +5,12 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { deleteJson, getJson, postJson, putJson } from "@/lib/api";
 import { useChartColors } from "@/lib/useChartColors";
 import type { SaDictionary, SaOverview, SaProcess } from "@/lib/types";
+import { SotTab } from "./SotTab";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg, num, useIsPractice } from "./kit";
 
 const TABS = [
   { id: "req", label: "Requirements" }, { id: "dict", label: "Data dictionary" }, { id: "process", label: "Process analysis" },
-  { id: "calc", label: "Calculators" }, { id: "feas", label: "Feasibility (TELOS)" },
+  { id: "calc", label: "Calculators" }, { id: "feas", label: "Feasibility (TELOS)" }, { id: "sot", label: "Single source of truth" },
 ];
 
 export function SaPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
@@ -35,6 +36,7 @@ export function SaPanel({ tab, onTab }: { tab: string; onTab: (t: string) => voi
       {tab === "dict" && <Dictionary />}
       {tab === "process" && <Process />}
       {tab === "calc" && <Calculators />}
+      {tab === "sot" && <SotTab />}
       {tab === "feas" && (d ? <Feasibility d={d} act={act} /> : <p className="text-sm text-muted">Loading…</p>)}
     </div>
   );

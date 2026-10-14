@@ -1,7 +1,7 @@
 "use client";
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, apiFetch } from "@/lib/api";
 
 /** "Send this to a notebook": asks the backend for a ready-to-run .ipynb and saves it. Works from SQL Lab, Workflow and ML Lab. */
 export function NotebookButton({ kind, body, disabled }: { kind: "sql" | "workflow" | "ml"; body: () => Record<string, unknown>; disabled?: boolean }) {
@@ -10,7 +10,7 @@ export function NotebookButton({ kind, body, disabled }: { kind: "sql" | "workfl
   async function go() {
     setBusy(true); setMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/api/notebook/export`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, ...body() }) });
+      const res = await apiFetch(`${API_BASE}/api/notebook/export`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, ...body() }) });
       if (!res.ok) {
         let detail = "Couldn't build the notebook.";
         try { const j = await res.json(); if (typeof j.detail === "string") detail = j.detail; } catch { /* keep default */ }

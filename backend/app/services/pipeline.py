@@ -6,6 +6,7 @@ history line so you can see runs over time.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib
 import json
 import sys
@@ -44,6 +45,59 @@ def _count(con, glob: str) -> int:
         return 0
 
 
+def reconcile(lake: Path) -> dict:
+    """Do the business-ready (gold) totals still equal the cleaned (silver) data they were built from?"""
+    import duckdb
+    silver, daily, ent = (lake / "silver" / "ops.parquet"), (lake / "gold" / "daily.parquet"), (lake / "gold" / "entity.parquet")
+    if not (silver.exists() and daily.exists() and ent.exists()):
+        return {"ok": False, "detail": "silver or gold files are missing", "rows": []}
+    con = duckdb.connect()
+    s_rev, s_cost, s_n = con.execute(f"SELECT coalesce(sum(revenue),0), coalesce(sum(operational_cost),0), count(*) FROM read_parquet('{silver.as_posix()}')").fetchone()
+    d_rev, d_cost, d_n = con.execute(f"SELECT coalesce(sum(revenue),0), coalesce(sum(cost),0), coalesce(sum(records),0) FROM read_parquet('{daily.as_posix()}')").fetchone()
+    e_rev = con.execute(f"SELECT coalesce(sum(revenue),0) FROM read_parquet('{ent.as_posix()}')").fetchone()[0]
+    rows = []
+    for name, a, b in (("Revenue: silver vs gold by day", s_rev, d_rev), ("Cost: silver vs gold by day", s_cost, d_cost),
+                       ("Records: silver vs gold by day", s_n, d_n), ("Revenue: silver vs gold by entity", s_rev, e_rev)):
+        a, b = float(a), float(b)
+        rows.append({"name": name, "silver": round(a, 2), "gold": round(b, 2), "ok": abs(a - b) <= max(0.01, 1e-9 * abs(a))})
+    bad = [r["name"] for r in rows if not r["ok"]]
+    return {"ok": not bad, "detail": "gold totals equal silver totals" if not bad else "differences in: " + ", ".join(bad), "rows": rows}
+
+
+def _last_published(lake: Path) -> dict | None:
+    try:
+        hist = json.loads((lake / "history.json").read_text())
+    except Exception:
+        return None
+    for e in reversed(hist):
+        if e.get("published", True) and not e.get("skipped") and e.get("silver_rows") is not None:
+            return e
+    return None
+
+
+def silent_failure_checks(entry: dict, prev: dict | None) -> list[dict]:
+    """A run can succeed and still be wrong. Compare this run with the last good one."""
+    if not prev or entry.get("reset"):
+        return []
+    out = []
+    ps, ns = prev.get("silver_rows") or 0, entry.get("silver_rows") or 0
+    if ps > 0:
+        out.append({"name": "Volume steady vs previous run", "ok": ns >= 0.5 * ps, "detail": f"silver {ns:,} rows now, {ps:,} last run"})
+    pq, nq = prev.get("quarantined") or 0, entry.get("quarantined") or 0
+    pshare = pq / max(pq + ps, 1)
+    nshare = nq / max(nq + ns, 1)
+    out.append({"name": "Quarantine has not jumped", "ok": nshare <= max(0.1, pshare * 3), "detail": f"{nshare:.1%} rejected now, {pshare:.1%} last run"})
+    return out
+
+
+def gate_checks(lake: Path, entry: dict | None = None, prev: dict | None = None) -> list[dict]:
+    """Checks that must pass before a gated run publishes. Freshness is left out: old sample data is still valid data."""
+    st = status(lake)
+    keep = [c for c in st.get("checks", []) if c["name"] != "Freshness"]
+    rec = reconcile(lake)
+    return keep + [{"name": "Gold reconciles to silver", "ok": rec["ok"], "detail": rec["detail"]}] + silent_failure_checks(entry or {}, prev)
+
+
 def status(lake: Path | None = None) -> dict:
     import duckdb
     lake = lake or LAKE
@@ -80,8 +134,10 @@ def status(lake: Path | None = None) -> dict:
         {"name": "Quarantine under 20%", "ok": silver == 0 or layers[2]["rows"] <= 0.2 * (silver + layers[2]["rows"]),
          "detail": f"{layers[2]['rows']:,} rejected"},
     ]
+    rec = reconcile(lake) if silver else {"ok": True, "detail": "n/a", "rows": []}
+    checks.append({"name": "Gold reconciles to silver", "ok": rec["ok"], "detail": rec["detail"]})
     return {"exists": True, "watermark": newest, "loads": state.get("loads", 0), "layers": layers, "quarantine_reasons": reasons,
-            "checks": checks, "history": _history(lake)}
+            "checks": checks, "reconciliation": rec["rows"], "history": _history(lake)}
 
 
 def _history(lake: Path) -> list[dict]:
@@ -115,7 +171,8 @@ def export_uploaded(dest: Path | None = None) -> tuple[Path, int]:
     return dest, len(rows)
 
 
-def run(source: str = "clean", reset: bool = False, lake: Path | None = None) -> dict:
+def run(source: str = "clean", reset: bool = False, lake: Path | None = None, gate: bool = False, only_if_new: bool = False) -> dict:
+    """With gate=True the run happens in a staging copy and replaces the real lake only if every check passes."""
     lake = lake or LAKE
     if source not in SOURCES and source != "uploaded":
         raise PipelineError("source must be 'clean', 'messy' or 'uploaded'.")
@@ -125,15 +182,36 @@ def run(source: str = "clean", reset: bool = False, lake: Path | None = None) ->
         path = SOURCES[source]
         if not path.exists():
             raise PipelineError(f"{path.name} wasn't found in data_samples/.", 404)
+    sha = hashlib.sha1(path.read_bytes()).hexdigest()[:12]
+    prev = _last_published(lake)
+    if only_if_new and not reset and prev and prev.get("source_sha") == sha:
+        return {"at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "source": source, "skipped": True, "source_sha": sha,
+                "message": "No new data since the last run, so nothing was run."}
     if not _run_lock.acquire(blocking=False):
         raise PipelineError("A pipeline run is already in progress.", 409)
     try:
+        import shutil
         m = _medallion()
         t0 = time.perf_counter()
-        stats = m.run(path, lake, reset=reset)
+        work = lake
+        if gate:
+            work = lake.with_name(lake.name + "_staging")
+            shutil.rmtree(work, ignore_errors=True)
+            if lake.exists() and not reset:
+                shutil.copytree(lake, work)
+        stats = m.run(path, work, reset=reset)
         entry = {"at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"), "source": source, "reset": reset,
-                 "seconds": round(time.perf_counter() - t0, 2), **{k: stats.get(k) for k in
+                 "seconds": round(time.perf_counter() - t0, 2), "source_sha": sha, **{k: stats.get(k) for k in
                  ("bronze_rows", "silver_rows", "quarantined", "gold_rows", "watermark_before", "watermark_after")}}
+        if gate:
+            checks = gate_checks(work, entry, prev)
+            failed = [f"{c['name']}: {c['detail']}" for c in checks if not c["ok"]]
+            entry.update({"gate": True, "published": not failed, "blocked_reasons": failed})
+            if failed:
+                shutil.rmtree(work, ignore_errors=True)  # the real lake is untouched
+            else:
+                shutil.rmtree(lake, ignore_errors=True)
+                work.rename(lake)
         hist = []
         try:
             hist = json.loads((lake / "history.json").read_text())

@@ -262,10 +262,10 @@ export interface GlossaryTerm {
 }
 
 export interface PipelineLayer { layer: string; label: string; rows: number; files: number }
-export interface PipelineRun { at: string; source: string; reset: boolean; seconds: number; bronze_rows: number; silver_rows: number; quarantined: number; gold_rows: number; watermark_before: string | null; watermark_after: string | null }
+export interface PipelineRun { at: string; source: string; reset: boolean; seconds: number; bronze_rows: number; silver_rows: number; quarantined: number; gold_rows: number; watermark_before: string | null; watermark_after: string | null; published?: boolean }
 export interface PipelineStatus {
   exists: boolean; message?: string; watermark?: string | null; loads?: number; layers?: PipelineLayer[];
-  quarantine_reasons?: { reason: string; rows: number }[]; checks?: { name: string; ok: boolean; detail: string }[]; history: PipelineRun[];
+  quarantine_reasons?: { reason: string; rows: number }[]; checks?: { name: string; ok: boolean; detail: string }[]; reconciliation?: { name: string; silver: number; gold: number; ok: boolean }[]; history: PipelineRun[];
 }
 
 type Unavailable = { available: false; reason: string };
@@ -328,12 +328,14 @@ export interface ColumnMeta { name: string; type: string }
 export interface UserTable { table_name: string; label: string; source: string; rows_count: number; columns: ColumnMeta[]; created_at: string; updated_at: string }
 export interface PreviewColumn { name: string; original: string; type: string; samples: string[] }
 export interface OpsField { field: string; required: boolean; hint: string }
+export interface SchemaDiff { table: string; existing_rows: number; added: string[]; removed: string[]; type_changed: { column: string; was: string; now: string }[]; reordered: boolean; identical: boolean; summary: string }
 export interface FilePreview {
+  schema_diff?: SchemaDiff | null;
   filename: string; rows_total: number; header: string[]; columns: PreviewColumn[]; preview: Record<string, string | null>[];
   suggested_name: string; delimiter?: string; sheets?: string[]; sheet?: string;
   operations: { fields: OpsField[]; suggested: Record<string, string> };
 }
-export interface ImportResult { table: string; rows: number; added: number; mode: string; columns: ColumnMeta[] }
+export interface ImportResult { table: string; rows: number; added: number; mode: string; columns: ColumnMeta[]; schema_diff?: SchemaDiff | null; skipped_existing?: number; rescued_columns?: string[] }
 export interface ProfileColumn {
   name: string; type: string; kind: "number" | "date" | "text" | "bool"; nulls: number; distinct_count: number;
   min?: number | string | null; max?: number | string | null; mean?: number | null; median?: number | null; top?: { value: string; n: number }[];
@@ -344,7 +346,7 @@ export interface TableHistogram { column: string; n: number; bins: { start: numb
 export interface TableBox { column: string; by: string | null; boxes: { name: string; mn: number; q1: number; med: number; q3: number; mx: number; mean: number; n: number }[] }
 export interface TableScatter { x: string; y: string; n: number; shown: number; correlation: number | null; points: { x: number; y: number }[] }
 
-export type SourceKind = "file" | "url" | "sql" | "html_table";
+export type SourceKind = "file" | "url" | "sql" | "html_table" | "ical";
 export interface DataSource {
   id: number; workspace: WorkspaceName; name: string; kind: SourceKind; config: Record<string, string | null>; target: string;
   interval_minutes: number; enabled: boolean; last_run_at: string | null; last_status: "ok" | "error" | null; last_message: string | null;

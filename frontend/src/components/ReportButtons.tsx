@@ -1,7 +1,7 @@
 "use client";
 import { FileSpreadsheet, FileText, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
-import { API_BASE, ApiError, filterQuery, getJson, postJson } from "@/lib/api";
+import { API_BASE, ApiError, filterQuery, getJson, postJson, apiFetch } from "@/lib/api";
 import type { FilterState } from "@/lib/types";
 
 /** Downloads a report of the current filtered view. Uses fetch so a "nothing to report" error shows as text, not a broken file. */
@@ -29,7 +29,7 @@ export function ReportButtons({ filters }: { filters: FilterState }) {
   async function download(format: "xlsx" | "pdf") {
     setBusy(format); setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/report${filterQuery(filters, { format })}`);
+      const res = await apiFetch(`${API_BASE}/api/report${filterQuery(filters, { format })}`);
       if (!res.ok) {
         let msg = `Report failed (${res.status}).`;
         try { const b = await res.json(); if (typeof b?.detail === "string") msg = b.detail; } catch { /* keep generic message */ }

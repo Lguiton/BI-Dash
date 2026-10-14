@@ -189,4 +189,13 @@ def it_ideas() -> dict:
     ]}
 
 
-BUILDERS = {"network": network_ideas, "itsupport": it_ideas, "security": security_ideas, "analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai, "pm": pm_ideas, "sysanalyst": sysanalyst_ideas, "fullstack": fullstack_ideas}
+def cpe_ideas() -> dict:
+    return {"ideas": [
+        "Convert -45 to 8-bit two's complement by hand, then check it. Where did the invert-and-add-1 go wrong?",
+        "Type A AND B OR A AND NOT B into the logic tool. What does it simplify to, and why?",
+        "Size the wire and fuse for a 10 A load 3 m from the battery. What happens to the drop if you use the next thinner wire?",
+        "Find the bus load of four CAN messages at 500 kbit/s, then double the message rates. When does it become heavy?",
+    ]}
+
+
+BUILDERS = {"cpe": cpe_ideas, "network": network_ideas, "itsupport": it_ideas, "security": security_ideas, "analyst": analyst, "scientist": scientist, "ml": ml, "engineering": engineering, "ai": ai, "pm": pm_ideas, "sysanalyst": sysanalyst_ideas, "fullstack": fullstack_ideas}

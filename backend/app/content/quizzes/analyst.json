@@ -1,0 +1,266 @@
+[
+ {
+  "step": "question",
+  "q": "What should you settle before you open any data?",
+  "options": [
+   "Which chart type looks best",
+   "The decision the number will support",
+   "Which database engine to use",
+   "How many rows the table has"
+  ],
+  "answer": 1,
+  "why": "A number with no decision attached is trivia. Start from what someone will do differently because of the answer."
+ },
+ {
+  "step": "kpis",
+  "q": "Net margin is computed as total profit divided by total revenue, not as the average of each entity's margin. Why?",
+  "options": [
+   "Averages are slower to compute",
+   "SQL cannot average percentages",
+   "Averaging percentages gives a tiny entity the same weight as a huge one",
+   "Margin is not a ratio"
+  ],
+  "answer": 2,
+  "why": "Ratios are non-additive. Add the numerators and denominators first, then divide: that weights every dollar equally."
+ },
+ {
+  "step": "quality",
+  "q": "One day shows $0 revenue, a cost, and the status 'Cancelled'. What is the best first move?",
+  "options": [
+   "Delete it so it doesn't drag the averages",
+   "Replace the zero with the average revenue",
+   "Find out whether it is a real cancellation before deciding to keep or exclude it",
+   "Ignore it, it is only one row"
+  ],
+  "answer": 2,
+  "why": "Never fix what you haven't understood. A genuine cancellation is information; a broken import is a defect."
+ },
+ {
+  "step": "visual",
+  "q": "You want to show how three categories share total revenue. Which chart fits best?",
+  "options": [
+   "A scatter plot of category names",
+   "A 3D pie with twelve colours",
+   "A line chart over the category names",
+   "A sorted bar chart or a simple donut of share of total"
+  ],
+  "answer": 3,
+  "why": "Share of a whole needs a part-to-whole view with few, labelled slices. Sorting makes the comparison readable."
+ },
+ {
+  "step": "monitor",
+  "q": "What makes a KPI more than a vanity metric?",
+  "options": [
+   "It is displayed in large type",
+   "It has a target, a direction, and someone who acts when it turns red",
+   "It always goes up",
+   "It is measured daily"
+  ],
+  "answer": 1,
+  "why": "A KPI exists to trigger a decision. Without a target and an owner it is just a number."
+ },
+ {
+  "step": "bitools",
+  "q": "In DAX, a measure is CALCULATE([Total Sales], Sales[Country] = \"USA\"). In a table grouped by Country, what does the Germany row show?",
+  "options": [
+   "Zero, because Germany is not USA",
+   "The USA total, because the filter replaces the row's Country filter",
+   "An error",
+   "Germany's own total"
+  ],
+  "answer": 1,
+  "why": "CALCULATE overrides the filter on the same column, so every row shows the USA figure. To keep the row context you would filter a different column or use KEEPFILTERS."
+ },
+ {
+  "step": "bitools",
+  "q": "A budget line is revenue: budget 100,000, actual 112,000. A cost line: budget 40,000, actual 47,000. Which is favourable?",
+  "options": [
+   "Both",
+   "Neither",
+   "Only the revenue line",
+   "Only the cost line"
+  ],
+  "answer": 2,
+  "why": "Above budget is good for revenue and bad for a cost. Variance is actual minus budget, and 'favourable' depends on the line's kind."
+ },
+ {
+  "step": "bitools",
+  "q": "A series rises by 2,000 every month. Why does a 3-month moving average forecast badly?",
+  "options": [
+   "It needs more than 12 months",
+   "It averages the past, so it lags a steady trend instead of extending it",
+   "Moving averages only work on seasonal data",
+   "It is always the most accurate method"
+  ],
+  "answer": 1,
+  "why": "An average of recent values sits behind the latest point. A trend method such as Holt or a linear fit extends the slope."
+ },
+ {
+  "step": "bitools",
+  "q": "OCR reads an invoice. Subtotal 459.98, tax 36.80, total 469.78. What is the right next step?",
+  "options": [
+   "Post it, the OCR is usually right",
+   "Flag it: 459.98 + 36.80 is 496.78, so a digit was probably transposed",
+   "Change the subtotal to match",
+   "Delete the tax line"
+  ],
+  "answer": 1,
+  "why": "Arithmetic checks catch OCR slips. Never edit one number to make the sum work without looking at the original."
+ },
+ {
+  "step": "relational",
+  "q": "You join orders to order lines on order_id and total revenue doubles. What is the most likely cause?",
+  "options": [
+   "The join key repeats on one side, so values are counted more than once",
+   "You used a LEFT join",
+   "DuckDB adds rows when joining",
+   "Revenue is a non-additive measure"
+  ],
+  "answer": 0,
+  "why": "A one-to-many join repeats the 'one' side's values for every matching row, so summing afterwards counts them again. Check the key is unique on the side you expect before joining."
+ },
+ {
+  "step": "cookbook",
+  "q": "Before running an UPDATE that cleans a column, what should you do first?",
+  "options": [
+   "Run it and look at the result afterwards",
+   "Run a SELECT with the same WHERE to see which rows would change, ideally on a copy",
+   "Delete the column and re-create it",
+   "Turn off the database checks"
+  ],
+  "answer": 1,
+  "why": "A SELECT with the same condition shows exactly what the UPDATE would touch. Doing it on a copy means a mistake costs nothing."
+ },
+ {
+  "step": "shape",
+  "q": "What is the 'grain' of a table?",
+  "options": [
+   "The number of rows it has",
+   "What one row represents",
+   "The data type of its key",
+   "The order it is sorted in"
+  ],
+  "answer": 1,
+  "why": "Grain is the meaning of one row (one sale, one customer per day). Every join and every sum depends on knowing it."
+ },
+ {
+  "step": "sql",
+  "q": "A KPI is below target. What is the most useful next query?",
+  "options": [
+   "Select every row and read them",
+   "Break the KPI down by the dimensions that could explain it (entity, category, period) and compare to target",
+   "Delete the rows with the worst values",
+   "Re-run the KPI with a different formula"
+  ],
+  "answer": 1,
+  "why": "A breakdown shows where the gap comes from. That turns 'the number is off' into 'these two entities explain it'."
+ },
+ {
+  "step": "story",
+  "q": "Which of these is a finding rather than just an observation?",
+  "options": [
+   "The chart shows cost by entity",
+   "The table has 5,000 rows",
+   "Cost is 12% over budget, driven by two entities; review their spend next quarter",
+   "Margin is a ratio"
+  ],
+  "answer": 2,
+  "why": "A finding is a claim, the evidence for it and a 'so what'. The first two are only observations."
+ },
+ {
+  "step": "deliver",
+  "q": "How do you know a report is ready to deliver?",
+  "options": [
+   "It contains every table you made",
+   "A person who was not in the room could act on it",
+   "It is longer than one page",
+   "It has no caveats"
+  ],
+  "answer": 1,
+  "why": "A report exists to change a decision. If someone outside the room cannot act on it, it is not finished. Keep the caveats, they help the reader judge the numbers."
+ },
+ {
+  "step": "survey-numbers",
+  "q": "A subgroup of 30 people shows 44%. Compared with a subgroup of 40 showing 16%, you should...",
+  "options": [
+   "Report it as fact",
+   "Test the gap and call it directional",
+   "Ignore both",
+   "Average them"
+  ],
+  "answer": 1,
+  "why": "Small groups swing widely; test the gap and report it as a lead."
+ },
+ {
+  "step": "survey-numbers",
+  "q": "Answers 51%, 47%, 32% and 25% add to 155%. That means...",
+  "options": [
+   "A mistake in the sum",
+   "People could pick several answers",
+   "The sample is too big",
+   "Percentages are wrong"
+  ],
+  "answer": 1,
+  "why": "It is a pick-several question, so each figure is not a share of one choice."
+ },
+ {
+  "step": "survey-numbers",
+  "q": "Doubling the sample size cuts the margin of error by about...",
+  "options": [
+   "Half",
+   "A quarter",
+   "30%",
+   "Nothing"
+  ],
+  "answer": 2,
+  "why": "The margin shrinks with the square root of the sample, so about 30% for double."
+ },
+ {
+  "step": "survey-numbers",
+  "q": "The margin of error covers...",
+  "options": [
+   "Every kind of error",
+   "Sampling luck only",
+   "Bad question wording",
+   "Non-response"
+  ],
+  "answer": 1,
+  "why": "It covers chance from sampling, not bias in the questions or who replied."
+ },
+ {
+  "step": "joint-marginal",
+  "q": "Marginal P(X=x) is found by...",
+  "options": [
+   "Dividing by the column total",
+   "Adding the row's cells",
+   "Multiplying the cells",
+   "Taking the largest cell"
+  ],
+  "answer": 1,
+  "why": "Sum the joint probabilities across all values of Y."
+ },
+ {
+  "step": "joint-marginal",
+  "q": "X and Y are independent when...",
+  "options": [
+   "Covariance is zero",
+   "Each cell equals the product of its marginals",
+   "They have the same mean",
+   "The table is square"
+  ],
+  "answer": 1,
+  "why": "Zero covariance is weaker; independence needs every cell to match."
+ },
+ {
+  "step": "joint-marginal",
+  "q": "P(Y=1 and X=1)=0.5 and P(X=1)=0.7. P(Y=1 given X=1) is about...",
+  "options": [
+   "0.35",
+   "0.71",
+   "0.5",
+   "1.4"
+  ],
+  "answer": 1,
+  "why": "0.5 divided by 0.7."
+ }
+]

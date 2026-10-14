@@ -1,0 +1,608 @@
+{
+ "title": "AI Engineering: useful assistants with known limits",
+ "intro": "AI engineering is building features around a model: giving it the right tools, checking its answers, controlling cost, and limiting what it may see.",
+ "outcome": "An assistant over your data that you've tested, whose answers you can verify, with privacy limits set.",
+ "steps": [
+  {
+   "id": "workbench",
+   "title": "Check your own AI work before shipping",
+   "what": "Test retrieval, review tool risk, version prompts and plan cost.",
+   "how": [
+    "Open the AI workbench on this page.",
+    "Size your prompt and check it fits the window.",
+    "Write 20 test questions (some the documents can't answer) and run RAG evaluation.",
+    "List the agent's tools in Tool safety and fix every red finding.",
+    "Save the prompt as a version, then compare test outputs before and after each change: paste them in, or preview and run the live test."
+   ],
+   "tool": {
+    "label": "AI workbench",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "Retrieval hit rate, tool-risk score, prompt tests and monthly cost are written down.",
+   "mistakes": [
+    "Changing a prompt without rerunning the same tests.",
+    "Giving an agent private data, untrusted input and an outside channel together."
+   ],
+   "ask": "Review my agent's tools and tell me the riskiest combination."
+  },
+  {
+   "id": "mlops",
+   "title": "Release a model like an engineer",
+   "what": "Gate, compare, roll out, watch and retrain on purpose.",
+   "how": [
+    "Register two versions of a model in the ML Lab (Models).",
+    "Open the MLOps lab > Release a model: run the gate, compare with the champion, then promote with the confirmation.",
+    "Run a shadow comparison and a load test; write the rollout rules with the plan tool.",
+    "Run the drift check on a schedule and read the retrain advice.",
+    "Record the release in Qual templates > Model release record."
+   ],
+   "tool": {
+    "label": "MLOps lab",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "A promoted version has a gate result, a rollback plan and a named thing you will watch.",
+   "mistakes": [
+    "Promoting because the score is higher on one split.",
+    "Automating retraining before a person has handled alerts by hand."
+   ],
+   "ask": "Walk me through releasing my model safely."
+  },
+  {
+   "id": "fundamentals",
+   "title": "Choose the right AI approach before you build",
+   "what": "Pick rules, classic ML, deep learning, an LLM or RAG on purpose.",
+   "how": [
+    "Open AI fundamentals > Concepts and use the approach chooser for your task.",
+    "Try RAG on two short documents: ask something answerable and something not.",
+    "Test the chatbot with phrasings you did not write and watch what is handed over to a person.",
+    "Write the plan as an AI use case brief in Qual templates."
+   ],
+   "tool": {
+    "label": "AI fundamentals",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can name the approach, the data, the metric and where a person reviews.",
+   "mistakes": [
+    "Using an LLM where a rule or a query would do.",
+    "Letting a bot answer when it has no source."
+   ],
+   "ask": "Which approach fits my task, and what should a person still check?"
+  },
+  {
+   "id": "setup",
+   "title": "Check providers and keys",
+   "what": "No key, no model.",
+   "how": [
+    "Open the AI Lab status panel.",
+    "Keys live in backend/.env, never in the browser.",
+    "Run scripts/check_ai_keys.py if a provider shows not ready."
+   ],
+   "tool": {
+    "label": "AI Lab",
+    "href": "/ai",
+    "tab": null
+   },
+   "done_when": "At least one provider shows ready.",
+   "mistakes": [
+    "Committing keys to git."
+   ],
+   "ask": "Which AI provider should I use first and why?"
+  },
+  {
+   "id": "privacy",
+   "title": "Set the privacy mode first",
+   "what": "Decide what the model may see before the first question.",
+   "how": [
+    "Open Settings: off, summaries only, or full.",
+    "Add blocked columns for personal data (the Governance PII scan helps).",
+    "Remember: a guardrail, not a vault."
+   ],
+   "tool": {
+    "label": "Settings",
+    "href": "/settings",
+    "tab": null
+   },
+   "done_when": "The Real workspace mode is a deliberate choice.",
+   "mistakes": [
+    "Leaving full access on for real data by habit."
+   ],
+   "ask": "Which privacy mode fits my Real data?"
+  },
+  {
+   "id": "ask",
+   "title": "Ask a data question and read the steps",
+   "what": "Watch how the agent loop works.",
+   "how": [
+    "Ask a simple question in the AI Lab.",
+    "Open the steps: get_schema, run_sql, answer.",
+    "Check the SQL it ran makes sense."
+   ],
+   "tool": {
+    "label": "AI Lab",
+    "href": "/ai",
+    "tab": null
+   },
+   "done_when": "You read the SQL behind one answer.",
+   "mistakes": [
+    "Trusting the sentence without the SQL."
+   ],
+   "ask": "Show me how an agent answers a data question."
+  },
+  {
+   "id": "verify",
+   "title": "Verify answers independently",
+   "what": "Models can be confidently wrong.",
+   "how": [
+    "Re-run the numbers in SQL Lab.",
+    "Ask a question whose answer you know.",
+    "Note any mismatch."
+   ],
+   "tool": {
+    "label": "SQL Lab",
+    "href": "/lab",
+    "tab": null
+   },
+   "done_when": "You caught or confirmed at least one answer.",
+   "mistakes": [
+    "Never checking."
+   ],
+   "ask": "How do I check an AI answer is right?"
+  },
+  {
+   "id": "route",
+   "title": "Understand routing, cost and limits",
+   "what": "Different questions need different models.",
+   "how": [
+    "Read the route shown with each answer.",
+    "Check daily caps and rate limits.",
+    "Use the simple/complex override."
+   ],
+   "tool": {
+    "label": "AI Lab",
+    "href": "/ai",
+    "tab": null
+   },
+   "done_when": "You can explain why one question went to one provider.",
+   "mistakes": [
+    "Using the biggest model for everything."
+   ],
+   "ask": "Explain model routing and cost control."
+  },
+  {
+   "id": "injection",
+   "title": "Test prompt injection",
+   "what": "Data can contain instructions.",
+   "how": [
+    "Run ai_engineering/05_prompt_injection.py.",
+    "See how tool results are treated as data."
+   ],
+   "tool": null,
+   "done_when": "You can describe one injection attack and the defence.",
+   "mistakes": [
+    "Giving the model a tool that can change data."
+   ],
+   "ask": "Explain prompt injection with an example."
+  },
+  {
+   "id": "inference",
+   "title": "Size and cost a model before you run it",
+   "what": "Running a model yourself is arithmetic first: memory, speed limits, latency percentiles and cost.",
+   "how": [
+    "Open the Inference Lab below the usage panels and check whether an 8B model fits on one H100 at 16-bit, then at 8-bit.",
+    "Use Speed limits to see which phase is memory-bound and what tokens per second to expect at most.",
+    "Paste your own request timings into Measure latency and read P95 and P99, not the mean.",
+    "Fill in API or own GPUs with your real prices and traffic, including engineering time."
+   ],
+   "tool": null,
+   "done_when": "You can say whether a model fits, its best-case speed, and whether an API or your own GPUs is cheaper for your traffic.",
+   "mistakes": [
+    "Trusting a ceiling as a promise.",
+    "Comparing the mean latency instead of percentiles.",
+    "Leaving engineering time out of the cost."
+   ],
+   "ask": "Does a 70B model fit on one H100, and what would I change?"
+  },
+  {
+   "id": "build",
+   "title": "Build the pieces yourself",
+   "what": "Learn by rebuilding.",
+   "how": [
+    "Work through ai_engineering exercises 01 to 04: structured output, RAG, evals, MCP server.",
+    "Run the tests in ai_engineering/tests."
+   ],
+   "tool": null,
+   "done_when": "All four exercises run.",
+   "mistakes": [
+    "Skipping evals."
+   ],
+   "ask": "What should my first eval for a data agent check?"
+  },
+  {
+   "id": "ai-path",
+   "title": "Follow your nine-level path and prove each module",
+   "what": "Levels 0 to 8, each ending in a gate project.",
+   "how": [
+    "Open the AI engineering learning path above.",
+    "Check each module's badge: some are built here, some need a course, some need GPUs or cloud this app does not have.",
+    "Do the 'Prove it' task before you tick a module.",
+    "Mark a gate passed only after the project is shipped and defended."
+   ],
+   "tool": {
+    "label": "Learning path",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "Level 0 and Level 1 are ticked and their gates marked.",
+   "mistakes": [
+    "Jumping to agents before you can measure retrieval.",
+    "Treating 'Built here' as a replacement for the course."
+   ],
+   "ask": "What is the next module I should prove?"
+  },
+  {
+   "id": "ai-retrieval",
+   "title": "Measure retrieval before you blame the prompt",
+   "what": "If the right passage is not in the top k, no prompt can save the answer.",
+   "how": [
+    "Open AI tools > Retrieval metrics and load the sample.",
+    "Add questions the corpus cannot answer and check the abstain rate.",
+    "Open Hybrid search and find a query keywords miss and one the vector side misses."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can report recall@k, MRR and the abstain rate for your own corpus.",
+   "mistakes": [
+    "Scoring with fewer than ~100 questions and treating it as stable.",
+    "Treating the n-gram vector as a real embedding."
+   ],
+   "ask": "Why is recall@k the first number to check in a RAG system?"
+  },
+  {
+   "id": "ai-structured",
+   "title": "Never let unvalidated output through",
+   "what": "Parse, validate, repair once or twice, then fail loudly.",
+   "how": [
+    "Open AI tools > Structured output and load the sample.",
+    "Read each error and the repair prompt.",
+    "Write the same schema as a Pydantic model in ai_engineering/01_structured_output.py."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "A broken reply produces a specific, sendable repair prompt.",
+   "mistakes": [
+    "Assuming valid JSON means correct facts."
+   ],
+   "ask": "Write a schema for an invoice-extraction task."
+  },
+  {
+   "id": "ai-trace",
+   "title": "Read an agent trace like a post-mortem",
+   "what": "An agent is a loop with a budget.",
+   "how": [
+    "Open AI tools > Agent trace and load the sample.",
+    "Find the loop, the repeated failure, the unapproved send and the missing final answer.",
+    "Set a step budget and prices to see the cost."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can name which rule caught each problem.",
+   "mistakes": [
+    "Enforcing step limits only in the prompt."
+   ],
+   "ask": "What guardrails should this agent have?"
+  },
+  {
+   "id": "ai-evalstats",
+   "title": "Know how sure your eval score is",
+   "what": "A pass rate on 30 cases is a rough guess.",
+   "how": [
+    "Open AI tools > Eval statistics.",
+    "Get the interval for your pass rate and the cases needed for the precision you want.",
+    "Compare two prompts with the A/B mode and read the p-value.",
+    "Check an AI judge against human labels with kappa."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You know how many cases it takes to detect a 5-point change.",
+   "mistakes": [
+    "Declaring a winner from a 2-point gap on 50 cases."
+   ],
+   "ask": "Is my prompt B really better than prompt A?"
+  },
+  {
+   "id": "ai-reliability",
+   "title": "Do the reliability arithmetic",
+   "what": "Retries, budgets and chains multiply.",
+   "how": [
+    "Open AI tools > Reliability.",
+    "Compute the worst-case time of your retry policy.",
+    "Compute chained availability with and without a backup provider.",
+    "See how retries at three layers amplify load."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "Your worst-case latency fits your deadline.",
+   "mistakes": [
+    "Retrying at every layer.",
+    "Retrying errors that can never succeed."
+   ],
+   "ask": "Design a retry and fallback policy for an LLM call."
+  },
+  {
+   "id": "ai-finetune",
+   "title": "Check training data and size the run before paying for GPUs",
+   "what": "Most failed fine-tunes are data problems.",
+   "how": [
+    "Open AI tools > Fine-tune data and load the sample; fix every issue it lists.",
+    "Open LoRA size and compare full fine-tune memory with LoRA.",
+    "Remember the decision ladder: prompt, few-shot, RAG, fine-tune."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "The training file passes with no issues and no test overlap.",
+   "mistakes": [
+    "Fine-tuning to add facts a RAG system would supply."
+   ],
+   "ask": "Should I fine-tune or use RAG for this task?"
+  },
+  {
+   "id": "ai-guard",
+   "title": "Redact and scan before text reaches a model",
+   "what": "Personal data and injected orders are the two ways text hurts you.",
+   "how": [
+    "Open AI tools > PII and injection scan and load the sample.",
+    "Check what was redacted and which injection signals fired.",
+    "Try a paraphrased attack and see what the scan misses."
+   ],
+   "tool": {
+    "label": "AI tools",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You know what the scan catches and, as important, what it cannot.",
+   "mistakes": [
+    "Treating 'clean' as 'safe'."
+   ],
+   "ask": "What would a defence in depth look like for retrieved documents?"
+  },
+  {
+   "id": "ai-gov-registry",
+   "title": "Register your AI assets and find the risky ones",
+   "what": "You cannot govern what you cannot list. An AI asset registry names every model, agent, tool, MCP server and coding agent, who owns it, what data it touches, what it can do and whether anyone approved it. Shadow AI (things in use that are not registered) is the first risk to find.",
+   "how": [
+    "Open AI Engineering > AI governance lab > AI asset registry and register three real or invented assets: a chat model, an agent that can send messages, and a coding agent.",
+    "Read the risk tier and the issues each one gets. Why does an autonomous agent that can write and has no oversight come out high?",
+    "Open Shadow AI check, load the sample and read which names are unregistered or unapproved.",
+    "Fix each issue by changing the asset (add an owner, oversight, tracing, a review date) and watch the tier fall.",
+    "Write one sentence: who would you ask first if an agent did something unexpected?"
+   ],
+   "tool": {
+    "label": "AI governance lab",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can say what a registry must record, why shadow AI is the fastest-growing risk, and which three fields drive an asset's risk most (data sensitivity, actions it can take, autonomy).",
+   "mistakes": [
+    "Registering the model but not the agents and tools around it.",
+    "Listing assets once and never reviewing them.",
+    "Treating 'approved' as a one-time stamp."
+   ],
+   "ask": "I have an agent that reads customer emails and drafts replies. How should I register it and what controls would you add?"
+  },
+  {
+   "id": "ai-gov-risk",
+   "title": "Classify a use case by risk and decide the controls",
+   "what": "Not every AI use needs the same care. A hiring screen and an internal spell-checker are different. Classifying by what the system decides, and about whom, tells you how much testing, oversight and documentation it needs. The EU AI Act's four levels (prohibited, high, limited, minimal) and the NIST AI Risk Management Framework (Govern, Map, Measure, Manage) are the common references.",
+   "how": [
+    "Open AI governance lab > Risk tier. Tick only 'Hiring, promotion, firing' and classify. Read the controls.",
+    "Clear it and tick 'People talk to it'. What changed?",
+    "Classify three of your own ideas (a sales email writer, a loan helper, a support chatbot).",
+    "For any high result, write who has the power to override the system and how an affected person can contest a decision.",
+    "Read the Reference tab's list of what the governance book leaves out."
+   ],
+   "tool": {
+    "label": "AI governance lab",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can name the four levels, give one example of each and list the controls a high-risk use needs. You also know this is a learning aid, not legal advice.",
+   "mistakes": [
+    "Assuming a vendor's platform makes your use compliant. The use case decides the risk, not the tool.",
+    "Treating 'a human reviews it' as oversight when the human always clicks approve.",
+    "Forgetting that laws and dates differ by country and change."
+   ],
+   "ask": "We want an AI that ranks job applicants. Which risk tier is that and what must we have before using it?"
+  },
+  {
+   "id": "ai-gov-policy-spend",
+   "title": "Govern actions and spend: policy rules, budgets and routing",
+   "what": "Governing AI means governing what it does and what it costs. Runtime policy asks 'should this agent do this action with this data for this person?', with allow, deny and approve outcomes. Spend governance attributes tokens to people, teams and apps, sets budgets and tests whether cheaper models can handle simple tasks.",
+   "how": [
+    "Open AI governance lab > Policy simulator, load the sample and read which rule decided each request.",
+    "Add a rule that lets an agent push code only with approval, then add a request to test it.",
+    "Change the default to allow and read the warning. Why is default deny safer?",
+    "Open Spend attribution, load the sample and find which user costs most and which team is over budget.",
+    "Set the cheaper model to small-model and read the saving. What must you test before moving traffic?"
+   ],
+   "tool": {
+    "label": "AI governance lab",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can explain deny-beats-approve-beats-allow, why default deny is safer, and why a routing saving is only an estimate until quality is measured on your own tasks.",
+   "mistakes": [
+    "A blanket allow rule that makes every other rule pointless.",
+    "Blocking all users at the same limit before you can see who needs more.",
+    "Believing a vendor's savings percentage instead of measuring your own."
+   ],
+   "ask": "Our coding agent bill doubled. What do I look at first to find out why?"
+  },
+  {
+   "id": "py-libs-tour",
+   "title": "Tour the Python libraries behind AI work",
+   "what": "AI work uses a small set of Python libraries again and again: pandas and NumPy for data, Matplotlib for charts, scikit-learn for classic models, PyTorch for deep learning, FastAPI to serve it, and others. Knowing what each one is for, and which are not AI tools at all, saves months of wandering.",
+   "how": [
+    "Open AI Engineering > Python libraries behind AI work and see which are installed here.",
+    "Press Demo on pandas, NumPy, scikit-learn and FastAPI and read each output line by line.",
+    "Install one missing library into your virtual environment with the pip command shown and run its demo.",
+    "Pick the first exercise for one library and do it in a notebook.",
+    "Read the infographic mistakes and say which libraries are really general software tools."
+   ],
+   "tool": {
+    "label": "Python libraries",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can name the job of each of the 19 libraries, pick the right one for a task, and say which ones you would not reach for first in 2026 (NLTK for modern NLP, Selenium for new browser automation).",
+   "mistakes": [
+    "Installing packages into the system Python instead of a virtual environment.",
+    "Learning a framework (LangChain) before the basics it wraps.",
+    "Scraping a website without checking its terms and robots.txt."
+   ],
+   "ask": "I know pandas. In what order should I learn the rest to build and ship a small ML app?"
+  },
+  {
+   "id": "ai-impl-ready",
+   "title": "Decide if a workflow is ready for AI, and where to start",
+   "what": "Most AI pilots that stall do so because the workflow was never ready: nobody owns the number, the work is done ten different ways, or nobody knows today's error rate. Five checks (business value, frequency, process stability, measurability, risk) tell you whether to start, repair first, or pick another workflow. Then a seven-stage order keeps you from skipping the boring parts. The scores and pass mark here are this app's own rule of thumb; the source guide gives none.",
+   "how": [
+    "Open the AI track > AI implementation planner > Readiness. Load the sample and read which dimensions pull the result down.",
+    "Score a real workflow of your own. For any 1 or 2, read the fix it names.",
+    "Open the Seven-stage checklist. Tick only the first two stages and read the verdict.",
+    "Open Exception map, load the sample, and find the exceptions with no owner.",
+    "Write the share of cases that are rule-based. That is the part to automate first."
+   ],
+   "tool": {
+    "label": "AI implementation planner",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can list the five readiness dimensions, name the first stage of the seven, and say why an exception with no owner is a blocker.",
+   "mistakes": [
+    "Treating a high demo score as readiness. A demo shows the model works, not that the workflow fits.",
+    "Waiting for a perfect process. Fix the contradictions that block automation, not every flaw.",
+    "Choosing a workflow with a few cases a month: you cannot measure change quickly."
+   ],
+   "ask": "Our team handles about 40 invoices a month and everyone processes them differently. Is that ready for AI?"
+  },
+  {
+   "id": "ai-impl-operate",
+   "title": "Set the autonomy level and prove the result",
+   "what": "Decide how much the AI does on its own: assist (human acts), supervised (human reviews every result), bounded (humans audit a sample) or broad (humans handle exceptions only). The level follows the cost of an error, whether it can be undone, whether it is regulated, and how much reviewed evidence you have. Then measure honestly: separate whether the model works, whether it fits the workflow, whether people use it, and whether the business number moved. The thresholds in this app are rules of thumb.",
+   "how": [
+    "Open AI implementation planner > Autonomy level. With the defaults, note the level and the lower bound on accuracy.",
+    "Change cases reviewed from 300 to 20 with the same share correct. What happens to the level, and why?",
+    "Set cost of an error to high. What is the cap?",
+    "Open What can I claim? with the defaults. Which of the four claims are supported?",
+    "Set adoption to 20 and run it again. Which claim fails?"
+   ],
+   "tool": {
+    "label": "AI implementation planner",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can explain why the lower confidence bound is used instead of the raw accuracy, and why high adoption alone does not prove value.",
+   "mistakes": [
+    "Moving to audit samples (level 3) because accuracy looks good on a handful of cases.",
+    "Counting adoption as a safety metric. Escalation rate is the fit signal.",
+    "Quoting a saving without subtracting the tool cost.",
+    "Calling a change real after one good week. Low volume needs a longer window."
+   ],
+   "ask": "Our AI is right on 19 of 20 reviewed cases. Can we let it act without review?"
+  },
+  {
+   "id": "ai-vendor-scorecard",
+   "title": "Score an AI software vendor without being fooled by the total",
+   "what": "A vendor checklist adds up yes answers. The trap: 20 easy yeses (templates, dashboards) can hide a no on security, data use or exit. Mark the must-pass questions, treat unknown as not yet answered, and get the important answers in writing. This scorecard keeps the 25 original questions, adds 7 the checklist leaves out (data export, uptime commitment, activity log, human override, your own accuracy test, breach notice, total cost), and weights them. Weights and gates are this app's own rule of thumb.",
+   "how": [
+    "Open the AI track > AI implementation planner > Vendor scorecard and click Load sample.",
+    "Score it. Compare the original checklist band with the verdict. Why do they disagree?",
+    "Set the security answers to unknown and score again. What is the verdict now?",
+    "Untick the 7 extra questions and score. Which gate disappears?",
+    "Score a real product you use or are considering, answering only what you saw in writing or in a demo."
+   ],
+   "tool": {
+    "label": "AI implementation planner",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can say why a 24 out of 25 vendor can still fail, and what to ask for when an answer is unknown.",
+   "mistakes": [
+    "Counting a salesperson's spoken yes as evidence. Ask for the document, report or contract clause.",
+    "Treating 'we are SOC 2' as 'we comply with our rules'. It says what was audited.",
+    "Skipping a trial on your own cases. A demo is the vendor's best case.",
+    "Forgetting the exit: how do you get your data out?"
+   ],
+   "ask": "A vendor scores 23 of 25 on the checklist but will not say whether it trains on our data. Should we buy?"
+  },
+  {
+   "id": "free-courses",
+   "title": "Choose free AI courses and keep track",
+   "what": "A long list of free courses is easy to collect and hard to finish. Pick one path (literacy, ML foundations, deep learning, building on language models, or vision), do the first unfinished course, and tick it only when you did the exercises. Free status changes: Udemy and Udacity courses in particular may now be paid or removed, so check the page before you plan around one.",
+   "how": [
+    "Open the AI track > Free AI course catalog and choose a suggested path.",
+    "Open the first course's page and check it is free today. Note what is free (watching, exercises, certificate).",
+    "Finish it, do the exercises, then tick it here.",
+    "Search the catalog for a topic you know and compare two courses on it.",
+    "Read the mistakes list: find the duplicate course."
+   ],
+   "tool": {
+    "label": "Free AI course catalog",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You have one path, one course in progress, and you checked its free status yourself.",
+   "mistakes": [
+    "Ticking a course after watching but not doing the exercises.",
+    "Starting several at once.",
+    "Trusting 'free' without opening the page.",
+    "Jumping to deep learning before the Python and statistics basics."
+   ],
+   "ask": "I have six hours a week. Which of these courses should I do first to become an ML engineer?"
+  },
+  {
+   "id": "ai-text-internals",
+   "title": "See how tokens and attention work, and test a meaning search",
+   "what": "Language models read tokens, not words, and mix information with attention. See a tokenizer build its vocabulary, see untrained attention weights, and compare keyword search with a concept-based search. This shows why prompts cost what they cost and why retrieval can miss.",
+   "how": [
+    "Open AI > Build and check ML pieces > Tokenizer (BPE) and run the sample. Compare the characters-per-token ratio for a common word and a rare one.",
+    "Open Attention and run a sentence of 6 words. Notice that each row adds to 1.",
+    "Open Meaning search (LSA) and run the sample. Which document does keyword search miss?",
+    "Explain how this affects the cost of a long prompt and the quality of retrieval."
+   ],
+   "tool": {
+    "label": "Build and check ML pieces",
+    "href": "/tracks/ai",
+    "tab": null
+   },
+   "done_when": "You can explain why a rare word costs more tokens and why keyword retrieval can miss a relevant document.",
+   "mistakes": [
+    "Estimating cost from word counts.",
+    "Assuming retrieval by keyword finds everything relevant.",
+    "Reading random attention weights as meaning."
+   ],
+   "ask": "Why can one long rare word cost more tokens than a short sentence of common words?"
+  }
+ ]
+}

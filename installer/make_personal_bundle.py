@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SKIP_DIRS = {"node_modules", ".venv", ".next", "__pycache__", ".pytest_cache", ".git"}
 SKIP_SUFFIX = (".tsbuildinfo", ".pyc")
-SKIP_NAMES = {"next-env.d.ts"}
+SKIP_NAMES = {"next-env.d.ts", "computer_control.enabled"}   # computer control stays off on your other computer
 
 if (ROOT / "backend" / "data").exists() and any(p.name.endswith(".wal") for p in (ROOT / "backend" / "data").glob("*.wal")):
     sys.exit("A .wal file exists in backend/data, which usually means the app is still running. Stop it, then try again.")
@@ -25,3 +25,10 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(p, Path(ROOT.name) / rel)
         n += 1
 print(f"Wrote {out} ({n} files). It includes your data and backend/.env. Keep it private.")
+sys.path.insert(0, str(ROOT / "scripts"))
+try:
+    from check_bundle import check
+    r = check(out, personal=True)
+    print("Safety check: " + ("computer control is off in this bundle." if r["ok"] else "PROBLEM: " + "; ".join(r["findings"])))
+except Exception as e:  # the check must never stop the bundle being written
+    print(f"(Safety check skipped: {e})")

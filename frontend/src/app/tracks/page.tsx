@@ -8,6 +8,12 @@ import { PageShell } from "@/components/PageShell";
 import { ApiError, getJson } from "@/lib/api";
 import type { Track, TrackStep } from "@/lib/types";
 
+// Everything meant for learning and practice. The top bar only holds working tools.
+const LEARN: { title: string; items: { href: string; label: string }[] }[] = [
+  { title: "Practice", items: [{ href: "/python", label: "Python practice" }, { href: "/ml", label: "ML practice lab" }, { href: "/mlhand", label: "Learn ML by hand" }, { href: "/ai", label: "AI practice lab" }, { href: "/apache", label: "Apache practice" }, { href: "/pipeline", label: "Learn pipelines" }, { href: "/scd", label: "Learn history tracking (SCD)" }] },
+  { title: "Reference and tests", items: [{ href: "/schema", label: "Learn star schemas" }, { href: "/glossary", label: "Data glossary" }, { href: "/quiz", label: "Practice quiz" }, { href: "/review", label: "Spaced review" }, { href: "/toolmap", label: "Tool map" }, { href: "/portfolio", label: "Portfolio builder" }] },
+];
+
 interface FileView { path: string; language: string; content: string }
 
 export default function TracksPage() {
@@ -46,6 +52,12 @@ export default function TracksPage() {
         {track && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{track.role}</span>}
         {track && <Link href={`/tracks/${track.id}`} className="btn btn-primary">Open {track.name} dashboard</Link>}
       </div>
+      <section aria-label="Learning tools" className="card space-y-2 p-4">
+        <h2 className="text-sm font-semibold">Learning tools</h2>
+        {LEARN.map((g) => (
+          <div key={g.title} className="flex flex-wrap items-center gap-1"><span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted">{g.title}</span>{g.items.map((i) => <Link key={i.href} href={i.href} className="btn">{i.label}</Link>)}</div>
+        ))}
+      </section>
       {!tracks && !error && <p className="text-sm text-muted">Loading…</p>}
 
       {track && (

@@ -78,7 +78,7 @@ def test_fallback_when_provider_fails(monkeypatch):
     all_keys(monkeypatch)
     r = llm_router.ask("How many records?", adapters=stubs(google="Google Gemini is rate limiting requests"))
     assert r.provider == "openai"
-    assert [(a["provider"], a["ok"]) for a in r.attempts] == [("google", False), ("openai", True)]
+    assert [(a["provider"], a["ok"]) for a in r.attempts if not a.get("skipped")] == [("google", False), ("openai", True)]
     r = llm_router.ask("How many records?", adapters=stubs(google="x", openai="y"))
     assert r.provider == "anthropic"
 

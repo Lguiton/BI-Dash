@@ -220,7 +220,7 @@ def test_event_reader_accepts_plain_lines_and_rejects_junk(client):
 
 def test_checklists_tick_and_reset(client):
     d = client.get("/api/it/checklists").json()
-    assert {l["id"] for l in d["lists"]} == {"onboard", "offboard", "new_pc", "outage"}
+    assert {l["id"] for l in d["lists"]} == {"onboard", "offboard", "new_pc", "outage", "malware", "change", "disposal", "method", "vendor", "fwapp", "footprint", "harden", "print", "destroy", "byod", "dr", "gpochg"}
     d = client.post("/api/it/checklists/offboard", json={"index": 0, "done": True}).json()
     off = next(l for l in d["lists"] if l["id"] == "offboard")
     assert off["items"][0]["done"] and "Disable the account" in off["items"][0]["text"] and not off["items"][1]["done"]
@@ -258,7 +258,7 @@ def test_cheats_and_methods(client):
 def test_new_tracks_are_wired_everywhere(client, tid):
     assert client.get(f"/api/manuals/{tid}").status_code == 200
     q = client.get(f"/api/quizzes/{tid}").json()
-    assert len(q["questions"]) == 6 and all("answer" not in x for x in q["questions"])
+    assert len(q["questions"]) >= 6 and all("answer" not in x for x in q["questions"])
     assert client.get(f"/api/tracks/{tid}/dashboard").json()["ideas"]
     assert any(c["id"] == tid for c in client.get("/api/dataset").json()["careers"])
     ag = client.get(f"/api/agents/{tid}").json()
@@ -276,3 +276,26 @@ def test_tool_map_has_the_new_groups_and_keeps_offensive_tools_out(client):
     status = {t["tool"]: t["status"] for t in cats["Network engineering"]}
     assert status["Subnet calculators (ipcalc, subnetting tools)"] == "built" and status["Nmap and other scanners"] == "taught"
     assert all(t["status"] != "built" for t in cats["Network engineering"] if "Cloud" in t["tool"])
+
+
+def test_event_reader_handles_event_viewer_exports(client):
+    csv_text = "Level,Date and Time,Source,Event ID,Task Category\n" + "".join(
+        f"Information,10/10/2026 8:49:{i:02d} AM,Microsoft Windows security auditing.,4625,Logon\n" for i in range(6)) + \
+        "Information,10/10/2026 9:00:00 AM,Eventlog,1102,Log clear\n"
+    r = client.post("/api/it/events/read", json={"text": csv_text}).json()
+    assert r["events"] == 7 and any("cleared" in f["title"] for f in r["findings"])
+    tabbed = "Audit Success\t10/10/2026 8:49:36 AM\tMicrosoft Windows security auditing.\t4799\tSecurity Group Management\n" * 3
+    r = client.post("/api/it/events/read", json={"text": tabbed}).json()
+    assert r["events"] == 3 and r["table"][0]["id"] == 4799
+    up = client.post("/api/it/events/upload", files={"file": ("e.csv", ("﻿" + csv_text).encode("utf-8"), "text/csv")}).json()
+    assert up["events"] == 7
+    up16 = client.post("/api/it/events/upload", files={"file": ("e.csv", csv_text.encode("utf-16"), "text/csv")}).json()
+    assert up16["events"] == 7
+    assert client.post("/api/it/events/read", json={"text": "nothing useful here"}).status_code == 400
+
+
+def test_common_background_event_ids_are_named(client):
+    text = "Keywords,Date and Time,Source,Event ID,Task Category\n" + "Audit Success,10/10/2026 8:00:00 AM,Microsoft Windows security auditing.,5379,User Account Management\n" * 3 + \
+        "Audit Success,10/10/2026 8:00:01 AM,Microsoft Windows security auditing.,4799,Security Group Management\n"
+    t = {x["id"]: x for x in client.post("/api/it/events/read", json={"text": text}).json()["table"]}
+    assert "Credential Manager" in t[5379]["meaning"] and "enumerated" in t[4799]["meaning"]

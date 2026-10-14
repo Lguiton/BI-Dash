@@ -40,6 +40,9 @@ INFO = {
                "model_env": "BI_OPENAI_MODEL", "default_model": "gpt-4o-mini", "pip": "openai"},
     "anthropic": {"label": "Anthropic Claude", "keys": ("ANTHROPIC_API_KEY",), "module": "anthropic",
                   "model_env": "BI_AI_MODEL", "default_model": "claude-sonnet-5-5", "pip": "anthropic"},
+    # Local model through Ollama: free, private, works offline. "Configured" means BI_OLLAMA_MODEL is set (there is no key).
+    "ollama": {"label": "Ollama (local)", "keys": ("BI_OLLAMA_MODEL",), "module": "urllib.request",
+               "model_env": "BI_OLLAMA_MODEL", "default_model": "llama3.1", "pip": "(none: install Ollama from ollama.com)"},
 }
 
 
@@ -211,4 +214,63 @@ class GeminiAdapter:
             for c, out, err in results]))
 
 
-ADAPTERS = {"google": GeminiAdapter, "openai": OpenAIAdapter, "anthropic": AnthropicAdapter}
+# ---------- Ollama (local) ----------
+class OllamaAdapter:
+    """Talks to a local Ollama server over its plain HTTP API (no SDK, no key). Tool calling needs a model that supports it
+    (for example llama3.1, qwen2.5 or mistral-nemo). Set BI_OLLAMA_MODEL to turn it on and BI_OLLAMA_URL if it isn't on this machine."""
+    provider = "ollama"
+
+    def __init__(self, client=None, model: str | None = None, max_tokens: int = 1024):
+        self.base = os.environ.get("BI_OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
+        self.model, self.max_tokens, self._post = model or model_for("ollama"), max_tokens, client or self._http
+
+    def _http(self, path: str, body: dict) -> dict:
+        import urllib.error
+        import urllib.request
+        req = urllib.request.Request(self.base + path, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=180) as r:
+                return json.loads(r.read(8_000_000))
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try:
+                detail = json.loads(e.read(2000)).get("error", "")
+            except Exception:  # noqa: BLE001
+                pass
+            if e.code == 404:
+                raise ProviderError(f"Ollama doesn't have the model '{self.model}'. Run: ollama pull {self.model}", 400) from e
+            raise ProviderError(f"Ollama answered {e.code}. {detail}"[:200], 502) from e
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise ProviderError(f"Couldn't reach Ollama at {self.base}. Is it running? (start the Ollama app, or run: ollama serve)", 502) from e
+
+    def start(self, system, tools, question):
+        self.tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["input_schema"]}} for t in tools]
+        self.messages = [{"role": "system", "content": system}, {"role": "user", "content": question}]
+
+    def next_turn(self) -> Turn:
+        body = {"model": self.model, "messages": self.messages, "stream": False, "options": {"num_predict": self.max_tokens}}
+        if self.tools:
+            body["tools"] = self.tools
+        resp = self._post("/api/chat", body)
+        msg = resp.get("message") or {}
+        calls = []
+        for i, tc in enumerate(msg.get("tool_calls") or []):
+            fn = tc.get("function") or {}
+            args = fn.get("arguments") or {}
+            if isinstance(args, str):
+                try:
+                    args = json.loads(args)
+                except json.JSONDecodeError:
+                    args = {}
+            calls.append(Call(f"ollama-{len(self.messages)}-{i}", str(fn.get("name", "")), args if isinstance(args, dict) else {}))
+        self._assistant = {"role": "assistant", "content": msg.get("content") or "", **({"tool_calls": msg["tool_calls"]} if msg.get("tool_calls") else {})}
+        return Turn((msg.get("content") or "").strip(), calls, resp.get("done_reason") == "length",
+                    int(resp.get("prompt_eval_count") or 0), int(resp.get("eval_count") or 0))
+
+    def add_results(self, turn, results):
+        self.messages.append(self._assistant)
+        for c, out, err in results:
+            self.messages.append({"role": "tool", "tool_name": c.name, "content": ("ERROR: " + out) if err else out})
+
+
+ADAPTERS = {"google": GeminiAdapter, "openai": OpenAIAdapter, "anthropic": AnthropicAdapter, "ollama": OllamaAdapter}

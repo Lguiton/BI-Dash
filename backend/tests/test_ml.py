@@ -5,16 +5,9 @@ pytest.importorskip("pandas")
 
 
 @pytest.fixture()
-def big(client):
+def big(client, load_clean):
     """Load a year of generated sample data so there is enough to learn from."""
-    import subprocess, sys, pathlib
-    root = pathlib.Path(__file__).resolve().parents[2]
-    csv = root / "data_samples" / "operations_clean.csv"
-    if not csv.exists():
-        subprocess.run([sys.executable, str(root / "scripts" / "generate_sample_data.py")], check=True)
-    r = client.post("/api/ingest/csv?mode=replace", files={"file": ("d.csv", csv.read_bytes(), "text/csv")})
-    assert r.status_code == 200
-    return client
+    return load_clean()
 
 
 def test_options(client):

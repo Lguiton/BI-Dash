@@ -5,13 +5,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import cors_origins
-from app.routers import ai, analytics, apache, charts, data as data_router, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks, workspaces as workspaces_router, sources as sources_router, backups as backups_router, audit as audit_router, pm as pm_router, sysanalyst as sa_router, dba as dba_router, fullstack as fs_router, company as company_router, agents as agents_router, alerts as alerts_router, compare as compare_router, search as search_router, hub as hub_router, workflows as workflows_router, dq as dq_router, pipelines as pipelines_router, models as models_router, security as security_router, extras as extras_router, more as more_router, net as net_router, it as it_router
-from app.services import metrics, sources, state, workspaces
+from app.routers import ai, analytics, apache, charts, data as data_router, dataset, export, glossary, ingest, kpis, ml, pipeline, progress, python_lab, quality, report, scd, sql, tracks, workspaces as workspaces_router, sources as sources_router, backups as backups_router, audit as audit_router, pm as pm_router, sysanalyst as sa_router, dba as dba_router, fullstack as fs_router, company as company_router, agents as agents_router, alerts as alerts_router, compare as compare_router, search as search_router, hub as hub_router, workflows as workflows_router, dq as dq_router, pipelines as pipelines_router, models as models_router, security as security_router, extras as extras_router, more as more_router, net as net_router, it as it_router, system as system_router, stats as stats_router, cookbook as cookbook_router, relational as relational_router, se as se_router, aiml as aiml_router, aieng as aieng_router, mlops as mlops_router, aplus as aplus_router, itfund as itfund_router, itshell as itshell_router, itdrills as itdrills_router, bitools as bitools_router, netgen as netgen_router, honeypot as honeypot_router, endpoint as endpoint_router, learnpath as learnpath_router, infra as infra_router, review as review_router, portfolio as portfolio_router, frames as frames_router, aigov as aigov_router, infoaudit as infoaudit_router, aiimpl as aiimpl_router, lessons2 as lessons2_router, cpe as cpe_router, cpesim as cpesim_router, netsim as netsim_router, sectools as sectools_router, datalab as datalab_router, mlbuild as mlbuild_router, backuplab as backuplab_router, itagent as itagent_router, authr as authr_router, bizpacks as bizpacks_router, briefing as briefing_router, healthcheck as healthcheck_router, services_list as services_list_router, mlhand as mlhand_router, nlpdl as nlpdl_router, mlstudio as mlstudio_router, intake as intake_router, code as code_router, sysdesign as sysdesign_router, clients as clients_router, sectrack as sectrack_router, toolbox as toolbox_router, fieldbox as fieldbox_router, fieldpacks as fieldpacks_router
+from app.services import guard, metrics, sources, state, workspaces
+from app.services import auth as auth_service
 from app.services.db import close_connection
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    auth_service.init()
     workspaces.startup()
     scheduler = sources.Scheduler()
     scheduler.start()
@@ -36,6 +38,38 @@ async def _timing(request, call_next):
         metrics.record(request.method, getattr(route, "path", None) or "(no route)", status, time.perf_counter() - t0)
 
 
+@app.middleware("http")
+async def _guard(request, call_next):
+    """Always on, with or without the login: wrong Host names and other websites' writes are refused, and every answer carries security headers."""
+    from fastapi.responses import JSONResponse
+    h = request.headers
+    if not guard.host_ok(h.get("host")):
+        return JSONResponse({"detail": "Blocked: unknown host name. Use http://localhost."}, status_code=400)
+    if not guard.origin_ok(request.method, h.get("origin"), h.get("host"), cors_origins(), h.get("sec-fetch-site")):
+        state.audit("blocked_cross_site", f"{request.method} {request.url.path} from {h.get('origin') or 'cross-site'}", ok=False)
+        return JSONResponse({"detail": "Blocked: this request did not come from the dashboard."}, status_code=403)
+    response = await call_next(request)
+    for k, v in guard.HEADERS.items():
+        response.headers.setdefault(k, v)
+    if request.url.path.startswith("/api/auth"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.middleware("http")
+async def _login_gate(request, call_next):
+    """With BI_AUTH=1 every API call needs the owner's session cookie, and browsers may only change data from our own pages."""
+    from fastapi.responses import JSONResponse
+    from urllib.parse import urlparse
+    if request.method != "OPTIONS" and auth_service.needs_login(request.url.path):
+        if not auth_service.valid_token(request.cookies.get(auth_service.COOKIE)):
+            return JSONResponse({"detail": "Sign in required."}, status_code=401)
+        origin = request.headers.get("origin")
+        if request.method not in ("GET", "HEAD") and origin and origin not in cors_origins() and urlparse(origin).netloc != request.headers.get("host"):
+            return JSONResponse({"detail": "Blocked: this request did not come from the dashboard."}, status_code=403)
+    return await call_next(request)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins(),
@@ -45,6 +79,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(authr_router.router)
+app.include_router(bizpacks_router.router)
+app.include_router(bizpacks_router.models_router)
+app.include_router(briefing_router.router)
 app.include_router(analytics.router)
 app.include_router(charts.router)
 app.include_router(dataset.router)
@@ -68,6 +106,19 @@ app.include_router(data_router.router)
 app.include_router(sources_router.router)
 app.include_router(backups_router.router)
 app.include_router(audit_router.router)
+app.include_router(healthcheck_router.router)
+app.include_router(services_list_router.router)
+app.include_router(mlhand_router.router)
+app.include_router(nlpdl_router.router)
+app.include_router(mlstudio_router.router)
+app.include_router(intake_router.router)
+app.include_router(code_router.router)
+app.include_router(sysdesign_router.router)
+app.include_router(clients_router.router)
+app.include_router(sectrack_router.router)
+app.include_router(toolbox_router.router)
+app.include_router(fieldbox_router.router)
+app.include_router(fieldpacks_router.router)
 app.include_router(pm_router.router)
 app.include_router(sa_router.router)
 app.include_router(dba_router.router)
@@ -87,6 +138,39 @@ app.include_router(extras_router.router)
 app.include_router(more_router.router)
 app.include_router(net_router.router)
 app.include_router(it_router.router)
+app.include_router(system_router.router)
+app.include_router(stats_router.router)
+app.include_router(cookbook_router.router)
+app.include_router(relational_router.router)
+app.include_router(se_router.router)
+app.include_router(aiml_router.router)
+app.include_router(aieng_router.router)
+app.include_router(mlops_router.router)
+app.include_router(aplus_router.router)
+app.include_router(itfund_router.router)
+app.include_router(itshell_router.router)
+app.include_router(itdrills_router.router)
+app.include_router(bitools_router.router)
+app.include_router(netgen_router.router)
+app.include_router(honeypot_router.router)
+app.include_router(endpoint_router.router)
+app.include_router(learnpath_router.router)
+app.include_router(infra_router.router)
+app.include_router(frames_router.router)
+app.include_router(aigov_router.router)
+app.include_router(infoaudit_router.router)
+app.include_router(aiimpl_router.router)
+app.include_router(lessons2_router.router)
+app.include_router(cpe_router.router)
+app.include_router(cpesim_router.router)
+app.include_router(netsim_router.router)
+app.include_router(sectools_router.router)
+app.include_router(datalab_router.router)
+app.include_router(mlbuild_router.router)
+app.include_router(backuplab_router.router)
+app.include_router(itagent_router.router)
+app.include_router(review_router.router)
+app.include_router(portfolio_router.router)
 
 
 @app.get("/metrics", include_in_schema=False)

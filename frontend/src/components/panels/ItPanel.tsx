@@ -1,15 +1,22 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
-import { deleteJson, getJson, patchJson, postJson } from "@/lib/api";
+import { deleteJson, getJson, patchJson, postFile, postJson, putJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg, num } from "./kit";
+import { QualTab } from "./AnalysisQual";
+import { AplusTab } from "./AplusTab";
+import { FundTab } from "./FundTab";
+import { InfraTab } from "./InfraTab";
+import { CoachTab } from "./CoachTab";
+import { BackupLab, InventoryImport } from "./ItBuild";
 
 const TABS = [
-  { id: "tickets", label: "Helpdesk" }, { id: "assets", label: "Inventory" }, { id: "events", label: "Event logs" },
-  { id: "checklists", label: "Checklists" }, { id: "capacity", label: "Capacity and RAID" }, { id: "cheats", label: "Cheat sheets" },
+  { id: "tickets", label: "Helpdesk" }, { id: "repair", label: "How to repair" }, { id: "assets", label: "Inventory" }, { id: "backup", label: "Backup lab" }, { id: "events", label: "Event logs" },
+  { id: "checklists", label: "Checklists" }, { id: "capacity", label: "Capacity and RAID" }, { id: "cheats", label: "Cheat sheets" }, { id: "keys", label: "Windows shortcuts" }, { id: "software", label: "Software guide" }, { id: "virt", label: "Virtualization (vSphere)" }, { id: "aplus", label: "CompTIA A+" }, { id: "fund", label: "IT fundamentals" }, { id: "infra", label: "Infrastructure labs" }, { id: "coach", label: "Ticket coach" },
 ];
 
 export function ItPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const [ver, setVer] = useState(0);
   return (
     <div className="space-y-4">
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
@@ -17,11 +24,20 @@ export function ItPanel({ tab, onTab }: { tab: string; onTab: (t: string) => voi
       </p>
       <Tabs tabs={TABS} value={tab} onChange={onTab} label="IT tools" />
       {tab === "tickets" && <TicketsTab />}
-      {tab === "assets" && <AssetsTab />}
+      {tab === "repair" && <RepairTab />}
+      {tab === "assets" && <><AssetsTab key={ver} /><InventoryImport onDone={() => setVer((v) => v + 1)} /></>}
+      {tab === "backup" && <BackupLab />}
       {tab === "events" && <EventsTab />}
       {tab === "checklists" && <ChecklistsTab />}
       {tab === "capacity" && <CapacityTab />}
       {tab === "cheats" && <CheatsTab />}
+      {tab === "keys" && <ShortcutsTab />}
+      {tab === "software" && <SoftwareTab />}
+      {tab === "virt" && <VirtTab />}
+      {tab === "aplus" && <AplusTab />}
+      {tab === "fund" && <FundTab />}
+      {tab === "infra" && <InfraTab />}
+      {tab === "coach" && <CoachTab />}
     </div>
   );
 }
@@ -160,18 +176,22 @@ function EventsTab() {
   const [text, setText] = useState("");
   const [r, setR] = useState<Ev | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [fname, setFname] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const act = async (fn: () => Promise<void>, m: string) => { setErr(null); try { await fn(); } catch (e) { setErr(errMsg(e, m)); } };
   return (
-    <Section title="Windows event log reader">
+    <Section title="Windows event log reader" note="Export from Event Viewer: Windows Logs, Security, then Action, Save All Events As, and choose CSV. A .evtx file is binary and can't be read here. Files up to 25 MB; nothing is stored.">
       {err && <ErrorBanner message={err} />}
       <textarea className="field h-40 w-full font-mono text-xs" aria-label="Event log export" value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste an Event Viewer CSV export or lines containing 'Event ID: 4625'." />
       <div className="mt-2 flex flex-wrap gap-2">
         <button className="btn" onClick={() => act(async () => setText((await getJson<{ text: string }>("/api/it/events/sample")).text), "Couldn't load the sample.")}>Load sample</button>
-        <button className="btn btn-primary" onClick={() => act(async () => setR(await postJson<Ev>("/api/it/events/read", { text })), "Couldn't read that.")}>Read it</button>
+        <button className="btn btn-primary" disabled={!text.trim()} onClick={() => act(async () => { setFname(null); setR(await postJson<Ev>("/api/it/events/read", { text })); }, "Couldn't read that.")}>Read it</button>
+        <button className="btn" onClick={() => fileRef.current?.click()}>Open file…</button>
+        <input ref={fileRef} type="file" accept=".csv,.txt,.log" className="hidden" aria-label="Open an event log export" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void act(async () => { setFname(f.name); setR(await postFile<Ev>("/api/it/events/upload", f)); }, "Couldn't read that file."); }} />
       </div>
       {r && (
         <div className="mt-3 space-y-3">
-          <p className="text-sm">{r.events} events, {r.distinct_ids} distinct IDs.</p>
+          <p className="text-sm">{fname ? `${fname}: ` : ""}{r.events.toLocaleString()} events, {r.distinct_ids} distinct IDs.</p>
           {r.findings.length === 0 ? <p className="text-sm text-muted">No notable patterns.</p> : (
             <ul className="space-y-2">{r.findings.map((x, i) => (
               <li key={i} className="rounded border border-line p-2 text-sm">
@@ -268,6 +288,255 @@ function CheatsTab() {
       {d && Object.entries(d.groups).map(([g, rows]) => (
         <Section key={g} title={g}><Table head={["Command", "What it does"]} caption={g} rows={rows.map((r) => [<code key="c" className="break-all text-xs">{r.cmd}</code>, r.what])} /></Section>
       ))}
+    </div>
+  );
+}
+
+
+interface Guide { id: string; objective: string; area: string; title: string; symptoms: string[]; causes: string[]; steps: string[]; tools: string[]; safety: string; escalate: string }
+interface Toolkit { title: string; problems: string[]; tools: { name: string; fixes: string; how: string }[]; commands: { name: string; run: string[]; note: string }[]; links: { name: string; url: string }[]; tips: string[] }
+function RepairTab() {
+  const [d, setD] = useState<{ method: { step: number; name: string; what: string }[]; safety: string[]; areas: string[]; guides: Guide[]; note: string; toolkit: Toolkit } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [area, setArea] = useState("");
+  useEffect(() => { getJson<NonNullable<typeof d>>("/api/it/repair").then(setD).catch((e) => setErr(errMsg(e, "Couldn't load the repair guides."))); }, []);
+  const needle = q.trim().toLowerCase();
+  const [rank, setRank] = useState<{ q: string; ids: string[] } | null>(null);
+  useEffect(() => {
+    if (needle.length < 2) return;
+    const t = setTimeout(() => {
+      getJson<{ results: { id: string }[] }>(`/api/it/repair/search?q=${encodeURIComponent(needle)}&limit=20`).then((r) => setRank({ q: needle, ids: r.results.map((x) => x.id) })).catch(() => setRank(null));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [needle]);
+  const ranked = needle.length >= 2 && rank?.q === needle ? rank.ids : null;
+  const all = (d?.guides ?? []).filter((g) => !area || g.area === area);
+  const guides = !needle ? all : ranked ? ranked.map((id) => all.find((g) => g.id === id)).filter((g): g is Guide => !!g)
+    : all.filter((g) => [g.title, g.area, ...g.symptoms, ...g.causes, ...g.steps].some((t) => t.toLowerCase().includes(needle)));
+  return (
+    <div className="space-y-4">
+      {err && <ErrorBanner message={err} />}
+      {d && <Section title="Before you open anything: safety"><ul className="list-disc space-y-1 pl-5 text-sm">{d.safety.map((x) => <li key={x}>{x}</li>)}</ul></Section>}
+      {d && <Section title="The six-step repair method"><ol className="list-decimal space-y-1 pl-5 text-sm">{d.method.map((m) => <li key={m.step}><strong>{m.name}.</strong> {m.what}</li>)}</ol></Section>}
+      {d && (
+        <details className="card p-4">
+          <summary className="cursor-pointer font-semibold">{d.toolkit.title}</summary>
+          <div className="mt-3 space-y-3 text-sm">
+            <p><strong>Covers:</strong> {d.toolkit.problems.join(" · ")}</p>
+            <Table head={["Tool", "What it fixes", "How to use it"]} caption="Essential tools" rows={d.toolkit.tools.map((t) => [t.name, t.fixes, t.how])} />
+            <div className="space-y-2">{d.toolkit.commands.map((c) => (
+              <div key={c.name}><h4 className="font-medium">{c.name}</h4>{c.run.map((r) => <code key={r} className="block break-all rounded bg-black/10 px-2 py-1 text-xs">{r}</code>)}<p className="text-xs text-muted">{c.note}</p></div>))}</div>
+            <div><h4 className="font-medium">Official downloads</h4><ul className="list-disc pl-5">{d.toolkit.links.map((l) => <li key={l.url}><a className="underline" href={l.url} target="_blank" rel="noopener noreferrer">{l.name}</a></li>)}</ul></div>
+            <ul className="list-disc pl-5">{d.toolkit.tips.map((t) => <li key={t}>{t}</li>)}</ul>
+          </div>
+        </details>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <input className="input min-w-64 flex-1" placeholder="Search a symptom, e.g. printer offline, no power, beeps, 169.254 (typos are fine)" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search repair guides" />
+        <select className="input" value={area} onChange={(e) => setArea(e.target.value)} aria-label="Area"><option value="">All areas</option>{d?.areas.map((a) => <option key={a}>{a}</option>)}</select>
+        {d && <span className="text-xs text-muted">{guides.length} of {d.guides.length} guides</span>}
+      </div>
+      {d && guides.length === 0 && <p className="text-sm text-muted">No guide matches. Try a shorter word.</p>}
+      {guides.map((g) => (
+        <details key={g.id} className="card p-4">
+          <summary className="cursor-pointer font-semibold">{g.title} <span className="ml-2 text-xs font-normal text-muted">{g.area}{g.objective === "General" ? "" : ` · A+ objective ${g.objective}`}</span></summary>
+          <div className="mt-3 space-y-3 text-sm">
+            <div><h4 className="font-medium">What you see</h4><ul className="list-disc pl-5">{g.symptoms.map((x) => <li key={x}>{x}</li>)}</ul></div>
+            <div><h4 className="font-medium">Likely causes, easiest to check first</h4><ol className="list-decimal pl-5">{g.causes.map((x) => <li key={x}>{x}</li>)}</ol></div>
+            <div><h4 className="font-medium">Steps</h4><ol className="list-decimal space-y-1 pl-5">{g.steps.map((x) => <li key={x}>{x}</li>)}</ol></div>
+            <p><strong>Tools:</strong> {g.tools.join(", ")}</p>
+            <p className="rounded-lg p-2" style={{ background: "var(--warn-bg)" }}><strong>Safety:</strong> {g.safety}</p>
+            <p><strong>Stop and escalate when:</strong> {g.escalate}</p>
+          </div>
+        </details>
+      ))}
+      {d && <p className="text-xs text-muted">{d.note}</p>}
+    </div>
+  );
+}
+
+
+function ShortcutsTab() {
+  const [d, setD] = useState<{ groups: Record<string, { keys: string; what: string }[]>; count: number; note: string } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  useEffect(() => { getJson<NonNullable<typeof d>>("/api/it/shortcuts").then(setD).catch((e) => setErr(errMsg(e, "Couldn't load the shortcuts."))); }, []);
+  const needle = q.trim().toLowerCase();
+  const groups = d ? Object.entries(d.groups).map(([g, rows]) => [g, rows.filter((r) => !needle || r.keys.toLowerCase().includes(needle) || r.what.toLowerCase().includes(needle) || g.toLowerCase().includes(needle))] as const).filter(([, rows]) => rows.length) : [];
+  return (
+    <div className="space-y-4">
+      {err && <ErrorBanner message={err} />}
+      <div className="flex flex-wrap items-center gap-2">
+        <input className="input min-w-64 flex-1" placeholder="Search by key or task, e.g. lock, snip, Win+R" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search shortcuts" />
+        {d && <span className="text-xs text-muted">{d.count} shortcuts</span>}
+      </div>
+      {d && <p className="text-xs text-muted">{d.note}</p>}
+      {d && groups.length === 0 && <p className="text-sm text-muted">Nothing matches “{q}”.</p>}
+      {groups.map(([g, rows]) => (
+        <Section key={g} title={g}><Table head={["Keys", "What it does"]} caption={g} rows={rows.map((r) => [<kbd key="k" className="rounded border border-current/30 px-1.5 py-0.5 text-xs">{r.keys}</kbd>, r.what])} /></Section>
+      ))}
+    </div>
+  );
+}
+
+
+// ---------------------------------------------------------------- software guide
+interface SwProduct { name: string; change: number | null; rank: number; [k: string]: string | number | null }
+interface SwCat { id: string; label: string; what: string; free: string; count: number; products: SwProduct[] }
+interface SwCatalog { source: string; metrics: { key: string; label: string; max: number }[]; categories: SwCat[]; notes: string[] }
+interface SwRank { label: string; rows: { name: string; score: number; weight_covered_pct: number; missing: string[]; guide_rank: number; position: number }[]; lesson: string; caution: string }
+interface SwStack { rows: { id: string; label: string; tool: string; status: string; note: string }[]; statuses: string[]; have: number; counted: number; gaps: string[]; lesson: string }
+const STACK_LABEL: Record<string, string> = { have: "Have it", planned: "Planned", none: "Gap", not_needed: "Not needed" };
+
+function SoftwareTab() {
+  const [cat, setCat] = useState<SwCatalog | null>(null);
+  const [stack, setStack] = useState<SwStack | null>(null);
+  const [rows, setRows] = useState<SwStack["rows"]>([]);
+  const [sel, setSel] = useState("rmm");
+  const [w, setW] = useState<Record<string, number>>({});
+  const [skip, setSkip] = useState("");
+  const [rank, setRank] = useState<SwRank | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    getJson<SwCatalog>("/api/it/software").then((c) => { setCat(c); setW(Object.fromEntries(c.metrics.map((m) => [m.key, 1]))); }).catch((e) => setErr(errMsg(e, "Couldn't load the guide.")));
+    getJson<SwStack>("/api/it/software/stack").then((s) => { setStack(s); setRows(s.rows); }).catch((e) => setErr(errMsg(e, "Couldn't load your stack.")));
+  }, []);
+  const cur = cat?.categories.find((c) => c.id === sel);
+  const doRank = async () => {
+    setErr(null);
+    try { setRank(await postJson<SwRank>("/api/it/software/shortlist", { category: sel, weights: w, exclude: skip.split(",").map((x) => x.trim()).filter(Boolean) })); } catch (e) { setRank(null); setErr(errMsg(e, "That didn't work.")); }
+  };
+  const save = async () => {
+    setErr(null); setMsg(null);
+    try { const s = await putJson<SwStack>("/api/it/software/stack", { items: rows }); setStack(s); setRows(s.rows); setMsg("Saved."); } catch (e) { setErr(errMsg(e, "Couldn't save.")); }
+  };
+  const setRow = (id: string, patch: Partial<SwStack["rows"][number]>) => setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  const val = (v: string | number | null) => (v == null ? "—" : String(v));
+  return (
+    <div className="space-y-4">
+      {err && <ErrorBanner message={err} />}
+      <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
+        Ratings from the NinjaOne SysAdmin Software Guide 2026 (G2 and Capterra, March 2026). The guide is published by a vendor that is also ranked in it, and ratings are one input among price, fit and support. This tab helps you plan and shortlist; it does not install or manage any software.
+      </p>
+      <Section title="What do you cover today?" note={stack?.lesson}>
+        {stack && <p className="mb-2 text-sm">{stack.have} of {stack.counted} categories covered{stack.gaps.length > 0 ? `. Gaps: ${stack.gaps.join(", ")}.` : "."}</p>}
+        <div className="space-y-2">
+          {rows.map((r) => (
+            <div key={r.id} className="grid gap-2 sm:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
+              <p className="self-center text-sm">{r.label}</p>
+              <select className="field" aria-label={`Status for ${r.label}`} value={r.status} onChange={(e) => setRow(r.id, { status: e.target.value })}>{(stack?.statuses ?? []).map((st) => <option key={st} value={st}>{STACK_LABEL[st] ?? st}</option>)}</select>
+              <input className="field" aria-label={`Tool for ${r.label}`} placeholder="Tool you use" maxLength={80} value={r.tool} onChange={(e) => setRow(r.id, { tool: e.target.value })} />
+              <input className="field" aria-label={`Note for ${r.label}`} placeholder="Note" maxLength={200} value={r.note} onChange={(e) => setRow(r.id, { note: e.target.value })} />
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-3"><button className="btn btn-primary" onClick={save}>Save my stack</button>{msg && <span className="text-xs text-muted" role="status">{msg}</span>}</div>
+      </Section>
+      <Section title="Shortlist a tool" note="Weight what matters to you (0 to 10). Each rating is put on a 0 to 10 scale and averaged; ratings a product lacks are left out.">
+        {cat && (
+          <>
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Kind of tool"><select className="field" value={sel} onChange={(e) => { setSel(e.target.value); setRank(null); }}>{cat.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
+              <Field label="Leave out (names, comma separated)"><input className="field" value={skip} onChange={(e) => setSkip(e.target.value)} /></Field>
+              <button className="btn btn-primary" onClick={doRank}>Rank them</button>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {cat.metrics.map((m) => (
+                <Field key={m.key} label={`${m.label}: ${w[m.key] ?? 0}`}><input type="range" min={0} max={10} step={1} value={w[m.key] ?? 0} aria-label={`Weight for ${m.label}`} onChange={(e) => setW({ ...w, [m.key]: Number(e.target.value) })} /></Field>
+              ))}
+            </div>
+          </>
+        )}
+      </Section>
+      {rank && (
+        <Section title={`Your ranking: ${rank.label}`} note={`${rank.lesson} ${rank.caution}`}>
+          <Table head={["#", "Tool", "Score (0 to 10)", "Weight covered", "Missing ratings", "Guide rank"]} rows={rank.rows.map((r) => [r.position, r.name, r.score.toFixed(2), `${r.weight_covered_pct}%`, r.missing.length ? r.missing.join(", ") : "—", r.guide_rank])} />
+        </Section>
+      )}
+      {cur && cat && (
+        <Section title={`${cur.label}: the guide's ratings`} note={`${cur.what} Free options to practise on (not from the guide): ${cur.free}`}>
+          <Table head={["Rank", "Tool", "Change", ...cat.metrics.map((m) => m.label)]} rows={cur.products.map((p) => [p.rank, p.name, p.change == null || p.change === 0 ? "—" : p.change > 0 ? `+${p.change}` : String(p.change), ...cat.metrics.map((m) => val(p[m.key]))])} />
+        </Section>
+      )}
+      <Section title="Write down the decision" note="Save why you chose a tool, what you tried and what it costs, so it can be reviewed later."><QualTab kinds={["toolchoice"]} /></Section>
+      {cat && <Section title="Read this first"><ul className="list-disc space-y-1 pl-5 text-sm">{cat.notes.map((n) => <li key={n}>{n}</li>)}</ul><p className="mt-2 text-xs text-muted">{cat.source}.</p></Section>}
+    </div>
+  );
+}
+
+
+// ---------------------------------------------------------------- virtualization planner
+interface VCat { runbook: { n: number; title: string; what: string; do: string[]; verify: string[]; mistakes: string[]; note: string }[]; components: { name: string; what: string }[]; practice: { name: string; how: string; needs: string }[]; not_available: string[]; roles: string[]; example_network: VNet[]; example_hosts: VHost[]; source_note: string }
+interface VNet { name: string; role: string; vlan: number; subnet: string }
+interface VHost { name: string; cores: number; ram_gb: number; version: string }
+interface VIssues { issues: { level: string; text: string }[]; ok?: boolean }
+interface VCap { total_vcpu: number; total_ram_gb: number; total_disk_gb: number; hosts_for_cpu: number; hosts_for_ram: number; hosts_working: number; hosts_total: number; storage_tb: number; actual_vcpu_per_core: number; ram_used_pct_one_host_down: number; survives_one_host_failure: boolean; notes: string[]; lesson: string }
+const LV: Record<string, "bad" | "warn" | "muted"> = { bad: "bad", warn: "warn", info: "muted" };
+
+function VirtTab() {
+  const [cat, setCat] = useState<VCat | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [cap, setCap] = useState({ vms: "50", vcpu_per_vm: "2", ram_per_vm_gb: "8", disk_per_vm_gb: "100", host_cores: "16", host_ram_gb: "128", vcpu_ratio: "4", headroom_pct: "20", ha_spares: "1" });
+  const [capRes, setCapRes] = useState<VCap | null>(null);
+  const [nets, setNets] = useState<VNet[]>([]);
+  const [netRes, setNetRes] = useState<VIssues | null>(null);
+  const [hosts, setHosts] = useState<VHost[]>([]);
+  const [hostRes, setHostRes] = useState<VIssues | null>(null);
+  useEffect(() => { getJson<VCat>("/api/it/virt").then((c) => { setCat(c); setNets(c.example_network); setHosts(c.example_hosts); }).catch((e) => setErr(errMsg(e, "Couldn't load the planner."))); }, []);
+  const calc = () => { setErr(null); postJson<VCap>("/api/it/virt/capacity", Object.fromEntries(Object.entries(cap).map(([k, v]) => [k, Number(v)]))).then(setCapRes).catch((e) => { setCapRes(null); setErr(errMsg(e, "Check the numbers.")); }); };
+  const chkNet = () => { setErr(null); postJson<VIssues>("/api/it/virt/network", { rows: nets }).then(setNetRes).catch((e) => { setNetRes(null); setErr(errMsg(e, "Check the networks.")); }); };
+  const chkHost = () => { setErr(null); postJson<VIssues>("/api/it/virt/cluster", { rows: hosts }).then(setHostRes).catch((e) => { setHostRes(null); setErr(errMsg(e, "Check the hosts.")); }); };
+  const issues = (r: VIssues | null) => r && (r.issues.length === 0 ? <p className="mt-2 text-sm"><Badge tone="ok">No problems found</Badge></p> : <ul className="mt-2 space-y-1 text-sm">{r.issues.map((i, k) => <li key={k}><Badge tone={LV[i.level] ?? "muted"}>{i.level}</Badge> {i.text}</li>)}</ul>);
+  if (!cat) return err ? <ErrorBanner message={err} /> : <p className="text-sm text-muted">Loading…</p>;
+  const CAPF: [keyof typeof cap, string][] = [["vms", "VMs"], ["vcpu_per_vm", "vCPU per VM"], ["ram_per_vm_gb", "RAM per VM (GB)"], ["disk_per_vm_gb", "Disk per VM (GB)"], ["host_cores", "Cores per host"], ["host_ram_gb", "RAM per host (GB)"], ["vcpu_ratio", "vCPU per core"], ["headroom_pct", "Headroom %"], ["ha_spares", "Spare hosts (HA)"]];
+  return (
+    <div className="space-y-4">
+      <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">Plan a VMware vSphere build: the 10 steps in order, how many hosts and how much storage you need, and whether your VLANs and cluster hold together. ESXi and vCenter can&apos;t run here (they need your own hardware and a licence), so this tab plans and checks; it never connects to a host. {cat.source_note}</p>
+      {err && <ErrorBanner message={err} />}
+      <Section title="The 10 steps">
+        <div className="space-y-2">{cat.runbook.map((s) => (
+          <details key={s.n} className="rounded border border-line p-2"><summary className="cursor-pointer text-sm"><b>{s.n}. {s.title}</b> <span className="text-muted">{s.what}</span></summary>
+            <div className="mt-2 grid gap-3 text-sm sm:grid-cols-3">
+              <div><p className="text-xs font-semibold">Do</p><ul className="list-disc pl-4">{s.do.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+              <div><p className="text-xs font-semibold">Check it worked</p><ul className="list-disc pl-4">{s.verify.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+              <div><p className="text-xs font-semibold">Common mistakes</p><ul className="list-disc pl-4">{s.mistakes.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            </div>{s.note && <p className="mt-2 text-xs text-muted">{s.note}</p>}</details>))}</div>
+      </Section>
+      <Section title="How many hosts and how much storage">
+        <div className="grid gap-2 sm:grid-cols-3">{CAPF.map(([k, l]) => <Field key={k} label={l}><input className="field" inputMode="decimal" value={cap[k]} onChange={(e) => setCap({ ...cap, [k]: e.target.value })} /></Field>)}</div>
+        <button className="btn mt-2" onClick={calc}>Work it out</button>
+        {capRes && <div className="mt-3 space-y-2">
+          <div className="grid gap-3 sm:grid-cols-4"><Stat label="Hosts to buy" value={String(capRes.hosts_total)} sub={`${capRes.hosts_working} working + ${capRes.hosts_total - capRes.hosts_working} spare`} /><Stat label="Needed for CPU / RAM" value={`${capRes.hosts_for_cpu} / ${capRes.hosts_for_ram}`} /><Stat label="Shared storage" value={`${num(capRes.storage_tb, 1)} TB`} /><Stat label="RAM used, one host down" value={`${num(capRes.ram_used_pct_one_host_down, 0)}%`} /></div>
+          <ul className="list-disc pl-5 text-sm">{capRes.notes.map((n, i) => <li key={i}>{n}</li>)}</ul><p className="text-xs text-muted">{capRes.lesson}</p></div>}
+      </Section>
+      <Section title="Network plan checker" note="The sample has vMotion and the VM network both on VLAN 20, as the source infographic does. Check it, then fix the VLAN.">
+        <div className="space-y-1">{nets.map((n, i) => (
+          <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <input className="field" aria-label="Name" value={n.name} onChange={(e) => setNets(nets.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
+            <select className="field" aria-label="Role" value={n.role} onChange={(e) => setNets(nets.map((x, j) => j === i ? { ...x, role: e.target.value } : x))}>{cat.roles.map((r) => <option key={r}>{r}</option>)}</select>
+            <input className="field" aria-label="VLAN" inputMode="numeric" value={n.vlan} onChange={(e) => setNets(nets.map((x, j) => j === i ? { ...x, vlan: Number(e.target.value) } : x))} />
+            <input className="field" aria-label="Subnet" value={n.subnet} onChange={(e) => setNets(nets.map((x, j) => j === i ? { ...x, subnet: e.target.value } : x))} />
+            <button className="btn" onClick={() => setNets(nets.filter((_, j) => j !== i))}>Remove</button></div>))}</div>
+        <div className="mt-2 flex gap-2"><button className="btn" onClick={() => setNets([...nets, { name: "", role: "other", vlan: 50, subnet: "" }])}>Add network</button><button className="btn btn-primary" onClick={chkNet}>Check</button></div>
+        {issues(netRes)}
+      </Section>
+      <Section title="Cluster check">
+        <div className="space-y-1">{hosts.map((h, i) => (
+          <div key={i} className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <input className="field" aria-label="Host name" value={h.name} onChange={(e) => setHosts(hosts.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
+            <input className="field" aria-label="Cores" inputMode="numeric" value={h.cores} onChange={(e) => setHosts(hosts.map((x, j) => j === i ? { ...x, cores: Number(e.target.value) } : x))} />
+            <input className="field" aria-label="RAM GB" inputMode="decimal" value={h.ram_gb} onChange={(e) => setHosts(hosts.map((x, j) => j === i ? { ...x, ram_gb: Number(e.target.value) } : x))} />
+            <input className="field" aria-label="ESXi version" value={h.version} onChange={(e) => setHosts(hosts.map((x, j) => j === i ? { ...x, version: e.target.value } : x))} />
+            <button className="btn" onClick={() => setHosts(hosts.filter((_, j) => j !== i))}>Remove</button></div>))}</div>
+        <div className="mt-2 flex gap-2"><button className="btn" onClick={() => setHosts([...hosts, { name: "", cores: 16, ram_gb: 128, version: "8.0.2" }])}>Add host</button><button className="btn btn-primary" onClick={chkHost}>Check</button></div>
+        {issues(hostRes)}
+      </Section>
+      <Section title="Terms"><Table head={["Term", "What it is"]} rows={cat.components.map((c) => [c.name, c.what])} /></Section>
+      <Section title="Free ways to practise"><Table head={["Option", "What it gives you", "You need"]} rows={cat.practice.map((p) => [p.name, p.how, p.needs])} />
+        <p className="mt-2 text-xs font-semibold">Not available in this app</p><ul className="list-disc pl-5 text-sm">{cat.not_available.map((x, i) => <li key={i}>{x}</li>)}</ul></Section>
+      <QualTab kinds={["virtplan"]} />
     </div>
   );
 }

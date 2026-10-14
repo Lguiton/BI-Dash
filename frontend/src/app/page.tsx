@@ -1,240 +1,80 @@
 "use client";
-
-import { Activity, DollarSign, Layers, Percent, RefreshCw, TrendingUp } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Filters } from "@/components/Filters";
-import { EntityChart, TrendChart } from "@/components/Charts";
-import { DatasetCard } from "@/components/DatasetCard";
-import { ChartGallery } from "@/components/ChartGallery";
-import { EntityTable } from "@/components/EntityTable";
-import { HeatmapView, ScatterView } from "@/components/ExplorePanel";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
-import { InsightsPanel } from "@/components/InsightsPanel";
-import { KpiCard } from "@/components/KpiCard";
-import { CommandPalette, SearchButton } from "@/components/CommandPalette";
-import { NavBar } from "@/components/NavBar";
-import { WebDock } from "@/components/WebDock";
-import { SetupChecklist } from "@/components/SetupChecklist";
-import { ViewsBar, type Layout } from "@/components/ViewsBar";
-import { WeeklyCard } from "@/components/WeeklyCard";
-import { RecordsPanel } from "@/components/RecordsPanel";
-import { CompanyCard } from "@/components/CompanyCard";
-import { AlertsCard } from "@/components/panels/OpsPanels";
-import { StudyWidget } from "@/components/StudyWidget";
-import { ReportButtons } from "@/components/ReportButtons";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { RealBanner, WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
-import { UploadPanel } from "@/components/UploadPanel";
-import { ApiError, filterQuery, getJson } from "@/lib/api";
-import { money, num, pct } from "@/lib/format";
-import {
-  EMPTY_FILTERS, type EntityRow, type FilterState, type Forecast, type HeatmapData, type Insight, type Meta,
-  type ScatterData, type Summary, type TrendPoint,
-} from "@/lib/types";
+import { PwaSetup } from "@/components/PwaSetup";
+import { PageShell } from "@/components/PageShell";
+import { ApiError, getJson } from "@/lib/api";
 
-const SECTIONS = [
-  { id: "setup", label: "Getting started" },
-  { id: "alerts", label: "Alerts" },
-  { id: "weekly", label: "What changed this week" },
-  { id: "company", label: "Company plan" },
-  { id: "study", label: "Study progress" },
-  { id: "upload", label: "Upload data" },
-  { id: "dataset", label: "Dataset card" },
-  { id: "metrics", label: "Key metrics" },
-  { id: "charts", label: "Trend, entity and insights" },
-  { id: "more", label: "Scatter and heatmap" },
-  { id: "entities", label: "Entity table" },
-  { id: "records", label: "Records" },
+type Pack = { id: string; industry: string; dept: string; title: string; rows: number | null };
+type Briefing = { subject: string; items: number; sections: { title: string; items: string[] }[] };
+type Health = { score: number; grade: string; needs_attention: { name: string; detail: string }[] };
+
+const PLACES = [
+  { href: "/bi", label: "Main dashboard", note: "Your uploaded data: trend, entities, insights" },
+  { href: "/packs", label: "Business dashboards", note: "Industry and department views, reports, imports" },
+  { href: "/company", label: "Company", note: "Plan, goals and company health" },
+  { href: "/kpis", label: "KPIs", note: "Targets and how you are doing" },
+  { href: "/tracks", label: "Tracks", note: "Analyst, data science, IT, engineering tools" },
+  { href: "/services", label: "Services", note: "What you can sell, with a quote builder" },
+  { href: "/intake", label: "Data Intake", note: "Upload a file; the agents process it end to end" },
+  { href: "/data", label: "My data", note: "Tables, charts and imports" },
 ];
 
-export default function Dashboard() {
-  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
-  const [meta, setMeta] = useState<Meta | null>(null);
-  const [data, setData] = useState<{
-    key: string;
-    summary?: Summary; trend?: TrendPoint[]; entities?: EntityRow[]; insights?: Insight[];
-    forecast?: Forecast; scatter?: ScatterData; heatmap?: HeatmapData; error?: string;
-  } | null>(null);
-  const [showForecast, setShowForecast] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
+export default function HomePage() {
+  const [packs, setPacks] = useState<Pack[]>([]);
+  const [pick, setPick] = useState("");
+  const [brief, setBrief] = useState<Briefing | null>(null);
+  const [health, setHealth] = useState<Health | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  const [layout, setLayout] = useState<Layout>({ hidden: [], order: [] });
-  const refresh = useCallback(() => setRefreshKey((n) => n + 1), []);
-  const requestKey = `${filterQuery(filters)}|${refreshKey}`;
-
-  // Filter options + data range. Reloaded on refresh (e.g. after an import).
   useEffect(() => {
-    const ctl = new AbortController();
-    getJson<Meta>("/api/analytics/meta", ctl.signal).then(setMeta).catch(() => { /* surfaced by the data load below */ });
-    return () => ctl.abort();
-  }, [refreshKey]);
+    const m = (e: unknown) => (e instanceof ApiError ? e.message : "Couldn't load part of the home screen.");
+    getJson<{ packs: Pack[] }>("/api/biz-packs").then((r) => setPacks(r.packs)).catch((e) => setErr(m(e)));
+    getJson<Briefing>("/api/briefing/preview").then(setBrief).catch(() => setBrief(null));
+    getJson<Health>("/api/health-check").then(setHealth).catch(() => setHealth(null));
+  }, []);
 
-  // Main analytics load. A newer request aborts the older one, so a slow
-  // response can never overwrite fresher data.
-  useEffect(() => {
-    const ctl = new AbortController();
-    const q = filterQuery(filters);
-    Promise.all([
-      getJson<Summary>(`/api/analytics/summary${q}`, ctl.signal),
-      getJson<TrendPoint[]>(`/api/analytics/timeseries${q}`, ctl.signal),
-      getJson<EntityRow[]>(`/api/analytics/by-entity${q}`, ctl.signal),
-      getJson<{ insights: Insight[] }>(`/api/analytics/insights${q}`, ctl.signal),
-      getJson<Forecast>(`/api/analytics/forecast${q}`, ctl.signal),
-      getJson<ScatterData>(`/api/analytics/scatter${q}`, ctl.signal),
-      getJson<HeatmapData>(`/api/analytics/heatmap${q}`, ctl.signal),
-    ])
-      .then(([summary, trend, entities, i, forecast, scatter, heatmap]) =>
-        setData({ key: requestKey, summary, trend, entities, insights: i.insights, forecast, scatter, heatmap }))
-      .catch((err) => {
-        if (ctl.signal.aborted) return;
-        setData((prev) => ({ ...prev, key: requestKey, error: err instanceof ApiError ? err.message : "Something went wrong loading analytics." }));
-      });
-    return () => ctl.abort();
-  }, [filters, refreshKey, requestKey]);
-
-  // Last good data stays on screen (dimmed) while a newer request is in flight.
-  const summary = data?.summary ?? null;
-  const trend = useMemo(() => data?.trend ?? [], [data?.trend]);
-  const entities = data?.entities ?? [];
-  const insights = data?.insights ?? [];
-  const forecast = data?.forecast;
-  const forecastPoints = forecast?.available ? forecast.points : undefined;
-  const loading = data?.key !== requestKey;
-  const error = data?.key === requestKey ? data.error ?? null : null;
-
-  const spark = useMemo(() => ({
-    revenue: trend.map((t) => t.revenue),
-    profit: trend.map((t) => t.profit),
-    margin: trend.map((t) => (t.revenue ? (t.profit / t.revenue) * 100 : 0)),
-    units: trend.map((t) => t.units),
-  }), [trend]);
-
-  const d = summary?.deltas;
-  const empty = summary != null && summary.record_count === 0;
-
-  // Sections can be hidden and re-ordered by a saved view. CSS `order` does the re-ordering without remounting anything.
-  const sec = (id: string, node: React.ReactNode) => {
-    if (layout.hidden.includes(id)) return null;
-    const i = layout.order.indexOf(id);
-    return <div key={id} style={{ order: i === -1 ? SECTIONS.findIndex((x) => x.id === id) + 100 : i }}>{node}</div>;
-  };
-
+  const industries = [...new Set(packs.map((p) => p.industry))];
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Business Intelligence Dashboard</h1>
-          <p className="text-sm text-muted">
-            {meta?.min_date && meta.max_date
-              ? `${num(meta.record_count)} records · ${meta.min_date} to ${meta.max_date}`
-              : "FastAPI + DuckDB analytics engine"}
-          </p>
+    <PageShell title="Home" subtitle="Everything in one place: today's briefing, your system health and a shortcut to any dashboard.">
+      {err && <ErrorBanner message={err} />}
+      <section className="card space-y-2 p-4" aria-label="Dashboards">
+        <h2 className="text-sm font-semibold">Dashboards</h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <select className="input min-w-72" aria-label="Choose a dashboard" value={pick} onChange={(e) => setPick(e.target.value)}>
+            <option value="">Choose a dashboard…</option>
+            <optgroup label="Main"><option value="/bi">Main dashboard (your uploaded data)</option><option value="/company">Company</option><option value="/kpis">KPIs</option></optgroup>
+            {industries.map((i) => (
+              <optgroup key={i} label={i}>{packs.filter((p) => p.industry === i).map((p) => <option key={p.id} value={`/packs?pid=${p.id}`}>{p.dept}: {p.title}{p.rows == null ? " (no data yet)" : ""}</option>)}</optgroup>
+            ))}
+          </select>
+          <Link href={pick || "#"} aria-disabled={!pick} className={`btn btn-primary ${pick ? "" : "pointer-events-none opacity-50"}`}>Open</Link>
         </div>
-        <div className="flex flex-wrap items-start gap-2">
-          <NavBar />
-          <SearchButton />
-          <WorkspaceSwitcher />
-          <ThemeToggle />
-          <button className="btn" onClick={refresh} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} aria-hidden /> Refresh
-          </button>
-        </div>
-      </header>
-
-      <CommandPalette />
-      <RealBanner />
-      {error && <ErrorBanner message={error} onRetry={refresh} />}
-
-      <ReportButtons filters={filters} />
-
-      <ViewsBar filters={filters} setFilters={setFilters} sections={SECTIONS} layout={layout} setLayout={setLayout} />
-
-      <Filters meta={meta} filters={filters} onChange={setFilters} />
-
-      {summary?.previous_range && (
-        <p className="-mt-3 text-xs text-muted">
-          Changes compare with the previous equal-length period ({summary.previous_range.date_from} to {summary.previous_range.date_to}).
-        </p>
-      )}
-
-      {empty && !error && (
-        <div className="card p-6 text-center text-sm text-muted">
-          No records match these filters. Try widening the date range or resetting the filters.
-        </div>
-      )}
-
-      <div className="flex flex-col gap-6">
-      {sec("setup", <SetupChecklist refreshKey={refreshKey} />)}
-      {sec("alerts", <AlertsCard />)}
-      {sec("weekly", <WeeklyCard refreshKey={refreshKey} />)}
-      {sec("company", <CompanyCard />)}
-      {sec("study", <StudyWidget />)}
-      {sec("upload", <UploadPanel onLoaded={() => { setFilters(EMPTY_FILTERS); refresh(); }} />)}
-      {sec("dataset", <DatasetCard refreshKey={refreshKey} />)}
-      {sec("metrics", <section aria-label="Key metrics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Revenue" icon={<DollarSign className="h-4 w-4 text-[var(--c-revenue)]" />} loading={loading}
-                 value={money(summary?.total_revenue)} caption={summary ? `Cost ${money(summary.total_cost)}` : ""}
-                 delta={d?.total_revenue} spark={spark.revenue} sparkColor="var(--c-revenue)" />
-        <KpiCard label="Net profit" icon={<TrendingUp className="h-4 w-4 text-[var(--c-profit)]" />} loading={loading}
-                 value={money(summary?.net_profit)} caption="Revenue minus cost"
-                 delta={d?.net_profit} spark={spark.profit} sparkColor="var(--c-profit)" />
-        <KpiCard label="Net margin" icon={<Percent className="h-4 w-4 text-accent" />} loading={loading}
-                 value={pct(summary?.net_margin_pct)} caption="Profit ÷ revenue"
-                 delta={d?.net_margin_pct} deltaUnit=" pts" spark={spark.margin} />
-        <KpiCard label="Units processed" icon={<Layers className="h-4 w-4 text-amber-500" />} loading={loading}
-                 value={num(summary?.total_units)}
-                 caption={summary?.rev_per_unit != null ? `${money(summary.rev_per_unit)} revenue / unit` : ""}
-                 delta={d?.total_units} spark={spark.units} sparkColor="var(--muted)" />
-      </section>)}
-
-      {sec("charts", <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="card p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wide">Revenue, cost and profit over time</h2>
-              <label className="flex items-center gap-2 text-xs text-muted">
-                <input type="checkbox" checked={showForecast} onChange={(e) => setShowForecast(e.target.checked)} disabled={!forecastPoints} />
-                14-day forecast
-              </label>
-            </div>
-            <TrendChart data={trend} forecast={showForecast ? forecastPoints : undefined} />
-            {forecast && !forecast.available && <p className="mt-2 text-xs text-muted">{forecast.reason}</p>}
-            {forecast?.available && showForecast && (
-              <p className="mt-2 text-xs text-muted">
-                {forecast.method}; shaded band is a 95% range.
-                {forecast.backtest && ` Backtest error on the last ${forecast.backtest.days} days: ${forecast.backtest.mape_pct}%.`}
-              </p>
-            )}
-          </div>
-          <div className="card p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
-              <Activity className="h-4 w-4 text-accent" aria-hidden /> Revenue and profit by entity
-            </h2>
-            <EntityChart data={entities} selectedId={filters.entity_id} onSelect={(id) => setFilters({ ...filters, entity_id: id })} />
-          </div>
-          <ChartGallery filters={filters} refreshKey={refreshKey} />
-        </div>
-        <InsightsPanel insights={insights} loading={loading} />
-      </section>)}
-
-      {sec("more", <section className="grid grid-cols-1 gap-6 lg:grid-cols-2" aria-label="More views">
-        <div className="card p-5">
-          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide">Cost vs revenue per record</h2>
-          <p className="mb-3 text-xs text-muted">Each dot is one record. Dots far from the rest of their category are worth a look.</p>
-          <ScatterView data={data?.scatter ?? null} />
-        </div>
-        <div className="card p-5">
-          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide">Revenue by weekday</h2>
-          <p className="mb-3 text-xs text-muted">Which entities earn more on which days.</p>
-          <HeatmapView data={data?.heatmap ?? null} />
-        </div>
-      </section>)}
-
-      {sec("entities", <EntityTable rows={entities} selectedId={filters.entity_id} onSelect={(id) => setFilters({ ...filters, entity_id: id })} />)}
-
-      {sec("records", <RecordsPanel filters={filters} refreshKey={refreshKey} />)}
+      </section>
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="card space-y-2 p-4" aria-label="Today's briefing">
+          <h2 className="text-sm font-semibold">Today&apos;s briefing</h2>
+          {!brief && <p className="text-sm text-muted">Loading…</p>}
+          {brief && brief.items === 0 && <p className="text-sm">Nothing needs attention today.</p>}
+          {brief?.sections.map((s) => (
+            <div key={s.title}><h3 className="text-xs font-semibold uppercase text-muted">{s.title}</h3><ul className="list-disc pl-5 text-sm">{s.items.map((i) => <li key={i}>{i}</li>)}</ul></div>
+          ))}
+          <Link href="/settings" className="text-xs underline">Briefing settings</Link>
+        </section>
+        <section className="card space-y-2 p-4" aria-label="System health">
+          <h2 className="text-sm font-semibold">System health</h2>
+          {health ? (<>
+            <p className="text-2xl font-bold">{health.score}<span className="text-sm font-normal text-muted"> / 100 · {health.grade}</span></p>
+            {health.needs_attention.length === 0 ? <p className="text-sm">Everything checks out.</p> : <ul className="list-disc pl-5 text-sm">{health.needs_attention.map((n) => <li key={n.name}><strong>{n.name}.</strong> {n.detail}</li>)}</ul>}
+          </>) : <p className="text-sm text-muted">Loading…</p>}
+          <Link href="/activity" className="text-xs underline">Open the activity log</Link>
+        </section>
       </div>
-      <WebDock />
-    </div>
+      <div><PwaSetup showButton /></div>
+      <section aria-label="Places" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {PLACES.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
+      </section>
+    </PageShell>
   );
 }

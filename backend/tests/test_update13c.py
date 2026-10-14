@@ -112,12 +112,10 @@ def test_lineage_for_a_kpi_lists_what_feeds_it(client):
 
 
 # ---------------------------------------------------------------- 6 drift history
-def test_drift_checks_are_logged_and_listed(client, tmp_path, monkeypatch):
+def test_drift_checks_are_logged_and_listed(client, load_clean, tmp_path, monkeypatch):
     pytest.importorskip("sklearn")
-    import pathlib
     monkeypatch.setenv("BI_MODELS_DIR", str(tmp_path / "models"))
-    csv = pathlib.Path(__file__).resolve().parents[2] / "data_samples" / "operations_clean.csv"
-    assert client.post("/api/ingest/csv?mode=replace", files={"file": ("d.csv", csv.read_bytes(), "text/csv")}).status_code == 200
+    load_clean()
     feats = ["category", "weekday", "units_processed", "duration_minutes"]
     assert client.post("/api/models", json={"name": "rev", "task": "revenue", "model": "ridge", "features": feats}).status_code == 200
     assert client.get("/api/models/rev/drift/history").json()["history"] == []

@@ -135,8 +135,24 @@ def read_table(raw: bytes, filename: str = "data.csv", sheet: str | None = None)
         rows, info = _read_xlsx(raw, sheet, info)
     elif filename.lower().endswith(".xls"):
         raise DataError("Old .xls files are not supported. Save the sheet as .xlsx or CSV and try again.")
-    elif filename.lower().endswith(".json"):
+    elif filename.lower().endswith((".json", ".jsonl", ".ndjson")):
         rows = _read_json(raw)
+    elif filename.lower().endswith(".xml"):
+        from app.services import fileformats
+        rows = fileformats.read_xml(raw)
+    elif filename.lower().endswith(".pdf"):
+        from app.services import fileformats
+        try:
+            rows, pinfo = fileformats.read_pdf_table(raw)
+        except DataError as e:
+            if "No table" not in str(e):
+                raise
+            rows, pinfo = fileformats.read_pdf_lines(raw)       # words but no table: one row per line of text
+        info.update(pinfo)
+    elif filename.lower().endswith(".parquet"):
+        rows = _read_parquet(raw)
+    elif filename.lower().endswith((".html", ".htm")):
+        rows = _read_html(raw)
     else:
         text = decode(raw)
         delim = sniff_delimiter(text)
@@ -194,22 +210,48 @@ def _cell(v) -> str | None:
     return str(v)
 
 
-def _read_json(raw: bytes) -> list[list[str | None]]:
+def _read_parquet(raw: bytes) -> list[list[str | None]]:
     try:
-        data = json.loads(decode(raw))
+        import pyarrow.parquet as pq
+        t = pq.read_table(io.BytesIO(raw))
+    except Exception as e:  # noqa: BLE001
+        raise DataError("Could not read that Parquet file.") from e
+    if t.num_rows > MAX_TABLE_ROWS:
+        raise DataError(f"{t.num_rows:,} rows is over the {MAX_TABLE_ROWS:,}-row limit.")
+    cols = t.column_names
+    data = t.to_pydict()
+    return [list(cols)] + [[_cell(data[c][i]) for c in cols] for i in range(t.num_rows)]
+
+
+def _read_html(raw: bytes) -> list[list[str | None]]:
+    """The first <table> on the page. Nothing in the page is run; scripts are ignored."""
+    try:
+        import pandas as pd
+        tables = pd.read_html(io.StringIO(decode(raw)))
+    except Exception as e:  # noqa: BLE001
+        raise DataError("No table found in that HTML file.") from e
+    df = tables[0]
+    return [[str(c) for c in df.columns]] + [[_cell(None if v != v else v) for v in row] for row in df.itertuples(index=False, name=None)]
+
+
+def _read_json(raw: bytes) -> list[list[str | None]]:
+    from app.services import fileformats
+    text = decode(raw)
+    try:
+        data = json.loads(text)
     except ValueError as e:
+        if "\n" in text.strip():
+            try:
+                return fileformats.read_jsonl(text)  # not one JSON document: maybe one object per line
+            except DataError:
+                pass
         raise DataError("That file is not valid JSON.") from e
     if isinstance(data, dict):
         lists = [v for v in data.values() if isinstance(v, list) and v and isinstance(v[0], dict)]
         data = lists[0] if lists else [data]
     if not isinstance(data, list) or not data or not all(isinstance(x, dict) for x in data):
         raise DataError("JSON must be a list of objects, e.g. [{\"a\": 1}, {\"a\": 2}].")
-    cols: list[str] = []
-    for obj in data[:5000]:
-        for k in obj:
-            if k not in cols:
-                cols.append(k)
-    return [cols] + [[None if obj.get(c) is None else (json.dumps(obj[c]) if isinstance(obj.get(c), (dict, list)) else _cell(obj.get(c))) for c in cols] for obj in data]
+    return fileformats.table_from_objects(data)
 
 
 # ---------------------------------------------------------------- names and types
@@ -321,11 +363,39 @@ def _convert(col: dict, v: str | None):
 ARROW = {"bool": pa.bool_(), "int": pa.int64(), "float": pa.float64(), "date": pa.date32(), "timestamp": pa.timestamp("us"), "varchar": pa.string()}
 
 
-def preview(raw: bytes, filename: str, sheet: str | None = None, limit: int = 15) -> dict:
+KIND_OF_INFERRED = {"int": "number", "float": "number", "date": "date", "timestamp": "date", "bool": "bool", "varchar": "text"}
+
+
+RESCUED = "_rescued"
+
+
+def schema_diff(table: str, cols: list[dict]) -> dict | None:
+    """Compare the columns of an incoming file with the table of the same name. None when the table doesn't exist yet."""
+    ensure_registry()
+    with get_cursor() as cur:
+        if not cur.execute("SELECT 1 FROM user_tables WHERE table_name = ?", [table_name_for(table)]).fetchone():
+            return None
+        old = fetch_all(cur, "SELECT column_name AS name, data_type AS type FROM information_schema.columns WHERE table_schema='main' AND table_name = ? ORDER BY ordinal_position", [table_name_for(table)])
+        rows = cur.execute(f"SELECT COUNT(*) FROM {q(table_name_for(table))}").fetchone()[0]
+    old_kind = {c["name"]: kind_of(c["type"]) for c in old}
+    new_kind = {c["name"]: KIND_OF_INFERRED.get(c["type"], "text") for c in cols}
+    added = [n for n in new_kind if n not in old_kind]
+    removed = [n for n in old_kind if n not in new_kind]
+    changed = [{"column": n, "was": old_kind[n], "now": new_kind[n]} for n in new_kind if n in old_kind and old_kind[n] != new_kind[n]]
+    reordered = not added and not removed and list(old_kind) != list(new_kind)
+    return {"table": table_name_for(table), "existing_rows": rows, "added": added, "removed": removed, "type_changed": changed, "reordered": reordered,
+            "identical": not (added or removed or changed or reordered),
+            "summary": "Same columns and types as the table you already have." if not (added or removed or changed or reordered) else
+            "The columns differ from the table you already have. Check before you replace it or add to it: reports, models and pipelines built on it can break."}
+
+
+def preview(raw: bytes, filename: str, sheet: str | None = None, limit: int = 15, table: str | None = None) -> dict:
     header, rows, info = read_table(raw, filename, sheet)
     names = sanitize_columns(header)
     cols = infer_types(names, rows)
+    suggested = table_name_for(re.sub(r"\.[A-Za-z0-9]+$", "", filename))
     return {
+        "schema_diff": schema_diff(table or suggested, cols),
         **info,
         "rows_total": len(rows),
         "header": header,
@@ -348,13 +418,33 @@ def _arrow_table(cols: list[dict], rows: list[list[str | None]]) -> pa.Table:
 
 
 def import_rows(header: list[str], rows: list[list[str | None]], table: str, mode: str = "replace", source: str = "upload",
-                min_ratio: float | None = None) -> dict:
-    """Create/replace/append a table. `min_ratio` refuses a replace that would shrink the table below that share of rows."""
+                min_ratio: float | None = None, key: list[str] | None = None, date_column: str | None = None, rescue: bool = False) -> dict:
+    """Create/replace/append a table. `min_ratio` refuses a replace that would shrink the table below that share of rows.
+
+    mode "append_new" adds only rows that are new: those whose `key` columns are not already in the table, or (with
+    `date_column`) whose date is after the newest date already there.
+    """
     ensure_registry()
-    if mode not in ("create", "replace", "append"):
-        raise DataError("mode must be create, replace or append.")
+    if mode not in ("create", "replace", "append", "append_new"):
+        raise DataError("mode must be create, replace, append or append_new.")
     names = sanitize_columns(header)
+    rescued_cols: list[str] = []
+    if rescue and mode in ("append", "append_new"):
+        header, rows, names, rescued_cols = _rescue_shape(table, header, rows, names)
     cols = infer_types(names, rows)
+    diff = schema_diff(table, cols)
+    if mode == "append_new":
+        if diff is None:
+            raise DataError("There is no table of that name yet, so there is nothing to add new rows to. Import it once with replace first.")
+        key = [sanitize_columns([k])[0] for k in (key or [])]
+        date_column = sanitize_columns([date_column])[0] if date_column else None
+        if not key and not date_column:
+            raise DataError("Say how to tell a row is new: pick a key column (or several) or a date column.")
+        if key and date_column:
+            raise DataError("Pick a key or a date column, not both.")
+        bad = [k for k in (key or [date_column]) if k not in names]
+        if bad:
+            raise DataError(f"Not a column in the file: {', '.join(bad)}.")
     arrow = _arrow_table(cols, rows)
     label = table
     table = table_name_for(table)
@@ -372,7 +462,18 @@ def import_rows(header: list[str], rows: list[list[str | None]], table: str, mod
         cur.register("_incoming", arrow)
         cur.execute("BEGIN")
         try:
-            if mode == "append" and registered:
+            before = cur.execute(f"SELECT COUNT(*) FROM {q(table)}").fetchone()[0] if registered else 0
+            if mode == "append_new":
+                have = [r[0] for r in cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema='main' AND table_name = ? ORDER BY ordinal_position", [table]).fetchall()]
+                if have != names:
+                    raise DataError(f"Columns don't match the existing table. Existing: {', '.join(have)}. New file: {', '.join(names)}.")
+                if key:
+                    on = " AND ".join(f"t.{q(k)} IS NOT DISTINCT FROM i.{q(k)}" for k in key)
+                    part = ", ".join(q(k) for k in key)
+                    cur.execute(f"INSERT INTO {q(table)} SELECT i.* FROM (SELECT * FROM _incoming QUALIFY ROW_NUMBER() OVER (PARTITION BY {part}) = 1) i WHERE NOT EXISTS (SELECT 1 FROM {q(table)} t WHERE {on})")
+                else:
+                    cur.execute(f"INSERT INTO {q(table)} SELECT * FROM _incoming WHERE {q(date_column)} > (SELECT MAX({q(date_column)}) FROM {q(table)})")
+            elif mode == "append" and registered:
                 have = [r[0] for r in cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema='main' AND table_name = ? ORDER BY ordinal_position", [table]).fetchall()]
                 if have != names:
                     raise DataError(f"Columns don't match the existing table. Existing: {', '.join(have)}. New file: {', '.join(names)}.")
@@ -393,13 +494,43 @@ def import_rows(header: list[str], rows: list[list[str | None]], table: str, mod
                 cur.unregister("_incoming")
             except Exception:  # noqa: BLE001
                 pass
-    return {"table": table, "rows": total, "added": len(rows), "mode": mode, "columns": col_meta}
+    added = (total - before) if mode == "append_new" else len(rows)
+    out = {"table": table, "rows": total, "added": added, "mode": mode, "columns": col_meta, "schema_diff": diff, "rescued_columns": rescued_cols}
+    if mode == "append_new":
+        out["skipped_existing"] = len(rows) - added
+    return out
 
 
-def import_file(raw: bytes, filename: str, table: str | None, mode: str = "replace", sheet: str | None = None, source: str = "upload") -> dict:
+def _rescue_shape(table: str, header: list, rows: list, names: list[str]):
+    """Fit a file to an existing table: extra columns go into a `_rescued` JSON text column, missing ones become empty."""
+    tname = table_name_for(table)
+    try:
+        have = [c["name"] for c in table_columns(tname)]
+    except DataError:
+        return header, rows, names, []
+    base = [c for c in have if c != RESCUED]
+    extra = [n for n in names if n not in have]
+    if not extra and not [b for b in base if b not in names]:
+        return header, rows, names, []
+    if extra and RESCUED not in have:
+        with get_cursor() as cur:
+            cur.execute(f"ALTER TABLE {q(tname)} ADD COLUMN {q(RESCUED)} VARCHAR")
+    out_cols = base + [RESCUED]
+    idx = {n: i for i, n in enumerate(names)}
+    new_rows = []
+    for r in rows:
+        vals = [r[idx[b]] if b in idx else None for b in base]
+        packed = {n: (None if r[idx[n]] is None else str(r[idx[n]])) for n in extra if n in idx and r[idx[n]] not in (None, "")}
+        vals.append(json.dumps(packed, ensure_ascii=False) if packed else None)
+        new_rows.append(vals)
+    return out_cols, new_rows, out_cols, extra
+
+
+def import_file(raw: bytes, filename: str, table: str | None, mode: str = "replace", sheet: str | None = None, source: str = "upload",
+                key: list[str] | None = None, date_column: str | None = None, rescue: bool = False) -> dict:
     header, rows, _ = read_table(raw, filename, sheet)
     name = table or re.sub(r"\.[A-Za-z0-9]+$", "", filename)
-    return import_rows(header, rows, name, mode, source)
+    return import_rows(header, rows, name, mode, source, key=key, date_column=date_column, rescue=rescue)
 
 
 # ---------------------------------------------------------------- profile and rows

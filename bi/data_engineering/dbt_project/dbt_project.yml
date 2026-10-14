@@ -1,0 +1,8 @@
+name: bi_lake
+version: "1.0"
+profile: bi_lake
+model-paths: ["models"]
+test-paths: ["tests"]
+models:
+  bi_lake:
+    +materialized: table

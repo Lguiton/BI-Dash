@@ -28,6 +28,7 @@ TRACKS = [
             {"name": "pandas + matplotlib", "install": "pip install -r python_practice/requirements-practice.txt"},
             {"name": "Tableau / Superset / Power BI", "install": "Tableau Public is free; Superset steps are on the Apache page."},
             {"name": "Excel", "install": "Use the Excel report button on the dashboard, then pivot it."},
+            {"name": "DAX (Power BI measures)", "install": "Practise in the BI toolkit on this page; Power BI Desktop is free on Windows for the real thing."},
         ],
         "path": [
             page("Read the dashboard like an analyst", "/", "Which KPI moved? Is it a ratio of sums or a sum?"),
@@ -41,6 +42,7 @@ TRACKS = [
             page("Take the quiz", "/quiz", "Check what stuck."),
             file("docs/TABLEAU.md", "Rebuild this dashboard in Tableau."),
             file("docs/BI_TOOLS.md", "Rebuild it in Superset or Power BI and compare the totals."),
+            file("docs/BI_TOOLKIT.md", "DAX lab, forecast backtest, variance, scenarios, distributions and the document reader, with the slips found in the source posters."),
         ],
         "projects": [
             "One-page memo: 'Where are we losing money?' with 3 charts and one recommendation.",
@@ -61,6 +63,7 @@ TRACKS = [
             {"name": "statsmodels (next step)", "install": "pip install statsmodels"},
         ],
         "path": [
+            file("docs/BI_TOOLKIT.md", "Backtest forecasting methods and fit distributions on your own series (BI toolkit on this page)."),
             nb("02_pandas_explore", "Explore before you model."),
             nb("05_forecast", "Backtest a forecast against a naive baseline."),
             nb("11_hypothesis_testing", "Welch t-test, permutation test, bootstrap interval, pseudo-replication."),
@@ -92,13 +95,16 @@ TRACKS = [
             nb("14_ml_classification", "Imbalance, precision vs recall, tuning the threshold on a validation split."),
             nb("15_mlflow_tracking", "Log runs, compare, pick the best - reproducibly."),
             file("backend/app/services/ml_lab.py", "Read how the ML Lab guards against shuffled splits and leakage."),
+            file("backend/app/services/ml_tools.py", "Bias and variance, gradient descent, algorithms from scratch, ROC and thresholds, leakage scan."),
+            file("backend/app/services/ml_build.py", "Drift checks, automatic search, a numpy network, attention, a tokenizer and a meaning search."),
+            file("backend/app/services/learn_path.py", "The seven-level ML path and the nine-level AI path with their gate projects."),
         ],
         "projects": [
             "Predict 'not completed' records with a cost-aware threshold; justify it in dollars.",
             "An MLflow comparison of 5 models with a one-paragraph recommendation.",
             "Add a model (e.g. HistGradientBoosting) to ml_lab.py with a test.",
         ],
-        "files": ["backend/app/services/ml_lab.py"],
+        "files": ["backend/app/services/ml_lab.py", "backend/app/services/ml_tools.py", "backend/app/services/ml_build.py", "backend/app/routers/mlbuild.py", "docs/AI_ML_FUNDAMENTALS.md", "backend/app/services/learn_path.py"],
     },
     {
         "id": "engineering", "name": "Data Engineering",
@@ -137,7 +143,7 @@ TRACKS = [
         "files": ["data_engineering/medallion.py", "data_engineering/tests/test_medallion.py",
                   "data_engineering/dbt_project/models/stg_ops.sql", "data_engineering/dbt_project/models/mart_daily_kpis.sql",
                   "data_engineering/dbt_project/models/schema.yml", "data_engineering/README.md",
-                  "docs/DBA_AND_GOVERNANCE.md", "backend/app/services/dba.py", "backend/app/services/governance.py"],
+                  "docs/DBA_AND_GOVERNANCE.md", "backend/app/services/dba.py", "backend/app/services/governance.py", "docs/DATA_TOOLS_LAB.md", "backend/app/services/data_dbt.py", "backend/app/services/data_calc.py", "backend/app/services/data_flow.py", "backend/app/routers/datalab.py"],
     },
     {
         "id": "ai", "name": "AI Engineering",
@@ -160,16 +166,19 @@ TRACKS = [
             file("backend/app/services/ai_agent.py", "The production-style agent loop behind the AI Lab."),
             file("backend/app/services/llm_router.py", "Routing, daily caps and fallback across Gemini, OpenAI and Claude."),
             file("backend/app/services/providers.py", "Three vendors' tool-calling formats behind one interface."),
+            file("backend/app/services/ai_tools.py", "Retrieval metrics, hybrid search, schema checks, agent traces, eval statistics, reliability, fine-tune data, PII scan."),
+            file("backend/app/services/learn_path.py", "The nine-level AI engineering path with gate projects."),
         ],
         "projects": [
             "Grow the eval to 30 questions and track the score across prompt versions.",
             "Swap TF-IDF for embeddings in 02_rag.py and compare retrieval hit-rate.",
             "Connect 04_mcp_server.py to Claude Desktop and record a demo.",
         ],
-        "files": ["ai_engineering/01_structured_output.py", "ai_engineering/02_rag.py", "ai_engineering/03_evals.py",
+        "files": ["backend/app/services/courses.py", "docs/LESSONS_OCT13.md", "backend/app/services/ai_impl.py", "backend/app/services/ai_vendor.py", "docs/AI_IMPLEMENTATION.md", "backend/app/services/ai_gov.py", "backend/app/services/pylib_map.py", "docs/AI_GOVERNANCE.md", "ai_engineering/01_structured_output.py", "ai_engineering/02_rag.py", "ai_engineering/03_evals.py",
                   "ai_engineering/04_mcp_server.py", "ai_engineering/05_prompt_injection.py",
                   "ai_engineering/README.md", "backend/app/services/ai_agent.py",
-                  "backend/app/services/llm_router.py", "backend/app/services/providers.py"],
+                  "backend/app/services/llm_router.py", "backend/app/services/providers.py",
+                  "backend/app/services/ai_tools.py", "backend/app/services/learn_path.py"],
     },
     {
         "id": "pm", "name": "Project & Product",
@@ -226,7 +235,7 @@ TRACKS = [
             "A feasibility memo with TELOS scores and the one risk you would raise first.",
             "Size a service desk: arrival rate, service time, and the smallest team that keeps the average wait under five minutes.",
         ],
-        "files": ["docs/SYSTEMS_ANALYSIS.md", "backend/tests/test_sysanalyst.py", "backend/app/services/sysanalysis.py"],
+        "files": ["backend/app/services/info_audit.py", "docs/SINGLE_SOURCE_OF_TRUTH.md", "docs/SYSTEMS_ANALYSIS.md", "backend/tests/test_sysanalyst.py", "backend/app/services/sysanalysis.py"],
     },
     {
         "id": "fullstack", "name": "Full Stack Developer",
@@ -269,6 +278,8 @@ TRACKS = [
                    "store passwords as hashes, and have a written plan for when something goes wrong. The tools here only look at "
                    "your own app and public sites; offensive tools (exploits, scanners against other people) are explained, not built.",
         "tools": [
+            {"name": "Endpoint hardening audit (built in)", "install": "Cybersecurity dashboard, tab Endpoint hardening. Copy the read-only script, run it yourself on a Windows PC you own, paste the output."},
+            {"name": "Honeypot log reader (built in)", "install": "Cybersecurity dashboard, tab Honeypot logs. Paste Cowrie logs. Running the honeypot itself needs a Raspberry Pi or VM."},
             {"name": "Self-audit (built in)", "install": "Open the Cybersecurity dashboard, tab Self-audit. Checks .env, permissions, secrets in files, CORS and backups."},
             {"name": "Log analysis (built in)", "install": "Paste or upload a web or auth log in the Logs tab. Detections are leads to check, not verdicts."},
             {"name": "Web header and TLS checks (built in)", "install": "Public hosts only. Private addresses are refused on purpose."},
@@ -277,12 +288,15 @@ TRACKS = [
             {"name": "Wireshark, Nmap, Burp, Metasploit, Kali", "install": "Not embedded. Learn them in a lab you own (a VM, or a deliberately vulnerable app); never point them at systems you don't have written permission to test."},
         ],
         "path": [
+            file("docs/ENDPOINT_HARDENING.md", "Read-only Windows hardening audit, rollout process and the slips found in the source guide."),
+            file("docs/NETWORK_GENERATORS.md", "Honeypot log reader notes and the slips found in the Cowrie and password posters."),
             file("docs/CYBERSECURITY.md", "Vocabulary, the CIA triad, and the limits of these tools."),
             page("Investigate a log file", "/logs", "Load the practice log and read each detection with its evidence."),
             page("Read the activity log", "/activity", "What the app recorded: the raw material for investigations."),
             page("Check configuration and backups", "/settings", "A tested backup is your best ransomware defence."),
             file("backend/app/services/seclogs.py", "How log lines become detections: brute force, probing, injection patterns."),
             file("backend/app/services/security.py", "Hashing, password strength and TOTP in plain code."),
+            file("backend/app/services/sec_tools.py", "Token and certificate inspectors, CVSS, STRIDE, code scanner, rule tester and playbook simulator."),
             file("backend/app/services/selfaudit.py", "The checks behind the self-audit, and what each one means."),
         ],
         "projects": [
@@ -291,7 +305,7 @@ TRACKS = [
             "Check the security headers of your own public site and list the three that matter most.",
             "Write an incident playbook for 'laptop lost' and run it as a tabletop exercise.",
         ],
-        "files": ["docs/CYBERSECURITY.md", "backend/app/services/seclogs.py", "backend/app/services/security.py", "backend/app/services/selfaudit.py", "backend/tests/test_update13.py"],
+        "files": ["docs/CYBERSECURITY.md", "backend/app/services/sec_tools.py", "backend/app/routers/sectools.py", "backend/app/services/sec_frame.py", "docs/SECURITY_FRAMEWORKS_NETWORK_DESIGN.md", "backend/app/services/seclogs.py", "backend/app/services/security.py", "backend/app/services/selfaudit.py", "backend/tests/test_update13.py"],
     },
     {
         "id": "network", "name": "Network Engineer",
@@ -300,6 +314,7 @@ TRACKS = [
                    "recognise what traffic looks like, and walk the layers from the cable up. The tools here run on text you paste and on public hosts; "
                    "they don't touch your network, and scanners are explained, not built.",
         "tools": [
+            {"name": "Config generators (built in)", "install": "Network dashboard, tab Config generators. VLAN, trunk and router-on-a-stick configs, a trunk checker, route selection and a cable chooser. Text only."},
             {"name": "Subnet and VLSM planner (built in)", "install": "Open the Network dashboard, tab Subnet and VLSM. Subnet, split, plan, check overlaps, summarise routes."},
             {"name": "Config review (built in)", "install": "Paste a router or switch config in the Config review tab. Pattern checks, not a CIS audit."},
             {"name": "Packet capture reader (built in)", "install": "Paste tcpdump -nn text in the Packet capture tab. It reads text; it never captures."},
@@ -309,7 +324,10 @@ TRACKS = [
             {"name": "iperf3, Nmap, Zabbix, Nagios, Ansible, pfSense", "install": "Not embedded. Run them in a lab you own; never scan networks you don't have written permission to test."},
         ],
         "path": [
+            file("docs/NETWORK_GENERATORS.md", "VLAN, trunk, router-on-a-stick, loopback, route selection, cables and the slips found in the posters."),
             file("docs/NETWORK_ENGINEERING.md", "The five ideas, what is built in, and what isn't."),
+            file("backend/app/services/net_sim.py", "Switch, spanning tree, OSPF, BGP, ACL and NAT simulators."),
+            file("backend/app/services/net_pcap.py", "Reads a saved capture file and summarises it."),
             page("Watch your own app's traffic", "/ops", "Request counts and timings for this app: a first taste of monitoring."),
             file("backend/app/services/netlab.py", "Subnetting, config checks and capture parsing in plain Python."),
             page("Read the activity log", "/activity", "A timeline of what changed: the habit behind change management."),
@@ -321,7 +339,7 @@ TRACKS = [
             "Read the sample capture and decide: scan, monitoring or a broken client? List the next two things you'd check.",
             "Write a one-page troubleshooting runbook for 'the internet is down' that walks the layers.",
         ],
-        "files": ["docs/NETWORK_ENGINEERING.md", "backend/app/services/netlab.py", "backend/app/routers/net.py", "backend/tests/test_network_it.py"],
+        "files": ["backend/app/services/net_design.py", "backend/app/services/net_sim.py", "backend/app/services/net_pcap.py", "backend/app/routers/netsim.py", "docs/SECURITY_FRAMEWORKS_NETWORK_DESIGN.md", "backend/app/services/dnsmasq_gen.py", "docs/NETWORK_ENGINEERING.md", "backend/app/services/netlab.py", "backend/app/routers/net.py", "backend/tests/test_network_it.py"],
     },
     {
         "id": "itsupport", "name": "IT Specialist",
@@ -332,6 +350,8 @@ TRACKS = [
             {"name": "Helpdesk tickets with SLA clocks (built in)", "install": "Open the IT dashboard, tab Helpdesk. Each category has a first-line checklist."},
             {"name": "Asset inventory (built in)", "install": "Inventory tab: owner, serial, warranty, status. Flags warranties ending within 90 days."},
             {"name": "Windows event log reader (built in)", "install": "Export from Event Viewer as CSV, or paste lines with Event IDs. Findings are leads."},
+            {"name": "IT fundamentals (built in)", "install": "IT dashboard, tab IT fundamentals: binary and hex converter, logic gates, storage units, chmod calculator, IPv6, a Windows and Linux command finder, and a reference for connections, wireless, cloud and sysadmin practice."},
+            {"name": "CompTIA A+ study area (built in)", "install": "IT dashboard, tab CompTIA A+: objective map for Core 1 and Core 2, readiness tracker, practice questions, port and acronym drills, symptom finder, and tools for IP, DHCP, mail records, power supply, backups and scripts."},
             {"name": "Checklists, capacity and RAID calculators (built in)", "install": "Onboarding, offboarding, new PC and outage checklists; disk-full forecast; availability; RAID."},
             {"name": "PowerShell, Bash, Active Directory, Group Policy", "install": "The cheat sheet tab lists safe starting commands. Practise Active Directory in a Windows Server evaluation VM."},
             {"name": "osTicket, GLPI, Snipe-IT, Zabbix", "install": "Not embedded. Free open-source helpdesk, asset and monitoring systems to try in a VM."},
@@ -339,8 +359,12 @@ TRACKS = [
         ],
         "path": [
             file("docs/IT_SPECIALIST.md", "The habits that matter, what is built in, and what isn't."),
+            file("docs/IT_FUNDAMENTALS.md", "The IT fundamentals tools, what they cover from the technician course, and the source slips found."),
+            file("docs/COMPTIA_APLUS.md", "How the A+ study area maps to Core 1 and Core 2, what is a tool and what needs real hardware."),
             page("Check settings and backups", "/settings", "A tested backup is the best fix for most disasters."),
             file("backend/app/services/itlab.py", "Ticket SLA clocks, the event-ID table and the calculators in plain code."),
+            file("backend/app/services/it_infra.py", "Group Policy resolver, LDIF checker and builder, RBAC audit."),
+            file("backend/app/services/it_ops.py", "RAID rebuild risk, backup and DR maths, load-balancer simulator, HTTP triage."),
             page("Read the activity log", "/activity", "An audit trail: who changed what and when."),
             file("backend/app/routers/it.py", "The endpoints behind the IT tools."),
         ],
@@ -349,8 +373,43 @@ TRACKS = [
             "Enter your own devices in the inventory and list the warranties that end this year.",
             "Paste the sample event log, rank the findings, and write what you'd do first.",
             "Write your own onboarding and offboarding checklist for a five-person business and run both once.",
+            "Rate every A+ objective, take a 10-question quiz on your weakest domain, and re-rate after reading the reference for what you missed.",
         ],
-        "files": ["docs/IT_SPECIALIST.md", "backend/app/services/itlab.py", "backend/app/routers/it.py", "backend/tests/test_network_it.py"],
+        "files": ["backend/app/services/ticket_coach.py", "backend/tests/test_coach_dnsmasq.py", "docs/IT_SPECIALIST.md", "docs/IT_INFRASTRUCTURE.md", "backend/app/services/it_infra.py", "backend/app/services/it_ops.py", "backend/app/routers/infra.py", "backend/tests/test_infra.py", "docs/COMPTIA_APLUS.md", "docs/IT_FUNDAMENTALS.md", "backend/app/services/itlab.py", "backend/app/services/it_fund.py", "backend/tests/test_itfund.py", "backend/app/services/aplus_lab.py", "backend/app/routers/it.py", "backend/tests/test_network_it.py", "backend/tests/test_aplus.py", "docs/IT_BUILD_TOOLS.md", "backend/app/services/backup_lab.py", "backend/app/services/inventory_agent.py", "backend/app/routers/backuplab.py", "backend/app/routers/itagent.py", "scripts/backup_tool.py", "scripts/inventory_agent.py", "backend/tests/test_it_build.py"],
+    },
+    {
+        "id": "cpe", "name": "Computer Engineer",
+        "role": "Understand how computers and the machines around them are built: bits, gates, circuits, processors, and the wiring of modern vehicles.",
+        "summary": "Computer engineering joins electrical engineering and computer science. Learn to move between number systems, simplify logic, size a resistor, "
+                   "read a cache address, then apply the same habits to a car: the right wire and fuse, how much a CAN bus can carry, how EV charging and "
+                   "high-voltage safety work. The tools do the arithmetic and show the working; they do not replace a breadboard, a meter or a service manual.",
+        "tools": [
+            {"name": "Number systems and floating point (built in)", "install": "Computer Engineer dashboard, tab Numbers. Binary, octal, decimal and hex, two's complement, overflow, and IEEE 754."},
+            {"name": "Boolean logic and minimiser (built in)", "install": "Tab Logic. Truth tables, minimal sum of products, and equivalence checks such as De Morgan."},
+            {"name": "DC circuits (built in)", "install": "Tab Circuits. Ohm's law, series and parallel, dividers, LED resistors, RC timing and resistor colour codes."},
+            {"name": "Computer architecture (built in)", "install": "Tab Architecture. Cache address split, AMAT, CPU time, Amdahl's law, pipeline speedup and RAID."},
+            {"name": "Vehicle wiring and CAN bus (built in)", "install": "Tab Vehicle wiring. Wire size, voltage drop and fuse, a harness checker, CAN bus load and termination."},
+            {"name": "EV charging and high voltage (built in)", "install": "Tab EV. Charge time, pack layout, pre-charge and insulation checks. Educational; never a substitute for training."},
+            {"name": "Logisim, Digital, Verilog simulators", "install": "Not embedded. Free tools for building and simulating circuits and CPUs."},
+            {"name": "KiCad, Arduino, a multimeter and a breadboard", "install": "Not embedded. Hardware you hold. Build the circuit you calculated and measure it."},
+        ],
+        "path": [
+            file("docs/COMPUTER_ENGINEERING.md", "The tools, what each teaches, the slips found in the course deck and diagrams, and what is not built."),
+            file("backend/app/services/cpe_lab.py", "Numbers, logic, circuits and architecture in plain Python, with the working shown."),
+            file("backend/app/services/auto_elec.py", "Wire and fuse sizing, CAN load, EV charging and the systems reference."),
+            file("backend/app/services/cpe_sim.py", "Logic circuit, tiny CPU, circuit solver and cache trace."),
+            file("backend/app/services/veh_decode.py", "CAN, J1939, OBD-II, diagnostic frame and charging-signal decoders."),
+            page("Read the activity log", "/activity", "A timeline of what changed: the habit behind change control."),
+            file("backend/app/routers/cpe.py", "The endpoints behind the Computer Engineer tools."),
+        ],
+        "projects": [
+            "Convert five numbers between binary, decimal and hex by hand, then check them. Add two 8-bit numbers that overflow and explain why.",
+            "Write a truth table for a three-input alarm (door, window, armed) and simplify it. Build it with NAND gates on paper.",
+            "Size the wire and fuse for six circuits in a small vehicle conversion and check them with the harness checker.",
+            "Estimate the bus load of a CAN network with ten messages, then decide whether it needs a second bus.",
+            "Plan a home charging setup: wall box current, phases, and how long 20 to 80% takes in your car.",
+        ],
+        "files": ["backend/app/services/cpe_lab.py", "backend/app/services/auto_elec.py", "backend/app/routers/cpe.py", "backend/app/services/cpe_sim.py", "backend/app/services/veh_decode.py", "backend/app/routers/cpesim.py", "docs/COMPUTER_ENGINEERING.md", "backend/tests/test_cpe.py"],
     },
 ]
 

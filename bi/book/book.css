@@ -1,0 +1,28 @@
+@page{size:Letter}
+body{font-family:Georgia,"Times New Roman",serif;font-size:10.5pt;line-height:1.5;color:#1a1a1a;margin:0}
+h1,h2,h3,h4{font-family:"Helvetica Neue",Arial,sans-serif;line-height:1.25;color:#0b2447}
+h1{font-size:26pt;page-break-before:always;margin:0 0 .6em;padding-bottom:.3em;border-bottom:3px solid #0b2447}
+h2{font-size:16pt;margin:1.6em 0 .5em;border-bottom:1px solid #bbb;padding-bottom:.15em;page-break-after:avoid}
+h3{font-size:12.5pt;margin:1.3em 0 .4em;page-break-after:avoid}
+h4{font-size:11pt;margin:1.1em 0 .3em;page-break-after:avoid;color:#222}
+p{margin:.55em 0;text-align:justify;hyphens:auto;orphans:3;widows:3}
+code{font-family:Menlo,Consolas,"DejaVu Sans Mono",monospace;font-size:8.6pt;background:#f1f3f6;padding:0 2px;border-radius:2px}
+pre{background:#f4f6f9;border:1px solid #d7dce3;border-left:3px solid #0b2447;padding:8px 10px;font-size:8.2pt;line-height:1.35;white-space:pre-wrap;word-break:break-word;page-break-inside:avoid;border-radius:3px}
+pre code{background:none;padding:0;font-size:inherit}
+table{border-collapse:collapse;width:100%;margin:.8em 0;font-size:9pt;page-break-inside:auto}
+tr{page-break-inside:avoid}
+th{background:#0b2447;color:#fff;text-align:left;padding:4px 6px;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:600}
+td{border:1px solid #cfd5dd;padding:4px 6px;vertical-align:top}
+tr:nth-child(even) td{background:#f7f9fb}
+ul,ol{margin:.5em 0 .5em 1.3em;padding:0}li{margin:.2em 0}
+blockquote{border-left:3px solid #8aa;margin:.8em 0;padding:.1em 1em;color:#333;background:#f6f8f9}
+.cover{page-break-after:always;height:9.2in;display:flex;flex-direction:column;justify-content:center;text-align:left;border-left:14px solid #0b2447;padding-left:.6in}
+.cover .kicker{letter-spacing:.25em;font:600 10pt "Helvetica Neue",Arial,sans-serif;color:#557}
+.cover .ct{font-size:44pt;border:0;page-break-before:avoid;margin:.2em 0;line-height:1.05}
+.cover .sub{font:300 17pt "Helvetica Neue",Arial,sans-serif;color:#334;margin-bottom:1.2in}
+.cover .list{font:10.5pt "Helvetica Neue",Arial,sans-serif;color:#445;max-width:5in;line-height:1.7}
+.cover .by{margin-top:1in;font:10pt Georgia,serif;color:#667}
+.tocp{page-break-after:always}.tt{font-size:22pt;border:0}
+.toc{list-style:none;margin:0;padding:0}.toc li{display:flex;gap:6px;padding:6px 0;border-bottom:1px dotted #aab;font:11pt "Helvetica Neue",Arial,sans-serif}
+.toc li a{flex:1;color:#0b2447;text-decoration:none}.toc .pg{color:#445}
+h1.unnumbered{page-break-before:always}

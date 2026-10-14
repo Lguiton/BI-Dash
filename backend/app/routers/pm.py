@@ -156,3 +156,40 @@ def rule_delete(rid: int):
 @router.post("/rules/run")
 def rules_run(body: dict = Body(default={})):
     return _g(pm_extra.evaluate, bool(body.get("apply")))
+
+
+# ---- what-if scenarios (nothing on the board is changed) and practice cases
+@router.get("/scenarios/kinds")
+def scenario_kinds():
+    from app.services import pm_scenarios
+    return {"schedule": pm_scenarios.SCHEDULE_KINDS, "cases": [*pm_scenarios.CASES, "product_roadmap"]}
+
+
+@router.post("/scenarios/schedule")
+def scenario_schedule(body: dict = Body(...)):
+    from app.services import pm_scenarios
+    return _g(pm_scenarios.run_schedule, body.get("changes") or [], _as_of(body.get("as_of")))
+
+
+@router.post("/scenarios/simulate")
+def scenario_simulate(body: dict = Body(default={})):
+    from app.services import pm_scenarios
+    return _g(pm_scenarios.simulate, int(body.get("runs") or 1000), body.get("optimistic_pct", 20), body.get("pessimistic_pct", 50), body.get("deadline") or None, body.get("changes") or None, int(body.get("seed") or 1), _as_of(body.get("as_of")))
+
+
+@router.post("/scenarios/product")
+def scenario_product(body: dict = Body(default={})):
+    from app.services import pm_scenarios
+    return _g(pm_scenarios.run_product, body.get("changes") or [], body.get("capacity"), body.get("capacity_pct") or 0)
+
+
+@router.get("/scenarios/practice")
+def scenario_practice(kind: str = Query("website"), seed: int = Query(1), reveal: bool = Query(False)):
+    from app.services import pm_scenarios
+    return _g(pm_scenarios.practice, kind, seed, reveal)
+
+
+@router.post("/scenarios/practice/load")
+def scenario_load(body: dict = Body(...)):
+    from app.services import pm_scenarios
+    return _g(pm_scenarios.load_case, str(body.get("kind") or "website"), int(body.get("seed") or 1))

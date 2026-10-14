@@ -4,10 +4,11 @@ import time
 from collections import deque
 from typing import Literal
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Body, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from app.services import seclogs, security, selfaudit, state
+from app.services import breach, endpoint_unix, phish, sec_fixes, sec_report, seclogs, security, selfaudit, state
 
 router = APIRouter(prefix="/api/security", tags=["security"])
 _hits: deque[float] = deque()
@@ -190,3 +191,96 @@ def incident_update(iid: int, body: IncidentPatch):
 def incident_delete(iid: int):
     _g(security.delete_incident, iid)
     return {"deleted": iid}
+
+
+# ============================================================ security checkup report
+def _report(body: dict):
+    hosts = [h for h in (body.get("hosts") or []) if str(h).strip()][:5]
+    for _ in hosts:
+        _limit_network()
+        _limit_network()
+    try:
+        return sec_report.build(body.get("client", ""), body.get("prepared_by", ""), body.get("scope", ""), body.get("endpoints") or [], hosts, str(body.get("logs") or "")[:5_000_000], body.get("checklist") or {})
+    except sec_report.ReportError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/report/checklist")
+def report_checklist():
+    return {"items": [{"id": c[0], "title": c[1], "severity": c[2]} for c in sec_report.CHECKLIST], "answers": list(sec_report.ANS)}
+
+
+@router.post("/report")
+def report(body: dict = Body(...)):
+    return _report(body)
+
+
+@router.post("/report/html")
+def report_html(body: dict = Body(...)):
+    return HTMLResponse(sec_report.to_html(_report(body)), headers={"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'", "Content-Disposition": 'inline; filename="security_checkup.html"'})
+
+
+# ============================================================ how-to-fix guides, phishing practice, breach checks, macOS/Linux audit
+@router.get("/fixes")
+def fixes_index():
+    return {"areas": sec_fixes.areas(), "count": len(sec_fixes.FIXES)}
+
+
+@router.get("/fixes/search")
+def fixes_search(q: str = Query("", max_length=200)):
+    return {"query": q, "results": sec_fixes.search(q, 8)}
+
+
+@router.get("/fixes/{gid}")
+def fixes_get(gid: str):
+    g = sec_fixes.get(gid)
+    if not g:
+        raise HTTPException(404, "No guide with that id.")
+    return g
+
+
+@router.get("/phish/deck")
+def phish_deck(seed: int = 1, n: int = 8):
+    return phish.deck(seed, n)
+
+
+@router.post("/phish/grade")
+def phish_grade(body: dict = Body(...)):
+    try:
+        return phish.grade(body.get("answers") or {})
+    except phish.PhishError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.post("/breach/password")
+def breach_password(body: dict = Body(...)):
+    _limit_network()
+    try:
+        return breach.password_exposure(str(body.get("password") or ""))
+    except breach.BreachError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.post("/breach/email")
+def breach_email(body: dict = Body(...)):
+    _limit_network()
+    try:
+        return breach.email_exposure(str(body.get("email") or ""), str(body.get("api_key") or ""))
+    except breach.BreachError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/unix/script")
+def unix_script(os: str = Query("linux")):
+    try:
+        return {"script": endpoint_unix.script(os)}
+    except endpoint_unix.UnixError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.post("/unix/grade")
+def unix_grade(body: dict = Body(...)):
+    try:
+        return endpoint_unix.grade(str(body.get("text") or ""), str(body.get("os") or ""))
+    except endpoint_unix.UnixError as e:
+        raise HTTPException(e.status, e.message) from None

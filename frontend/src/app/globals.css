@@ -42,6 +42,26 @@
   --cat-1: #60a5fa; --cat-2: #fbbf24; --cat-3: #a78bfa; --cat-4: #2dd4bf; --cat-5: #f472b6; --cat-6: #94a3b8;
 }
 
+/* Real workspace = green, so it never looks like Practice. Set on <html data-workspace="real"> by WorkspaceSwitcher. */
+:root[data-workspace="real"] {
+  --bg: #e9f5ee; --panel: #ffffff; --panel-2: #f1faf4; --muted: #46604f;
+  --line: #bfdcc8; --grid: #d3e9db; --accent: #15803d; --accent-fg: #ffffff;
+  --info-bg: #d5f0de; --warn-bg: #fef3c7; --good-bg: #bbf7d0;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-workspace="real"]:not([data-theme="light"]) {
+    --bg: #06150d; --panel: #0d2217; --panel-2: #0a1b12; --fg: #e4f3ea; --muted: #8fb8a0;
+    --line: #1d3d2b; --grid: #17321f; --accent: #4ade80; --accent-fg: #04140a;
+    --info-bg: #123a25; --good-bg: #0f4a2c; --warn-bg: #4a3a0a; --bad-bg: #4a1d1d;
+  }
+}
+:root[data-workspace="real"][data-theme="dark"] {
+  --bg: #06150d; --panel: #0d2217; --panel-2: #0a1b12; --fg: #e4f3ea; --muted: #8fb8a0;
+  --line: #1d3d2b; --grid: #17321f; --accent: #4ade80; --accent-fg: #04140a;
+  --info-bg: #123a25; --good-bg: #0f4a2c; --warn-bg: #4a3a0a; --bad-bg: #4a1d1d;
+}
+:root[data-workspace="real"] body { border-top: 6px solid var(--accent); }
+
 @theme inline {
   --color-bg: var(--bg);
   --color-panel: var(--panel);

@@ -25,7 +25,7 @@ import os
 from app.config import MAX_TABLE_UPLOAD_BYTES, MAX_TABLE_ROWS, scheduler_enabled, source_dirs
 from app.services import backups, datasets, state, workspaces
 
-KINDS = ("file", "url", "sql", "html_table")
+KINDS = ("file", "url", "sql", "html_table", "ical")
 ENV_RE = re.compile(r"^[A-Z_][A-Z0-9_]{0,63}$")
 SQL_START = re.compile(r"^\s*(select|with)\b", re.I)
 SQL_BAD = re.compile(r"\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|copy|call|do|vacuum|attach)\b", re.I)
@@ -70,6 +70,12 @@ def validate_config(kind: str, cfg: dict) -> dict:
         if env and not ENV_RE.match(str(env)):
             raise SourceError("auth_env must be an environment variable name like MY_API_TOKEN (the token itself is never stored).")
         return {"url": str(cfg["url"]), "auth_env": env or None, "format": cfg.get("format") or None}
+    if kind == "ical":
+        import re as _re
+        if not _re.fullmatch(r"[A-Z_][A-Z0-9_]*", str(cfg.get("url_env", ""))):
+            raise SourceError("url_env must be the name of an environment variable, like GOOGLE_CAL_ICAL_URL. The private link itself is never typed or stored here.")
+        return {"url_env": str(cfg["url_env"]), "past_days": max(0, min(int(cfg.get("past_days") or 30), 730)),
+                "future_days": max(1, min(int(cfg.get("future_days") or 180), 730)), "timezone": cfg.get("timezone") or None}
     if kind == "html_table":
         from app.services import webtable
         try:
@@ -142,6 +148,12 @@ def fetch(kind: str, cfg: dict) -> tuple[list[str], list[list], str]:
         fmt = cfg.get("format") or ("json" if "json" in ctype or path.endswith(".json") else "xlsx" if path.endswith((".xlsx", ".xlsm")) else "csv")
         h, r, _ = datasets.read_table(raw, f"download.{fmt}")
         return h, r, urlparse(cfg["url"]).netloc
+    if kind == "ical":
+        from app.services import ical
+        try:
+            return ical.fetch(cfg)
+        except ical.IcalError as e:
+            raise SourceError(str(e), 422) from e
     if kind == "html_table":
         from app.services import webtable
         try:
@@ -358,6 +370,16 @@ def tick() -> int:
     try:
         from app.services import jobs
         jobs.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import bi_tools
+        bi_tools.run_due()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import de_tools
+        de_tools.contract_check_due()
     except Exception:  # noqa: BLE001
         pass
     n = 0

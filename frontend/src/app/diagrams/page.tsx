@@ -1,7 +1,8 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
 import { PageShell } from "@/components/PageShell";
-import { Section } from "@/components/panels/kit";
+import { Section, Tabs } from "@/components/panels/kit";
+import { DiagramCanvas } from "@/components/panels/DiagramCanvas";
 import { parseDiagram, type DNode } from "@/lib/diagram";
 
 const SAMPLES: Record<string, string> = {
@@ -42,6 +43,7 @@ export default function DiagramsPage() {
   const [src, setSrc] = useState(SAMPLES["Order process"]);
   const d = useMemo(() => parseDiagram(src), [src]);
   const svg = useRef<SVGSVGElement>(null);
+  const [mode, setMode] = useState("text");
   const byId = new Map(d.nodes.map((n) => [n.id, n]));
   const download = () => {
     if (!svg.current) return;
@@ -57,7 +59,9 @@ export default function DiagramsPage() {
   return (
     <PageShell title="Diagram studio" subtitle="Type a flowchart as text and see it drawn. A free, small take on Mermaid and draw.io for process maps and pipelines.">
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">Honest label: this is our own small renderer for a Mermaid-style subset (graph TD / LR, boxes <code>[ ]</code>, rounded <code>( )</code>, decisions <code>{"{ }"}</code>, circles <code>(( ))</code>, arrows <code>--&gt;</code> with <code>|labels|</code>). It does not run Mermaid, so sequence diagrams, subgraphs and styling are not supported.</p>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+      <Tabs tabs={[{ id: "text", label: "Text to diagram" }, { id: "canvas", label: "Free-form canvas" }]} value={mode} onChange={setMode} label="Diagram mode" />
+      {mode === "canvas" && <DiagramCanvas />}
+      <div className={`grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] ${mode === "canvas" ? "hidden" : ""}`}>
         <Section title="Diagram text">
           <div className="mb-2 flex flex-wrap gap-2">{Object.keys(SAMPLES).map((k) => <button key={k} className="btn" onClick={() => setSrc(SAMPLES[k])}>{k}</button>)}</div>
           <textarea className="field h-72 w-full font-mono text-xs" style={{ fontVariantLigatures: "none" }} aria-label="Diagram text" value={src} spellCheck={false} onChange={(e) => setSrc(e.target.value)} />

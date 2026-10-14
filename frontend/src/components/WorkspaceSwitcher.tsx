@@ -5,6 +5,13 @@ import { FlaskRound, Landmark } from "lucide-react";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { WorkspaceList, WorkspaceName } from "@/lib/types";
 
+/** Green screen for the Real workspace: sets <html data-workspace> and caches it so the next page paints green at once. */
+export function tintForWorkspace(active: string) {
+  if (active === "real") document.documentElement.setAttribute("data-workspace", "real");
+  else document.documentElement.removeAttribute("data-workspace");
+  try { localStorage.setItem("bi-ws", active); } catch { /* storage unavailable: tint just won't pre-paint */ }
+}
+
 /** Practice / Real switch. Switching reloads the page so every number on screen comes from the other database. */
 export function WorkspaceSwitcher() {
   const [ws, setWs] = useState<WorkspaceList | null>(null);
@@ -13,7 +20,7 @@ export function WorkspaceSwitcher() {
 
   useEffect(() => {
     const ctl = new AbortController();
-    getJson<WorkspaceList>("/api/workspaces", ctl.signal).then(setWs).catch(() => { /* the page itself shows API errors */ });
+    getJson<WorkspaceList>("/api/workspaces", ctl.signal).then((w) => { tintForWorkspace(w.active); setWs(w); }).catch(() => { /* the page itself shows API errors */ });
     return () => ctl.abort();
   }, []);
 
@@ -38,7 +45,7 @@ export function WorkspaceSwitcher() {
           return (
             <button key={n} type="button" disabled={busy} aria-pressed={on} onClick={() => switchTo(n)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${on ? "font-semibold" : "text-muted hover:bg-panel2"}`}
-                    style={on ? { background: n === "real" ? "var(--warn-bg)" : "var(--info-bg)" } : undefined}>
+                    style={on ? { background: n === "real" ? "var(--good-bg)" : "var(--info-bg)" } : undefined}>
               <Icon className="h-4 w-4" aria-hidden /> {n === "practice" ? "Practice" : "Real"}
             </button>
           );
@@ -61,8 +68,8 @@ export function RealBanner() {
   if (!real) return null;
   const ai = real.settings.ai_mode;
   return (
-    <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-4 py-2 text-sm" style={{ background: "var(--warn-bg)" }}>
-      <strong>Real workspace.</strong>
+    <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-4 py-2 text-sm" style={{ background: "var(--good-bg)", border: "1px solid var(--accent)" }}>
+      <strong>REAL workspace.</strong>
       <span>Your own data. Destructive actions take a backup first.</span>
       <span>AI: {ai === "off" ? "off" : ai === "aggregate" ? "summaries only" : "full access"}.</span>
       <Link href="/settings" className="ml-auto underline">Settings</Link>

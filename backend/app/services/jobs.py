@@ -39,6 +39,27 @@ def tick() -> list[str]:
     except Exception:  # noqa: BLE001
         pass
     try:
+        from app.services import backups
+        ran += backups.daily_tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import briefing
+        ran += briefing.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import syscontrol
+        if syscontrol.process_due_reverts():
+            ran.append("auto-revert")
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import readiness
+        ran += readiness.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         from app.services import weekly
         ran += weekly.tick()
     except Exception:  # noqa: BLE001

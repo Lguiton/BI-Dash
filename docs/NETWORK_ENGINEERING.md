@@ -38,3 +38,9 @@ Cloud networking (VPCs, transit gateways) is out of scope here.
 
 ## Limits
 Nothing here replaces a lab with real gear. The tools run against text you paste and public hosts; they don't touch your network.
+
+## Simulators and capture file reader
+
+Network Engineer > Simulators: switch learning with VLANs, spanning tree, OSPF shortest path, BGP best path, ACL tester (with shadowed-line warnings) and NAT/PAT. Each result says which rule decided it. Network Engineer > Capture file reader: summarises a saved .pcap or .pcapng (protocols, top talkers, conversations, ports, DNS names, unanswered SYNs, resets, repeated sequence numbers). It reads files only and never captures live traffic.
+
+Not built: real routers and switches, OSPF areas, BGP policy, wireless, MPLS, live capture, TLS decryption. Files: `services/net_sim.py`, `services/net_pcap.py`, `routers/netsim.py`, `panels/NetSim.tsx`, `tests/test_net_sim.py`.

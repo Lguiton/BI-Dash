@@ -11,13 +11,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture()
-def big(client):
-    csv = ROOT / "data_samples" / "operations_clean.csv"
-    if not csv.exists():
-        import subprocess, sys
-        subprocess.run([sys.executable, str(ROOT / "scripts" / "generate_sample_data.py")], check=True)
-    assert client.post("/api/ingest/csv?mode=replace", files={"file": ("d.csv", csv.read_bytes(), "text/csv")}).status_code == 200
-    return client
+def big(client, load_clean):
+    return load_clean()
 
 
 FEATS = ["category", "weekday", "units_processed", "duration_minutes"]
@@ -28,11 +23,11 @@ def test_compare_ranks_every_model_and_logs_each_run(big):
     r = big.post("/api/ml/compare", json={"task": "revenue", "features": FEATS})
     assert r.status_code == 200
     j = r.json()
-    assert {m["model"] for m in j["models"]} == {"linear", "ridge", "random_forest", "gradient_boosting", "neural_net", "hist_gradient_boosting"}
+    assert {m["model"] for m in j["models"]} == {"linear", "ridge", "random_forest", "gradient_boosting", "neural_net", "hist_gradient_boosting", "knn"}
     scores = [m["score"] for m in j["models"]]
-    assert scores == sorted(scores, reverse=True) and [m["rank"] for m in j["models"]] == [1, 2, 3, 4, 5, 6]
+    assert scores == sorted(scores, reverse=True) and [m["rank"] for m in j["models"]] == [1, 2, 3, 4, 5, 6, 7]
     assert all(m["run_id"] for m in j["models"])
-    assert len(big.get("/api/ml/runs").json()["runs"]) == 6
+    assert len(big.get("/api/ml/runs").json()["runs"]) == 7
 
 
 def test_compare_flags_a_tie_instead_of_declaring_a_winner(big):

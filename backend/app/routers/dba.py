@@ -65,6 +65,16 @@ def protect(body: dict = Body(...)):
     return _g(governance.protect, list(body.get("columns") or []))
 
 
+@router.post("/api/governance/deidentify")
+def deidentify(body: dict = Body(...)):
+    return _g(governance.deidentify, str(body.get("table") or ""), dict(body.get("columns") or {}), str(body.get("new_table") or ""))
+
+
+@router.post("/api/governance/purge")
+def purge(body: dict = Body(...)):
+    return _g(governance.purge_expired, str(body.get("name") or ""), bool(body.get("confirm")))
+
+
 @router.get("/api/governance/lineage")
 def lineage():
     return governance.lineage()

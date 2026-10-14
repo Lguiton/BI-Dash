@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_eleven_tracks(client):
     ts = client.get("/api/tracks").json()["tracks"]
-    assert [t["id"] for t in ts] == ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport"]
+    assert [t["id"] for t in ts] == ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport", "cpe"]
     assert all(t["tools"] and t["path"] and t["projects"] for t in ts)
 
 

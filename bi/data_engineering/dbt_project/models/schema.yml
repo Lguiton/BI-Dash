@@ -1,0 +1,18 @@
+version: 2
+models:
+  - name: stg_ops
+    columns:
+      - name: fact_id
+        tests: [unique, not_null]
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['Completed', 'Delayed', 'Cancelled', 'Failed']
+  - name: mart_daily_kpis
+    columns:
+      - name: record_date
+        tests: [unique, not_null]
+  - name: mart_entity_scorecard
+    columns:
+      - name: entity_id
+        tests: [unique, not_null]

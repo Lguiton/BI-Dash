@@ -8,7 +8,7 @@ from app.services import agents, manuals, providers
 from app.services.providers import Call, Turn
 
 APP = Path(__file__).resolve().parents[2] / "frontend" / "src" / "app"
-IDS = ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport"]
+IDS = ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst", "fullstack", "security", "network", "itsupport", "cpe"]
 
 
 def test_every_track_has_a_manual_and_an_agent():
@@ -154,3 +154,77 @@ def test_api_endpoints(client, monkeypatch):
     monkeypatch.setattr(providers, "sdk_installed", lambda p: True)
     r = client.post("/api/agents/pm/chat", json={"message": "what next?", "provider": "anthropic"}).json()
     assert r["reply"] == "Do step 1." and r["provider"] == "anthropic"
+
+
+def test_story_proposal_for_analyst_and_scientist():
+    for t in ("analyst", "scientist"):
+        out = agents.validate_proposal(t, "story", {"headline": "West margin fell", "audience": "COO", "evidence": ["a", "", "b"]})
+        assert out["title"] == "West margin fell" and out["evidence"] == ["a", "b"]
+    with pytest.raises(agents.AgentError):
+        agents.validate_proposal("scientist", "story", {})
+    with pytest.raises(agents.AgentError):
+        agents.validate_proposal("pm", "story", {"headline": "x"})
+
+
+def test_full_work_for_each_role(client):
+    from app.services import ai_work
+    for role in ("analyst", "scientist", "bi"):
+        f = Fake([Turn("", [Call("1", "get_context", {}), Call("2", "run_sql", {"sql": "SELECT COUNT(*) AS n FROM fact_operations"})]),
+                  Turn("## 1. Question\nDone.\n## Numbers to check\n| n | 6 | run_sql |")])
+        e = ai_work.run(role, "What drives cost?", "operations", "anthropic", adapters={"anthropic": f, "openai": f, "google": f})
+        assert e["role"] == role and e["complete"] and "Numbers to check" in e["markdown"] and e["tools_used"][1]["tool"] == "run_sql"
+        sysmsg = f.system if hasattr(f, "system") else ""
+        assert "FULL-WORK MODE" in sysmsg
+    assert len(client.get("/api/agents/bi/work").json()["items"]) == 1
+    wid = client.get("/api/agents/bi/work").json()["items"][0]["id"]
+    assert client.delete(f"/api/agents/work/{wid}").status_code == 200
+    assert client.get("/api/agents/bi/work").json()["items"] == []
+    assert client.post("/api/agents/nope/complete", json={}).status_code == 404
+
+
+def test_full_work_stops_politely_and_respects_ai_off(client):
+    from app.services import ai_work
+    f = Fake([Turn("", [Call(str(i), "get_context", {})]) for i in range(ai_work.MAX_STEPS + 2)])
+    e = ai_work.run("analyst", "", "operations", "anthropic", adapters={"anthropic": f, "openai": f, "google": f})
+    assert e["complete"] is False
+    client.put("/api/workspaces/practice/settings", json={"ai_mode": "off"})
+    with pytest.raises(agents.AgentError):
+        ai_work.run("analyst", "", "operations", "anthropic", adapters={"anthropic": f, "openai": f, "google": f})
+
+
+def test_full_work_types(client):
+    from app.services import ai_work
+    ts = client.get("/api/agents/work/types").json()["types"]
+    assert [t["id"] for t in ts][:3] == ["complete", "descriptive", "diagnostic"] and len(ts) == len(ai_work.TYPES)
+    for k in ai_work.TYPES:
+        f = Fake([Turn("## 1. x\nok")])
+        e = ai_work.run("scientist", "", "operations", "anthropic", adapters={"anthropic": f, "openai": f, "google": f}, kind=k)
+        assert e["kind"] == k
+        if k != "complete":
+            assert ai_work.TYPES[k]["label"] in f.system and ai_work.TYPES[k]["sections"][0] in f.system
+    with pytest.raises(agents.AgentError):
+        ai_work.run("analyst", "", "operations", "anthropic", kind="astrology")
+
+
+def test_full_work_prefers_claude_when_its_key_is_set(client, monkeypatch):
+    from app.services import ai_work, llm_router
+    real = llm_router.status()
+    monkeypatch.setattr(llm_router, "status", lambda: {**real, "ready": ["google", "anthropic"]})
+    f = Fake([Turn("## 1. x\nok")])
+    e = ai_work.run("analyst", "", "operations", "auto", adapters={"anthropic": f, "openai": f, "google": f})
+    assert e["provider"] == "anthropic"
+
+
+def test_dataissue_proposal(client):
+    from tests.test_readiness import _table
+    _table()
+    for t in ("analyst", "scientist"):
+        out = agents.validate_proposal(t, "dataissue", {"table": "shop", "column": "label", "summary": "Blank labels on some rows", "severity": "high"})
+        assert out["role"] == t and out["severity"] == "high" and out["table"] == "shop"
+    with pytest.raises(agents.AgentError):
+        agents.validate_proposal("analyst", "dataissue", {"summary": "x"})
+    with pytest.raises(agents.AgentError):
+        agents.validate_proposal("analyst", "dataissue", {"table": "nope", "summary": "A real sentence here"})
+    with pytest.raises(agents.AgentError):
+        agents.validate_proposal("pm", "dataissue", {"summary": "A real sentence here"})
+    assert client.get("/api/pipeline/issues").json()["total"] == 0  # proposals are never saved

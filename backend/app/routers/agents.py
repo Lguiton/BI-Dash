@@ -18,7 +18,8 @@ class ChatIn(BaseModel):
     message: str = Field(min_length=2, max_length=1200)
     history: list[Msg] = Field(default_factory=list, max_length=20)
     step_id: str | None = None
-    provider: Literal["auto", "google", "openai", "anthropic"] = "auto"
+    persona: Literal["default", "cfo", "math", "engmath"] = "default"
+    provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
     effort: Literal["auto", "simple", "medium", "complex"] = "auto"
 
 
@@ -63,7 +64,7 @@ def chat(track: str, body: ChatIn):
 class EvalIn(BaseModel):
     track: str
     mode: Literal["route", "live"] = "route"
-    provider: Literal["auto", "google", "openai", "anthropic"] = "auto"
+    provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
     confirm: bool = False
 
 
@@ -100,3 +101,56 @@ def quiz_submit(track: str, body: dict = Body(...)):
 def quiz_all():
     r = quizzes._results()
     return {"tracks": {t: {"questions": len(q), "result": r.get(t)} for t, q in quizzes.QUIZZES.items()}, "pass_pct": quizzes.PASS_PCT}
+
+
+# ------------------------------------------------------------------ full work: the AI does the whole job
+from app.services import ai_work  # noqa: E402
+
+
+class WorkIn(BaseModel):
+    question: str = Field(default="", max_length=600)
+    source: str = Field(default="operations", min_length=1, max_length=120)
+    provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
+    kind: str = Field(default="complete", max_length=30)
+
+
+@router.get("/api/agents/work/types")
+def work_types():
+    return {"types": [{"id": k, "label": v["label"]} for k, v in ai_work.TYPES.items()]}
+
+
+@router.post("/api/agents/{role}/complete")
+def complete(role: str, body: WorkIn):
+    if role not in ai_work.ROLES:
+        raise HTTPException(404, "Pick analyst, scientist or bi.")
+    if agents.ai_policy.describe()["allowed"]:
+        ai_router._check_rate()
+    try:
+        return ai_work.run(role, body.question, body.source, body.provider, kind=body.kind)
+    except agents.AgentError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/api/agents/{role}/work")
+def work_list(role: str):
+    if role not in ai_work.ROLES:
+        raise HTTPException(404, "Pick analyst, scientist or bi.")
+    return {"items": ai_work.list_work(role)}
+
+
+@router.delete("/api/agents/work/{work_id}")
+def work_delete(work_id: str):
+    ai_work.delete_work(work_id)
+    return {"ok": True}
+
+
+@router.get("/api/consistency")
+def consistency_report():
+    from app.services import consistency
+    return consistency.run()
+
+
+@router.get("/api/known-errors")
+def known_errors_list(track: str | None = None):
+    from app.services import known_errors
+    return {"items": known_errors.public(track), "count": len(known_errors.public(track))}

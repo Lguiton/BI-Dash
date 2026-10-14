@@ -7,12 +7,13 @@ import { useChartColors } from "@/lib/useChartColors";
 import type { PmOverview, PmProduct } from "@/lib/types";
 import { TimePanel } from "./OpsPanels";
 import { CalendarTab, RulesTab } from "./PmExtras";
+import { ScenariosTab } from "./PmScenarios";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg, num, useIsPractice, usd } from "./kit";
 
 const TABS = [
   { id: "board", label: "Board" }, { id: "prio", label: "Prioritisation" }, { id: "sprint", label: "Sprints" }, { id: "flow", label: "Flow" },
   { id: "schedule", label: "Schedule" }, { id: "evm", label: "Earned value" }, { id: "risk", label: "Risks" }, { id: "okr", label: "OKRs" }, { id: "product", label: "Product analytics" }, { id: "time", label: "Time" },
-  { id: "calendar", label: "Calendar" }, { id: "rules", label: "Automations" },
+  { id: "scenarios", label: "What-if" }, { id: "calendar", label: "Calendar" }, { id: "rules", label: "Automations" },
 ];
 
 export function PmPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
@@ -43,12 +44,13 @@ export function PmPanel({ tab, onTab }: { tab: string; onTab: (t: string) => voi
       {tab === "prio" && <Prio d={d} />}
       {tab === "sprint" && <Sprints d={d} act={act} />}
       {tab === "flow" && <Flow d={d} />}
-      {tab === "schedule" && <Schedule d={d} />}
+      {tab === "schedule" && <Schedule d={d} act={act} />}
       {tab === "evm" && <Evm d={d} />}
       {tab === "risk" && <Risks d={d} act={act} />}
       {tab === "okr" && <Okrs d={d} act={act} />}
       {tab === "product" && <Product />}
       {tab === "time" && <TimePanel items={d.items} onChanged={load} />}
+      {tab === "scenarios" && <ScenariosTab items={d.items} />}
       {tab === "calendar" && <CalendarTab />}
       {tab === "rules" && <RulesTab onChanged={load} />}
     </div>
@@ -205,17 +207,56 @@ function Flow({ d }: { d: PmOverview }) {
   );
 }
 
-function Schedule({ d }: { d: PmOverview }) {
+function Schedule({ d, act }: { d: PmOverview; act: Act }) {
   const s = d.schedule;
   if (!s.available) return <p className="card p-4 text-sm text-muted">{s.reason ?? "Give items a start date, a duration and optional dependencies to get a critical path."}</p>;
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-3"><Stat label="Project duration" value={`${num(s.duration_days, 0)} d`} /><Stat label="Finish" value={s.finish ?? "—"} /><Stat label="Critical items" value={String(s.critical.length)} /></div>
+      <Gantt s={s} act={act} />
       <Section title="Critical path method" note="Float is how long an item can slip without delaying the finish. Zero float = critical. Unknown dependencies are ignored, not guessed.">
         <Table caption="CPM schedule" head={["Item", "Start", "Finish", "Days", "ES", "EF", "LS", "LF", "Float", "Critical"]}
           rows={s.rows.map((r) => [r.title, r.start, r.finish, r.duration, r.es, r.ef, r.ls, r.lf, r.float, r.critical ? <Badge key="c" tone="bad">critical</Badge> : ""])} />
       </Section>
     </div>
+  );
+}
+
+
+type Sched = PmOverview["schedule"];
+function Gantt({ s, act }: { s: Sched; act: Act }) {
+  const [drag, setDrag] = useState<{ id: number; days: number } | null>(null);
+  const rows = s.rows;
+  const total = Math.max(s.duration_days ?? 1, 1) + 4;
+  const W = 720, L = 150, rowH = 26, H = rows.length * rowH + 28, px = (W - L - 10) / total;
+  const lens = (r: Sched["rows"][number]) => (drag && drag.id === r.id ? drag.days : r.duration);
+  const commit = (id: number, days: number, old: number) => { if (days >= 1 && days !== old) void act(() => patchJson(`/api/pm/items/${id}`, { duration_days: days })); };
+  const idx = new Map(rows.map((r, i) => [r.id, i]));
+  return (
+    <Section title="Gantt chart" note="Drag the right end of a bar (or focus it and press the left and right arrow keys) to change its duration in days. The schedule is recalculated from the dependencies, so later bars move by themselves. Red bars are on the critical path; the pale tail is float.">
+      <div className="overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="min-w-[640px] w-full" role="img" aria-label="Gantt chart of the project schedule">
+          {Array.from({ length: Math.floor(total / 5) + 1 }, (_, k) => k * 5).map((d) => <g key={d}><line x1={L + d * px} x2={L + d * px} y1={14} y2={H} stroke="currentColor" opacity={0.12} /><text x={L + d * px} y={10} fontSize={9} textAnchor="middle" fill="currentColor" opacity={0.6}>{d}</text></g>)}
+          {rows.map((r, i) => {
+            const y = 20 + i * rowH, len = lens(r);
+            return (
+              <g key={r.id}>
+                <text x={4} y={y + 14} fontSize={11} fill="currentColor">{r.title.length > 22 ? r.title.slice(0, 21) + "…" : r.title}</text>
+                {r.float > 0 && <rect x={L + (r.es + len) * px} y={y + 5} width={r.float * px} height={12} fill="currentColor" opacity={0.1} rx={2} />}
+                <rect x={L + r.es * px} y={y + 3} width={Math.max(len * px, 3)} height={16} rx={3} fill={r.critical ? "#dc2626" : "#3b82f6"} opacity={r.status === "done" ? 0.45 : 0.9} />
+                {r.deps.map((dp) => { const j = idx.get(dp); if (j === undefined) return null; const dr = rows[j]; return <path key={dp} d={`M${L + dr.ef * px},${20 + j * rowH + 11} L${L + r.es * px - 2},${y + 11}`} stroke="currentColor" opacity={0.35} fill="none" />; })}
+                <rect x={L + (r.es + len) * px - 5} y={y + 1} width={10} height={20} fill="transparent" style={{ cursor: "ew-resize", touchAction: "none" }} tabIndex={0} role="slider" aria-label={`Duration of ${r.title}`} aria-valuemin={1} aria-valuenow={len} aria-valuemax={365}
+                  onPointerDown={(e) => { (e.target as Element).setPointerCapture(e.pointerId); setDrag({ id: r.id, days: r.duration }); }}
+                  onPointerMove={(e) => { if (drag && drag.id === r.id) { const svg = (e.target as SVGElement).ownerSVGElement!; const rect = svg.getBoundingClientRect(); const x = ((e.clientX - rect.left) / rect.width) * W; setDrag({ id: r.id, days: Math.max(1, Math.min(365, Math.round((x - L) / px - r.es))) }); } }}
+                  onPointerUp={() => { if (drag && drag.id === r.id) { commit(r.id, drag.days, r.duration); setDrag(null); } }}
+                  onKeyDown={(e) => { if (e.key === "ArrowRight") { e.preventDefault(); commit(r.id, r.duration + 1, r.duration); } if (e.key === "ArrowLeft") { e.preventDefault(); commit(r.id, r.duration - 1, r.duration); } }} />
+                <text x={L + (r.es + len) * px + 8} y={y + 15} fontSize={10} fill="currentColor" opacity={0.7}>{len} d</text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    </Section>
   );
 }
 

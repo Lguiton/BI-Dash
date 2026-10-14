@@ -111,7 +111,7 @@ def no_keys(monkeypatch):
 
 def test_endpoint_without_key(client, no_keys):
     st = client.get("/api/ai/status").json()
-    assert st["ready"] == [] and {p["id"] for p in st["providers"]} == {"google", "openai", "anthropic"}
+    assert st["ready"] == [] and {p["id"] for p in st["providers"]} == {"google", "openai", "anthropic", "ollama"}
     assert client.post("/api/ai/ask", json={"question": "how many records?"}).status_code == 503
     assert client.post("/api/ai/ask", json={"question": "x"}).status_code == 422
     assert client.post("/api/ai/ask", json={"question": "how many?", "provider": "bogus"}).status_code == 422

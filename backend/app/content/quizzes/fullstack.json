@@ -1,0 +1,122 @@
+[
+ {
+  "step": "design",
+  "q": "Which HTTP method should create a new record?",
+  "options": [
+   "GET",
+   "POST",
+   "DELETE",
+   "HEAD"
+  ],
+  "answer": 1,
+  "why": "POST creates, GET reads without side effects, PUT/PATCH update, DELETE removes."
+ },
+ {
+  "step": "scaffold",
+  "q": "Why must generated SQL pass user input as ? parameters rather than string-formatting it into the query?",
+  "options": [
+   "It is shorter",
+   "To prevent SQL injection",
+   "Parameters are faster to type",
+   "DuckDB requires it for SELECT only"
+  ],
+  "answer": 1,
+  "why": "Parameters keep data separate from the SQL text, so input like '; DROP TABLE' is treated as a value."
+ },
+ {
+  "step": "test",
+  "q": "Which API test is strongest for POST /items?",
+  "options": [
+   "It returns any response",
+   "It checks the status code, that the row was stored, and that bad input is rejected",
+   "It checks the response time only",
+   "It prints the result"
+  ],
+  "answer": 1,
+  "why": "Cover the happy path and the failure path, and check the effect, not only the status."
+ },
+ {
+  "step": "try",
+  "q": "A request is missing a required field and fails validation in FastAPI/Pydantic. Which status code is returned by default?",
+  "options": [
+   "200",
+   "404",
+   "422",
+   "500"
+  ],
+  "answer": 2,
+  "why": "422 Unprocessable Entity is FastAPI's default for validation errors. A 500 would mean your code crashed instead."
+ },
+ {
+  "step": "review",
+  "q": "The browser blocks your frontend from calling the API, but curl works. Most likely cause?",
+  "options": [
+   "The API is down",
+   "CORS: the API didn't allow that origin or method",
+   "The database is locked",
+   "The frontend has too many components"
+  ],
+  "answer": 1,
+  "why": "CORS is enforced by the browser only. A missing allowed method such as PATCH fails in the browser and passes in curl."
+ },
+ {
+  "step": "release",
+  "q": "Why keep API keys in backend/.env and out of git?",
+  "options": [
+   "It makes the repo smaller",
+   "Anyone with access to the repo history would get your keys",
+   "git cannot store text",
+   "Keys expire when committed"
+  ],
+  "answer": 1,
+  "why": "Anything committed is in history forever. Keep secrets in an ignored file and rotate any that leak."
+ },
+ {
+  "step": "process",
+  "q": "Which requirement is testable?",
+  "options": [
+   "The page should be fast",
+   "The report page loads in under 2 seconds with 10,000 rows",
+   "The app should be easy",
+   "The code should be clean"
+  ],
+  "answer": 1,
+  "why": "A requirement needs a measurable pass condition so a test can prove it. 'Fast' and 'easy' cannot be tested."
+ },
+ {
+  "step": "map",
+  "q": "Why map the API before changing an endpoint?",
+  "options": [
+   "To pass time",
+   "To know what depends on its contract so you do not break it",
+   "Maps are required by Python",
+   "To rename every route"
+  ],
+  "answer": 1,
+  "why": "Other code and screens depend on an endpoint's inputs and outputs. Knowing the contract first avoids silent breakage."
+ },
+ {
+  "step": "register",
+  "q": "You wrote a new router and added it to the app, but its endpoints return 404. What is the most likely cause?",
+  "options": [
+   "The database is empty",
+   "The backend was not restarted or the router was not registered",
+   "The browser cache",
+   "The CSS"
+  ],
+  "answer": 1,
+  "why": "A router must be included in the app, and a running server needs a restart to load new code."
+ },
+ {
+  "step": "ui",
+  "q": "Which states should a data screen handle?",
+  "options": [
+   "Success only",
+   "Loading, empty, error and success",
+   "Loading and success",
+   "Error only"
+  ],
+  "answer": 1,
+  "why": "Data screens spend much of their life not in the success state. Showing each state clearly avoids blank pages and confusion."
+ }
+]

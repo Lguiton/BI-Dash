@@ -108,10 +108,8 @@ def test_llm_monitor_reports_latency_and_no_cost_without_prices(client, monkeypa
 
 # ------------------------------------------------------------------ model registry
 @pytest.fixture()
-def big(client):
-    csv = ROOT / "data_samples" / "operations_clean.csv"
-    assert client.post("/api/ingest/csv?mode=replace", files={"file": ("d.csv", csv.read_bytes(), "text/csv")}).status_code == 200
-    return client
+def big(client, load_clean):
+    return load_clean()
 
 
 FEATS = ["category", "weekday", "units_processed", "duration_minutes"]
@@ -395,7 +393,7 @@ def test_security_track_is_wired_everywhere(client):
     assert "security" in manuals.MANUALS and "security" in agents.AGENTS and "security" in quizzes.QUIZZES
     assert any(d["id"] == "security" for d in client.get("/api/company").json()["disciplines"])
     ctx = agents.context("security")
-    assert "audit_score_pct" in ctx and ctx["manual_steps_ticked"].endswith("/6")
+    assert "audit_score_pct" in ctx and ctx["manual_steps_ticked"].endswith(f"/{len(manuals.MANUALS['security']['steps'])}")
     assert client.get("/api/tracks/security/dashboard").status_code in (200, 404)
 
 

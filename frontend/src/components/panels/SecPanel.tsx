@@ -3,23 +3,43 @@ import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ApiError, deleteJson, getJson, patchJson, postFile, postJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
+import { HoneypotTab } from "./Honeypot";
+import { EndpointTab } from "./EndpointTab";
+import { FrameTab } from "./FrameTab";
+import { SecTools } from "./SecTools";
+import { CheckupReport } from "./CheckupReport";
+import { FixGuides } from "./FixGuides";
+import { ClientRecords } from "./ClientRecords";
+import { PhishBreach } from "./PhishBreach";
+import { UnixAudit } from "./UnixAudit";
 
 const TABS = [
-  { id: "audit", label: "Self-audit" }, { id: "logs", label: "Log analysis" }, { id: "web", label: "Web checks" },
-  { id: "ports", label: "Local ports" }, { id: "crypto", label: "Crypto labs" }, { id: "incident", label: "Incidents" },
+  { id: "report", label: "Checkup report" }, { id: "fix", label: "How to fix" }, { id: "records", label: "Client records" }, { id: "phish", label: "Phishing and breach" }, { id: "unix", label: "Mac and Linux audit" }, { id: "audit", label: "Self-audit" }, { id: "logs", label: "Log analysis" }, { id: "web", label: "Web checks" },
+  { id: "ports", label: "Local ports" }, { id: "endpoint", label: "Endpoint hardening" }, { id: "honeypot", label: "Honeypot logs" }, { id: "frame", label: "Principles and NIST CSF" }, { id: "tools", label: "Defender tools" }, { id: "crypto", label: "Crypto labs" }, { id: "incident", label: "Incidents" },
 ];
 
 export function SecPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const [fixId, setFixId] = useState<string | undefined>(undefined);
+  const openFix = (id: string) => { setFixId(id); onTab("fix"); };
   return (
     <div className="space-y-4">
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
         Defensive tools for things you own. Web checks only work on public sites; offensive tools are explained in the Tool map, not built.
       </p>
       <Tabs tabs={TABS} value={tab} onChange={onTab} label="Cybersecurity tools" />
+      {tab === "report" && <CheckupReport onFix={openFix} />}
+      {tab === "fix" && <FixGuides openId={fixId} />}
+      {tab === "records" && <ClientRecords onFix={openFix} />}
+      {tab === "phish" && <PhishBreach onFix={openFix} />}
+      {tab === "unix" && <UnixAudit onFix={openFix} />}
       {tab === "audit" && <AuditTab />}
       {tab === "logs" && <LogsTab />}
       {tab === "web" && <WebTab />}
       {tab === "ports" && <PortsTab />}
+      {tab === "endpoint" && <EndpointTab />}
+      {tab === "honeypot" && <HoneypotTab />}
+      {tab === "frame" && <FrameTab />}
+      {tab === "tools" && <SecTools />}
       {tab === "crypto" && <CryptoTab />}
       {tab === "incident" && <IncidentTab />}
     </div>

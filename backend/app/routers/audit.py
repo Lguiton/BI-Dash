@@ -17,3 +17,9 @@ def recent(limit: int = Query(100, ge=1, le=500), workspace: str | None = None, 
     rows = state.rows(sql, (*params, limit))
     actions = [r["action"] for r in state.rows("SELECT DISTINCT action FROM audit ORDER BY action")]
     return {"entries": [{**r, "ok": bool(r["ok"])} for r in rows], "actions": actions}
+
+
+@router.get("/verify")
+def verify():
+    """Check the hash chain: shows if any entry was edited or removed."""
+    return state.audit_verify()

@@ -4,12 +4,8 @@ TRACKS = ["analyst", "scientist", "ml", "engineering", "ai", "pm", "sysanalyst",
 
 
 @pytest.fixture()
-def big(client):
-    import pathlib
-    root = pathlib.Path(__file__).resolve().parents[2]
-    r = client.post("/api/ingest/csv?mode=replace", files={"file": ("d.csv", (root / "data_samples" / "operations_clean.csv").read_bytes(), "text/csv")})
-    assert r.status_code == 200
-    return client
+def big(client, load_clean):
+    return load_clean()
 
 
 @pytest.mark.parametrize("tid", TRACKS)
@@ -63,7 +59,7 @@ def test_ai_dashboard_counts_questions(client, monkeypatch):
 
 def test_progress_flow(client):
     p = client.get("/api/progress").json()
-    assert p["overall_pct"] == 0 and len(p["tracks"]) == 11 and p["continue"]["track"] == "analyst"
+    assert p["overall_pct"] == 0 and len(p["tracks"]) == 12 and p["continue"]["track"] == "analyst"
     first = p["tracks"][0]["next"]["id"]
     assert client.put("/api/progress", json={"item": first, "done": True}).status_code == 200
     p = client.get("/api/progress").json()

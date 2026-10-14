@@ -6,6 +6,7 @@ import { AiChart } from "@/components/AiChart";
 import { PageShell } from "@/components/PageShell";
 import { EvalsPanel, UsagePanel } from "@/components/AiLabExtras";
 import { Tabs } from "@/components/panels/kit";
+import { AiWorkPanel } from "@/components/panels/AiWork";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { AiAnswer, AiProviderId, AiStatus } from "@/lib/types";
 
@@ -51,7 +52,8 @@ export default function AiPage() {
   return (
     <PageShell title="AI Lab" subtitle="An agent that answers questions by writing SQL, spread across Gemini, OpenAI and Claude.">
       {error && <ErrorBanner message={error} />}
-      <Tabs label="AI Lab sections" value={tab} onChange={setTab} tabs={[{ id: "ask", label: "Ask" }, { id: "usage", label: "Usage" }, { id: "evals", label: "Agent evals" }]} />
+      <Tabs label="AI Lab sections" value={tab} onChange={setTab} tabs={[{ id: "ask", label: "Ask" }, { id: "work", label: "AI mode: full BI work" }, { id: "usage", label: "Usage" }, { id: "evals", label: "Agent evals" }]} />
+      {tab === "work" && <AiWorkPanel role="bi" title="BI Analyst" />}
       {tab === "usage" && <UsagePanel />}
       {tab === "evals" && <EvalsPanel />}
 

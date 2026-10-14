@@ -4,6 +4,7 @@ A backup is a plain copy of the .duckdb file taken while the connection is close
 consistent. Restoring copies one back, after taking a safety backup of what is there now, so a restore can be undone.
 Files live in <data dir>/backups/<workspace>/.
 """
+import contextlib
 import re
 import shutil
 import threading
@@ -34,21 +35,128 @@ def _label(kind: str) -> str:
     return re.sub(r"[^a-z0-9-]", "", kind.lower().replace(" ", "-").replace("_", "-"))[:40] or "manual"
 
 
-def create(kind: str = "manual") -> dict:
-    ws = workspaces.active()
+def create(kind: str = "manual", ws: str | None = None) -> dict:
+    active = workspaces.active()
+    ws = ws or active
     src = workspaces.path_of(ws)
     if not src.exists():
         raise BackupError("There is nothing to back up yet (the database file doesn't exist).")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     name = f"{stamp}_{_label(kind)}.duckdb"
     dest = _dir(ws) / name
-    with _lock, db.exclusive():
+    with _lock, (db.exclusive() if ws == active else contextlib.nullcontext()):      # a workspace that isn't open can be copied as it is
         shutil.copy2(src, dest)
         wal = src.with_name(src.name + ".wal")
         if wal.exists():
             shutil.copy2(wal, dest.with_name(dest.name + ".wal"))
     prune(ws)
+    copy_out(dest)
     return describe(ws, dest)
+
+
+# ---- copy to another place (USB drive, OneDrive or Google Drive folder), so a lost laptop doesn't lose the data ----
+COPY_KEEP = 14
+
+
+def _real_path(text: str) -> Path:
+    """Accept a Windows path like D:\\Backups even though the app runs inside WSL (it becomes /mnt/d/Backups)."""
+    t = text.strip().strip('"')
+    m = re.match(r"^([A-Za-z]):[\\/](.*)$", t)
+    if m and not Path(t).exists() and Path("/mnt").exists():
+        return Path("/mnt") / m.group(1).lower() / m.group(2).replace("\\", "/")
+    return Path(t)
+
+
+def copy_folder() -> dict:
+    return {"folder": state.kv_get("backup_copy_dir", "") or "", "last": state.kv_get("backup_copy_last", "") or "", "keep": COPY_KEEP}
+
+
+def set_copy_folder(folder: str) -> dict:
+    folder = (folder or "").strip()
+    if not folder:
+        state.kv_set("backup_copy_dir", "")
+        state.kv_set("backup_copy_last", "")
+        return copy_folder()
+    p = _real_path(folder)
+    try:
+        p.mkdir(parents=True, exist_ok=True)
+        probe = p / ".bi_write_test"
+        probe.write_text("ok")
+        probe.unlink()
+    except OSError as e:
+        raise BackupError(f"I can't write to that folder ({e.strerror or 'not allowed'}). Check the path and that the drive is plugged in.") from e
+    state.kv_set("backup_copy_dir", folder)
+    state.kv_set("backup_copy_last", "")
+    state.audit("backup_copy_folder", folder)
+    return copy_folder()
+
+
+def copy_out(src: Path) -> None:
+    """Copy a fresh backup to the chosen folder. Never raises: a missing USB drive must not break the backup itself."""
+    folder = state.kv_get("backup_copy_dir", "") or ""
+    if not folder:
+        return
+    try:
+        dest = _real_path(folder)
+        dest.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest / f"{src.parent.name}_{src.name}")
+        mine = sorted(dest.glob(f"{src.parent.name}_*.duckdb"), reverse=True)
+        for old in mine[COPY_KEEP:]:
+            old.unlink(missing_ok=True)
+        state.kv_set("backup_copy_last", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + " ok")
+    except Exception as e:  # noqa: BLE001
+        state.kv_set("backup_copy_last", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + f" failed: {e}")
+
+
+MAX_IMPORT = 1024 * 1024 * 1024
+
+
+def import_file(raw: bytes) -> dict:
+    """Bring a backup from another computer. It is checked, then saved with your other backups; restoring it is a separate step."""
+    import duckdb
+    import tempfile
+    if len(raw) > MAX_IMPORT:
+        raise BackupError("That file is over 1 GB.")
+    if raw[8:12] != b"DUCK":
+        raise BackupError("That isn't a database backup from this dashboard (.duckdb file).")
+    ws = workspaces.active()
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    dest = _dir(ws) / f"{stamp}_imported.duckdb"
+    with tempfile.NamedTemporaryFile(suffix=".duckdb", delete=False, dir=str(_dir(ws))) as t:
+        t.write(raw)
+        tmp = Path(t.name)
+    try:
+        con = duckdb.connect(str(tmp), read_only=True)
+        try:
+            n = con.execute("SELECT COUNT(*) FROM information_schema.tables").fetchone()[0]
+        finally:
+            con.close()
+    except Exception as e:  # noqa: BLE001
+        tmp.unlink(missing_ok=True)
+        raise BackupError("That file couldn't be opened as a database. It may be damaged.") from e
+    tmp.replace(dest)
+    state.audit("backup_import", f"{dest.name}: {n} tables")
+    return {**describe(ws, dest), "tables": int(n)}
+
+
+DAILY_EVERY = timedelta(hours=20)
+
+
+def daily_tick(now: datetime | None = None) -> list[str]:
+    """Automatic backup of your Real data, at most once every 20 hours. Because the computer isn't always on, this runs whenever the app is running
+    (including right after it starts), not at a fixed clock time. Practice data is not backed up automatically."""
+    try:
+        if not workspaces.path_of("real").exists():
+            return []
+        now = now or datetime.now(timezone.utc)
+        last = next((b for b in list_backups("real") if b["kind"] == "daily"), None)
+        if last and now - datetime.strptime(last["created_at"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc) < DAILY_EVERY:
+            return []
+        create("daily", "real")
+        state.audit("auto_backup", "daily backup of Real data")
+        return ["daily-backup"]
+    except Exception:  # noqa: BLE001 - a failed backup never stops the app; the Settings page shows the newest backup
+        return []
 
 
 def safety_backup(reason: str) -> None:

@@ -1,8 +1,8 @@
 """IT Specialist track endpoints."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from app.services import itlab
+from app.services import it_software, itlab, virt_lab
 
 router = APIRouter(prefix="/api/it", tags=["it"])
 
@@ -130,6 +130,15 @@ def events_read(b: TextIn):
     return _g(itlab.read_events, b.text)
 
 
+@router.post("/events/upload")
+async def events_upload(file: UploadFile = File(...)):
+    raw = await file.read(itlab.MAX_EVENT_BYTES + 1)
+    if len(raw) > itlab.MAX_EVENT_BYTES:
+        raise HTTPException(413, f"That file is over {itlab.MAX_EVENT_BYTES // (1024 * 1024)} MB. Export a smaller slice.")
+    text = itlab.decode_export(raw)
+    return _g(itlab.read_events, text, itlab.MAX_EVENT_BYTES * 2)
+
+
 @router.get("/checklists")
 def checklists():
     return itlab.checklists()
@@ -155,6 +164,109 @@ def raid(b: RaidIn):
     return _g(itlab.raid, b.level, b.disks, b.size_tb)
 
 
+@router.get("/repair")
+def repair():
+    from app.services import it_repair
+    return it_repair.sheet()
+
+
+@router.get("/shortcuts")
+def shortcuts():
+    from app.services import it_shortcuts
+    return it_shortcuts.sheet()
+
+
 @router.get("/cheats")
 def cheats():
     return itlab.cheats()
+
+
+# ---------------------------------------------------------------- software guide
+def _sw(fn, *a, **k):
+    try:
+        return fn(*a, **k)
+    except it_software.SoftError as e:
+        raise HTTPException(e.status, e.message) from e
+
+
+class ShortlistIn(BaseModel):
+    category: str = Field(max_length=20)
+    weights: dict[str, float] | None = None
+    exclude: list[str] = Field(default_factory=list, max_length=40)
+
+
+class StackIn(BaseModel):
+    items: list[dict] = Field(max_length=20)
+
+
+@router.get("/software")
+def software_catalog():
+    return it_software.catalog()
+
+
+@router.post("/software/shortlist")
+def software_shortlist(body: ShortlistIn):
+    return _sw(it_software.shortlist, body.category, body.weights, body.exclude)
+
+
+@router.get("/software/stack")
+def software_stack():
+    return it_software.stack()
+
+
+@router.put("/software/stack")
+def software_stack_save(body: StackIn):
+    return _sw(it_software.save_stack, body.items)
+
+
+# ---------------------------------------------------------------- virtualization planner
+def _vt(fn, *a, **k):
+    try:
+        return fn(*a, **k)
+    except virt_lab.VirtError as e:
+        raise HTTPException(400, str(e)) from e
+
+
+class VirtCap(BaseModel):
+    vms: float
+    vcpu_per_vm: float
+    ram_per_vm_gb: float
+    disk_per_vm_gb: float
+    host_cores: float
+    host_ram_gb: float
+    vcpu_ratio: float = 4
+    headroom_pct: float = 20
+    ha_spares: float = 1
+    thin_ratio: float = 1.0
+    storage_overhead_pct: float = 25
+    ram_overcommit: float = 1.0
+
+
+class VirtRows(BaseModel):
+    rows: list[dict] = Field(max_length=40)
+
+
+@router.get("/virt")
+def virt_catalog():
+    return virt_lab.catalog()
+
+
+@router.post("/virt/capacity")
+def virt_capacity(b: VirtCap):
+    return _vt(virt_lab.capacity, **b.model_dump())
+
+
+@router.post("/virt/network")
+def virt_network(b: VirtRows):
+    return _vt(virt_lab.check_network, b.rows)
+
+
+@router.post("/virt/cluster")
+def virt_cluster(b: VirtRows):
+    return _vt(virt_lab.check_cluster, b.rows)
+
+
+@router.get("/repair/search")
+def repair_search(q: str = "", limit: int = 8):
+    from app.services import repair_search
+    return repair_search.search(q[:200], max(1, min(limit, 20)))

@@ -9,8 +9,12 @@ pyarrow>=15.0.0      # Parquet export
 reportlab>=4.0.0      # PDF report
 scikit-learn>=1.4   # ML Lab
 pandas>=2.2         # ML Lab (DuckDB .df())
+numpy>=1.26         # forecasting, distributions (BI toolkit)
+scipy>=1.11         # statistical tests and distributions (Analysis Lab, BI toolkit)
 anthropic>=0.40.0   # AI Lab: Claude (complex questions, code)
 openai>=1.50        # AI Lab: OpenAI (backup)
 google-genai>=1.0   # AI Lab: Google Gemini (default, free tier)
 psycopg[binary]>=3.1   # Sources: read-only Postgres queries
 # keys go in backend/.env (see .env.example); the AI Lab uses whichever providers have a key
+pdfplumber>=0.11     # My data: read tables and text from PDF files
+# optional: mlflow>=2.10   # MLOps lab can copy runs to a local MLflow store when this is installed

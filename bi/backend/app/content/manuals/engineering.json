@@ -1,0 +1,642 @@
+{
+ "title": "Data Engineering: manager, architect, database admin and warehouse engineer",
+ "intro": "Data engineering is a team sport, and this track holds four hats so one person can practise all of them: Data Manager (owners, quality, rules), Data Architect (how data flows from sources to users), Database Administrator (health, backups, speed) and Data Warehouse Engineer (facts and dimensions for reporting). Move data reliably, keep it healthy and recoverable, and make sure it has an owner and is handled safely.",
+ "outcome": "A pipeline that runs repeatably, a verified backup, every table owned and classified, and personal data protected.",
+ "steps": [
+  {
+   "id": "layers",
+   "title": "Understand bronze, silver and gold",
+   "what": "Raw data lands untouched (bronze), is cleaned (silver) and then shaped for reporting (gold).",
+   "how": [
+    "Open the Pipeline tab and read the layer cards.",
+    "Bad rows go to quarantine, not into silver."
+   ],
+   "tool": {
+    "label": "Pipeline",
+    "href": null,
+    "tab": "pipeline"
+   },
+   "done_when": "You can say what each layer is for.",
+   "mistakes": [
+    "Cleaning data in place so you can't re-run."
+   ],
+   "ask": "Explain the medallion layers using my pipeline."
+  },
+  {
+   "id": "run",
+   "title": "Run the pipeline",
+   "what": "Run it end to end on a chosen source.",
+   "how": [
+    "Choose a source (clean, messy or your uploaded data) and run.",
+    "Read the layer counts."
+   ],
+   "tool": {
+    "label": "Pipeline",
+    "href": null,
+    "tab": "pipeline"
+   },
+   "done_when": "A run completed and the counts make sense.",
+   "mistakes": [
+    "Not reading the counts."
+   ],
+   "ask": "Walk me through my last pipeline run."
+  },
+  {
+   "id": "quarantine",
+   "title": "Read the quarantine and health checks",
+   "what": "Rejected rows tell you what is wrong upstream.",
+   "how": [
+    "Open the quarantine reasons.",
+    "Decide per reason: fix at source, add a rule, or accept."
+   ],
+   "tool": {
+    "label": "Pipeline",
+    "href": null,
+    "tab": "pipeline"
+   },
+   "done_when": "Every quarantine reason has a decision.",
+   "mistakes": [
+    "Dropping bad rows without recording why."
+   ],
+   "ask": "Which quarantine reasons should I fix first?"
+  },
+  {
+   "id": "idempotent",
+   "title": "Prove it is idempotent",
+   "what": "Running twice must give the same result.",
+   "how": [
+    "Run the pipeline twice in a row.",
+    "The silver counts must not change."
+   ],
+   "tool": {
+    "label": "Pipeline",
+    "href": null,
+    "tab": "pipeline"
+   },
+   "done_when": "Two runs, identical silver counts.",
+   "mistakes": [
+    "Appending duplicates on re-run."
+   ],
+   "ask": "Why does idempotency matter in a pipeline?"
+  },
+  {
+   "id": "import",
+   "title": "Bring in real data",
+   "what": "Import your own CSV and map its columns.",
+   "how": [
+    "Open My data and import.",
+    "Map columns to the expected names.",
+    "Run the data-quality page afterwards."
+   ],
+   "tool": {
+    "label": "My data",
+    "href": "/data",
+    "tab": null
+   },
+   "done_when": "Real data is loaded and quality-checked.",
+   "mistakes": [
+    "Importing into Practice by mistake."
+   ],
+   "ask": "Help me map my CSV columns."
+  },
+  {
+   "id": "dba-baseline",
+   "title": "DBA: take a health baseline",
+   "what": "Know what normal looks like.",
+   "how": [
+    "Open Database admin: size, free blocks, tables, constraints.",
+    "Read every finding and its suggested action."
+   ],
+   "tool": {
+    "label": "Database admin",
+    "href": null,
+    "tab": "dba"
+   },
+   "done_when": "You know your database size and have read the findings.",
+   "mistakes": [
+    "Ignoring a 'no backups' finding."
+   ],
+   "ask": "Explain my database health findings."
+  },
+  {
+   "id": "dba-backup",
+   "title": "DBA: back up and prove the restore",
+   "what": "A backup you have not restored is a hope.",
+   "how": [
+    "Take a backup in Settings & backups.",
+    "Back in Database admin press Verify latest backup.",
+    "Set an automatic backup schedule for Real."
+   ],
+   "tool": {
+    "label": "Settings & backups",
+    "href": "/settings",
+    "tab": null
+   },
+   "done_when": "A backup exists and verification passed.",
+   "mistakes": [
+    "Never testing a restore."
+   ],
+   "ask": "What is RPO and RTO for my setup?"
+  },
+  {
+   "id": "dba-perf",
+   "title": "DBA: benchmark and read plans",
+   "what": "Find slow queries before users do.",
+   "how": [
+    "Run query benchmarks.",
+    "Open Query plans and look for full scans.",
+    "Re-run after importing more data and compare."
+   ],
+   "tool": {
+    "label": "Database admin",
+    "href": null,
+    "tab": "dba"
+   },
+   "done_when": "You know your slowest query and why.",
+   "mistakes": [
+    "Optimising without measuring."
+   ],
+   "ask": "Which of my benchmark queries is slowest and what would speed it up?"
+  },
+  {
+   "id": "dba-maintain",
+   "title": "DBA: checkpoint and watch growth",
+   "what": "Keep the WAL small and size predictable.",
+   "how": [
+    "Run CHECKPOINT.",
+    "Check the growth chart over days."
+   ],
+   "tool": {
+    "label": "Database admin",
+    "href": null,
+    "tab": "dba"
+   },
+   "done_when": "You have a rule for when to checkpoint.",
+   "mistakes": [
+    "Ignoring a growing WAL."
+   ],
+   "ask": "When should I checkpoint and how do I forecast growth?"
+  },
+  {
+   "id": "arch-plan",
+   "title": "Architect: draw the flow from sources to users",
+   "what": "Start from the need, then sources, storage, organizing and delivery.",
+   "how": [
+    "Open Design > Data architecture plan.",
+    "List every source and its format, how often it is pulled, and what could make it unreliable.",
+    "Name who uses the data and in what form: analysts want tables, managers want dashboards, apps want an API."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You have a saved plan with sources, storage and consumers.",
+   "mistakes": [
+    "Picking tools before naming the business need."
+   ],
+   "ask": "Help me draft a data architecture plan for my business."
+  },
+  {
+   "id": "arch-store",
+   "title": "Architect: choose the kind of store",
+   "what": "Database, warehouse or lake depends on the work, not fashion.",
+   "how": [
+    "Open Design > Choose a store and answer the five questions.",
+    "Read the reasons, and note what the app lets you practise."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You can say why you chose a database, warehouse or lake.",
+   "mistakes": [
+    "Using one store for everything because it is familiar."
+   ],
+   "ask": "Should my data live in a database, a warehouse or a lake?"
+  },
+  {
+   "id": "wh-star",
+   "title": "Warehouse engineer: design a star schema",
+   "what": "Decide the grain, then facts and dimensions.",
+   "how": [
+    "Open Design > Star schema and pick a table.",
+    "Read the suggested grain, dimensions and measures, and fix what the guess got wrong.",
+    "Never sum a ratio such as margin: keep numerator and denominator."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "A saved warehouse design with grain, measures and dimensions.",
+   "mistakes": [
+    "Starting without deciding what one fact row means."
+   ],
+   "ask": "Design a star schema for my main table."
+  },
+  {
+   "id": "wh-load",
+   "title": "Warehouse engineer: plan loads and checks",
+   "what": "A warehouse is only as good as its last load.",
+   "how": [
+    "Choose full reload, incremental or change capture.",
+    "Write the checks that run after each load: row counts, totals against the source, no orphan keys.",
+    "Run the pipeline twice to prove the gold layer does not change."
+   ],
+   "tool": {
+    "label": "Pipeline",
+    "href": null,
+    "tab": "pipeline"
+   },
+   "done_when": "Load method and checks are written down and the re-run is stable.",
+   "mistakes": [
+    "Loading without reconciling to the source."
+   ],
+   "ask": "What checks should I run after each warehouse load?"
+  },
+  {
+   "id": "mgr-plan",
+   "title": "Manager: write the data management plan",
+   "what": "One page that says who is accountable and what the rules are.",
+   "how": [
+    "Open Design > Data management plan.",
+    "Fill in owner, quality rules, master data (one agreed customer and product list), retention, access, privacy and backups.",
+    "Set a review date."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "A saved plan with an owner and a review date.",
+   "mistakes": [
+    "Rules nobody is accountable for."
+   ],
+   "ask": "Draft a data management plan for my business."
+  },
+  {
+   "id": "ready",
+   "title": "Prove the data is analytics-ready",
+   "what": "The job of a data engineer is analytics-ready data: accurate, reliable, compliant with the rules that govern it, and available when consumers need it.",
+   "how": [
+    "Accurate: open the Data quality page and clear the failures.",
+    "Reliable: re-run the pipeline twice and check the counts match.",
+    "Compliant: run the PII scan and review Controls.",
+    "Accessible: check each consumer can reach the layer it needs, and that a verified backup exists."
+   ],
+   "tool": {
+    "label": "Controls",
+    "href": null,
+    "tab": "gov/controls"
+   },
+   "done_when": "You can tick all four words with evidence.",
+   "mistakes": [
+    "Calling data ready because the pipeline ran."
+   ],
+   "ask": "Is my data analytics-ready? Check accuracy, reliability, compliance and access."
+  },
+  {
+   "id": "meta",
+   "title": "Manager: read and improve your metadata",
+   "what": "Metadata is data about data: technical (structures), process (what ran) and business (meaning and ownership).",
+   "how": [
+    "Open Design > Metadata and read the three sections.",
+    "Search for a column such as customer to see which tables hold it.",
+    "Fix the gaps it lists in Data governance > Catalog: describe and assign an owner to every table."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "Every table has a description and an owner.",
+   "mistakes": [
+    "Leaving descriptions until someone asks."
+   ],
+   "ask": "Which of my tables lack a description or owner?"
+  },
+  {
+   "id": "etl-elt",
+   "title": "Know ETL from ELT and choose",
+   "what": "ETL transforms before loading; ELT loads raw and transforms in place.",
+   "how": [
+    "Open Design > ETL, ELT and pipelines.",
+    "Decide which your pipeline is (bronze, silver, gold is ELT-style) and whether each load is initial, incremental or a full refresh.",
+    "Write down your load verification: what you check after every load and what you do on failure."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You can explain your pipeline as ETL or ELT with a load and verification plan.",
+   "mistakes": [
+    "Loading without checking for nulls and failures."
+   ],
+   "ask": "Is my pipeline ETL or ELT, and how should I verify loads?"
+  },
+  {
+   "id": "wrangle",
+   "title": "Wrangle and gather the data",
+   "what": "Wrangling is discovery, transformation, validation and publishing; gathering is getting the data in first.",
+   "how": [
+    "Open Design > Sources and gathering and pick the way you will collect the data (files, SQL, API).",
+    "Open Design > Data wrangling and work through the four stages, writing each step into a Data wrangling note.",
+    "Validate with the Data quality page before you publish."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "A wrangling note records every change and the data passes quality checks.",
+   "mistakes": [
+    "Changing data without recording what you did."
+   ],
+   "ask": "Walk me through wrangling my newest file."
+  },
+  {
+   "id": "secure",
+   "title": "Review security at every level",
+   "what": "Security is physical, network, application and data, plus monitoring.",
+   "how": [
+    "Open Design > Security levels and note which level is yours to handle.",
+    "Check Controls and Access in Data governance, run the PII scan, and confirm backups are encrypted or stored safely.",
+    "Choose how you will monitor and who reacts."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You can name a measure for each level and who owns it.",
+   "mistakes": [
+    "Securing the data but ignoring the backup copy."
+   ],
+   "ask": "Which security level is my weakest?"
+  },
+  {
+   "id": "tune",
+   "title": "Troubleshoot and tune performance",
+   "what": "Measure first, change one thing, measure again.",
+   "how": [
+    "Open Design > Performance and troubleshooting and note the four metrics: latency, failures, resource use, traffic.",
+    "In Database admin run the benchmarks and read the query plans for full scans.",
+    "Write the steps you would follow for a failed or slow pipeline run, and set a time-based maintenance routine (checkpoint, backup) plus a condition that triggers an extra one."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You have a baseline benchmark and a written troubleshooting routine.",
+   "mistakes": [
+    "Changing several things at once so you can't tell what helped."
+   ],
+   "ask": "My pipeline run was slow: what should I check first?"
+  },
+  {
+   "id": "query",
+   "title": "Practise the core queries",
+   "what": "Count, aggregate, slice, sort, filter by pattern and group.",
+   "how": [
+    "Open Design > Querying basics.",
+    "Run each example in SQL Lab on your own table.",
+    "Compare the average with the standard deviation for a numeric column."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You ran all eight on your own data.",
+   "mistakes": [
+    "Trusting an average without checking the spread."
+   ],
+   "ask": "Write the query to total revenue by entity."
+  },
+  {
+   "id": "comply",
+   "title": "Map compliance across the data lifecycle",
+   "what": "Know which rules apply and what you must show at each stage.",
+   "how": [
+    "Open Design > Governance and compliance and note which regulations apply to your business (GDPR, CCPA, HIPAA, PCI DSS, SOX).",
+    "For each lifecycle stage write the legal basis, the purpose and who may access the data.",
+    "Use De-identify and erase to make a safe copy for analysis, and set a retention rule, then purge expired rows."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You have a written basis and an owner for every lifecycle stage, and a retention rule on personal data.",
+   "mistakes": [
+    "Treating compliance as a one-time checklist."
+   ],
+   "ask": "Which lifecycle stage of my data is least documented?"
+  },
+  {
+   "id": "dataops",
+   "title": "Run a DataOps sprint",
+   "what": "DataOps: establish, iterate one sprint at a time, then improve.",
+   "how": [
+    "Open Design > DataOps and read the three phases.",
+    "Write one sprint note: the goal, consumers, tests, metadata updates, access, delivery and measures.",
+    "After the sprint record what to improve and carry it into the next one."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "A sprint note with tests, metrics and learnings.",
+   "mistakes": [
+    "Delivering data changes with no automated test."
+   ],
+   "ask": "Plan a DataOps sprint for my next dataset."
+  },
+  {
+   "id": "score",
+   "title": "Score every table and review weekly",
+   "what": "A scorecard turns 'is it ready?' into numbers you can improve.",
+   "how": [
+    "Open Design > Health scorecard and read the Fix first column.",
+    "Fix the lowest tables first: owners, descriptions, protected personal columns, duplicates, a recent backup.",
+    "Run a review, and leave the weekly review on so you can see what got worse."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "Every table scores 80 or more, or you know why not.",
+   "mistakes": [
+    "Chasing the score instead of the cause."
+   ],
+   "ask": "Which table should I fix first and why?"
+  },
+  {
+   "id": "relational",
+   "title": "Design tables from an ERD and check keys",
+   "what": "Turn entities and relationships into tables, then test the keys and rules the data really follows.",
+   "how": [
+    "Open Design > Relational design > ERD to tables and list your entities, attributes and relationships (1:1, 1:N, M:N).",
+    "Make the tables, read the notes (link tables, added keys) and run the SQL in your database.",
+    "On Keys and dependencies, analyze an imported table: check the candidate keys and any partial or transitive rule it suggests, then confirm each with the person who owns the data."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "Every table has a primary key, every link between tables is a foreign key, and each rule you rely on has been tested against the data and confirmed with its owner.",
+   "mistakes": [
+    "Storing a list of authors in one column instead of a link table.",
+    "Trusting a rule seen in a tiny table.",
+    "Calling a column a key when it repeats."
+   ],
+   "ask": "Help me design tables for my entities and check which columns are keys."
+  },
+  {
+   "id": "cdc",
+   "title": "Capture changes between snapshots",
+   "what": "When a source only gives whole copies, work out what changed and keep history if you need it.",
+   "how": [
+    "Open Design > Change capture (CDC), pick the old and new snapshot and the key column.",
+    "Compare, read the inserted, updated and deleted counts, and save the change feed.",
+    "Apply the feed as latest-only (SCD 1) or full history (SCD 2) into a new table.",
+    "Check a few keys by hand in SQL Lab."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "The new table matches what you expect for the keys you checked.",
+   "mistakes": [
+    "Choosing a key that is not unique.",
+    "Applying a feed with no sequence column."
+   ],
+   "ask": "Which key should I use to compare these two snapshots?"
+  },
+  {
+   "id": "issues",
+   "title": "Work the data issue queue",
+   "what": "Analysts, scientists and BI users report data problems; you triage and close them.",
+   "how": [
+    "Open Design > Data issues and sort by severity.",
+    "Reply with the cause and the fix, then set the status.",
+    "When you change the pipeline, run it with 'Stop publishing if checks fail' so a bad load can't reach the reports."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "No high-severity issue is left open without a reply.",
+   "mistakes": [
+    "Fixing the report instead of the source."
+   ],
+   "ask": "Triage my open data issues."
+  },
+  {
+   "id": "eco-review",
+   "title": "Check the whole data ecosystem",
+   "what": "Sources, repository, organizing, and delivery, each with its own risks.",
+   "how": [
+    "Walk your plan: Is each source reliable and secure? Is the repository available and flexible? Do standards and privacy rules apply? Does each user get data in the form they need?",
+    "Name the weakest link and fix it first."
+   ],
+   "tool": {
+    "label": "Design",
+    "href": null,
+    "tab": "design"
+   },
+   "done_when": "You know your weakest link.",
+   "mistakes": [
+    "Fixing the tool you like instead of the weakest link."
+   ],
+   "ask": "Which part of my data ecosystem is weakest?"
+  },
+  {
+   "id": "gov-catalog",
+   "title": "Governance: own and classify every table",
+   "what": "Unowned data is nobody's problem until it breaks.",
+   "how": [
+    "Open Data governance > Catalog.",
+    "Set owner, steward and classification (public / internal / confidential / restricted).",
+    "Add a retention rule where data should expire."
+   ],
+   "tool": {
+    "label": "Catalog",
+    "href": null,
+    "tab": "gov/catalog"
+   },
+   "done_when": "Every table has an owner and a class.",
+   "mistakes": [
+    "Classifying everything 'internal' to finish quickly."
+   ],
+   "ask": "Suggest an owner and classification for each of my tables."
+  },
+  {
+   "id": "gov-pii",
+   "title": "Governance: find and protect personal data",
+   "what": "Find personal columns and keep them away from AI.",
+   "how": [
+    "Run the PII scan.",
+    "Press Protect from AI for each real finding.",
+    "Remember: a clean scan means 'nothing obvious', not 'nothing'."
+   ],
+   "tool": {
+    "label": "PII scan",
+    "href": null,
+    "tab": "gov/pii"
+   },
+   "done_when": "No unprotected personal columns remain.",
+   "mistakes": [
+    "Trusting the scan blindly."
+   ],
+   "ask": "Explain my PII scan results."
+  },
+  {
+   "id": "gov-lineage",
+   "title": "Governance: document lineage",
+   "what": "Where does data come from and who reads it?",
+   "how": [
+    "Open Lineage.",
+    "Check each consumer reads from the right layer."
+   ],
+   "tool": {
+    "label": "Lineage",
+    "href": null,
+    "tab": "gov/lineage"
+   },
+   "done_when": "You can trace one KPI back to its source.",
+   "mistakes": [
+    "Undocumented copies of data."
+   ],
+   "ask": "Trace my revenue KPI back to its source."
+  },
+  {
+   "id": "gov-controls",
+   "title": "Governance: review controls and access",
+   "what": "Evidence that data is handled on purpose.",
+   "how": [
+    "Open Controls and fix gaps in order.",
+    "Open Access to see what left the computer and what failed."
+   ],
+   "tool": {
+    "label": "Controls",
+    "href": null,
+    "tab": "gov/controls"
+   },
+   "done_when": "6+ of 8 controls are in place.",
+   "mistakes": [
+    "Treating this checklist as a compliance certificate: it isn't."
+   ],
+   "ask": "Which governance control gaps should I fix first?"
+  }
+ ]
+}

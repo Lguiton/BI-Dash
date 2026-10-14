@@ -1,0 +1,147 @@
+"""App state in a small SQLite file next to the databases.
+
+Everything here must survive switching between the Practice and Real workspaces, so it can't live in either DuckDB file:
+study progress, the ML experiment log, the AI question log, per-workspace settings, saved data sources and the audit log.
+"""
+import json
+import sqlite3
+import threading
+from datetime import datetime, timezone
+
+from app.config import state_path
+
+_lock = threading.RLock()
+_conns: dict[str, sqlite3.Connection] = {}
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS study_progress (item_id TEXT PRIMARY KEY, done_at TEXT);
+CREATE TABLE IF NOT EXISTS ml_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT, task TEXT, model TEXT, features TEXT,
+    metric TEXT, model_score REAL, baseline_score REAL, test_rows INTEGER, workspace TEXT);
+CREATE TABLE IF NOT EXISTS ai_log (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT, question TEXT, provider TEXT, model TEXT,
+    kind TEXT, input_tokens INTEGER, output_tokens INTEGER, ok INTEGER, charted INTEGER, workspace TEXT);
+CREATE TABLE IF NOT EXISTS settings (workspace TEXT, key TEXT, value TEXT, PRIMARY KEY (workspace, key));
+CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, workspace TEXT, action TEXT, detail TEXT, ok INTEGER);
+CREATE TABLE IF NOT EXISTS sources (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, kind TEXT, config TEXT, target TEXT,
+    interval_minutes INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, created_at TEXT, last_run_at TEXT, last_status TEXT, last_message TEXT);
+CREATE TABLE IF NOT EXISTS pm_items (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, kind TEXT, title TEXT, status TEXT, priority INTEGER DEFAULT 3,
+    owner TEXT, sprint_id INTEGER, points REAL, reach REAL, impact REAL, confidence REAL, effort REAL, value REAL, time_crit REAL, risk_red REAL,
+    moscow TEXT, start_date TEXT, duration_days REAL, deps TEXT, planned_cost REAL, actual_cost REAL, created_at TEXT, started_at TEXT, done_at TEXT, notes TEXT);
+CREATE TABLE IF NOT EXISTS pm_sprints (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, start_date TEXT, end_date TEXT, goal TEXT);
+CREATE TABLE IF NOT EXISTS pm_risks (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, probability REAL, impact_usd REAL, status TEXT, owner TEXT, mitigation TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS pm_okrs (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, objective TEXT, kr TEXT, start_value REAL, target_value REAL, current_value REAL, owner TEXT);
+CREATE TABLE IF NOT EXISTS sa_requirements (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, code TEXT, title TEXT, kind TEXT, priority TEXT, status TEXT, source TEXT, acceptance TEXT, test_ref TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dba_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, size_bytes INTEGER, rows_total INTEGER);
+CREATE TABLE IF NOT EXISTS gov_assets (workspace TEXT, asset TEXT, owner TEXT, steward TEXT, description TEXT, classification TEXT, retention_days INTEGER, retention_column TEXT, PRIMARY KEY (workspace, asset));
+CREATE TABLE IF NOT EXISTS pm_time (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, item_id INTEGER, day TEXT, hours REAL, note TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS company_snapshots (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, kind TEXT, done INTEGER, total INTEGER, pct INTEGER, data TEXT, brief TEXT);
+CREATE TABLE IF NOT EXISTS pm_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, trigger TEXT, days INTEGER, action TEXT, value TEXT, enabled INTEGER DEFAULT 1, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dataset_notes (workspace TEXT, table_name TEXT, note TEXT, tags TEXT, updated_at TEXT, PRIMARY KEY (workspace, table_name));
+CREATE TABLE IF NOT EXISTS workflows (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, steps TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS dq_rules (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, table_name TEXT, kind TEXT, params TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS dq_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, table_name TEXT, total INTEGER, failed INTEGER, detail TEXT, trigger TEXT);
+CREATE TABLE IF NOT EXISTS pipelines (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, tasks TEXT, every_minutes INTEGER DEFAULT 0, enabled INTEGER DEFAULT 1, created_at TEXT, last_run_at TEXT, last_ok INTEGER);
+CREATE TABLE IF NOT EXISTS pipeline_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, pipeline_id INTEGER, workspace TEXT, at TEXT, ok INTEGER, seconds REAL, trigger TEXT, detail TEXT);
+CREATE TABLE IF NOT EXISTS models (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, name TEXT, version INTEGER, stage TEXT, task TEXT, kind TEXT, model TEXT,
+    features TEXT, params TEXT, metrics TEXT, baseline TEXT, train_stats TEXT, note TEXT, created_at TEXT, file TEXT);
+CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, severity TEXT, status TEXT, detected_at TEXT,
+    resolved_at TEXT, timeline TEXT, checklist TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS sys_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, workspace TEXT, action TEXT, title TEXT, risk TEXT, params TEXT, status TEXT, output TEXT, undo_data TEXT, undone_at TEXT, revert_at REAL, kept INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS it_tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, priority TEXT, status TEXT, requester TEXT,
+    opened_at TEXT, resolved_at TEXT, timeline TEXT, checklist TEXT);
+CREATE TABLE IF NOT EXISTS it_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, hostname TEXT, kind TEXT, os TEXT, owner TEXT, serial TEXT, purchased TEXT,
+    warranty_end TEXT, status TEXT, notes TEXT, created_at TEXT);
+CREATE TABLE IF NOT EXISTS drift_history (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, model TEXT, version INTEGER, overall TEXT, worst_feature TEXT, worst_psi REAL, recent_rows INTEGER, detail TEXT);
+CREATE TABLE IF NOT EXISTS source_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, source_id INTEGER, at TEXT, ok INTEGER, rows INTEGER, message TEXT, seconds REAL);
+"""
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def conn() -> sqlite3.Connection:
+    """One connection per state file (tests use a fresh file each time)."""
+    p = state_path()
+    key = str(p)
+    with _lock:
+        c = _conns.get(key)
+        if c is None:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            c = sqlite3.connect(key, check_same_thread=False, isolation_level=None)
+            c.row_factory = sqlite3.Row
+            c.executescript(SCHEMA)
+            _migrate(c)
+            _conns[key] = c
+        return c
+
+
+def _migrate(c: sqlite3.Connection) -> None:
+    """Additive upgrades for state files made by older versions."""
+    have = {r[1] for r in c.execute("PRAGMA table_info(ai_log)").fetchall()}
+    for col in ("tier", "track"):
+        if col not in have:
+            c.execute(f"ALTER TABLE ai_log ADD COLUMN {col} TEXT")
+    if "seconds" not in have:
+        c.execute("ALTER TABLE ai_log ADD COLUMN seconds REAL")
+    have = {r[1] for r in c.execute("PRAGMA table_info(ml_runs)").fetchall()}
+    for col, typ in (("note", "TEXT"), ("starred", "INTEGER DEFAULT 0"), ("params", "TEXT"), ("metrics", "TEXT"),
+                     ("cv_mean", "REAL"), ("seconds", "REAL"), ("batch", "TEXT")):
+        if col not in have:
+            c.execute(f"ALTER TABLE ml_runs ADD COLUMN {col} {typ}")
+
+
+def close_all() -> None:
+    with _lock:
+        for c in _conns.values():
+            c.close()
+        _conns.clear()
+
+
+def run(sql: str, params: tuple | list = ()) -> sqlite3.Cursor:
+    with _lock:
+        return conn().execute(sql, params)
+
+
+def rows(sql: str, params: tuple | list = ()) -> list[dict]:
+    with _lock:
+        return [dict(r) for r in conn().execute(sql, params).fetchall()]
+
+
+def one(sql: str, params: tuple | list = ()) -> dict | None:
+    r = rows(sql, params)
+    return r[0] if r else None
+
+
+# ---- key/value (active workspace, migration flags) ----
+def kv_get(key: str, default: str | None = None) -> str | None:
+    r = one("SELECT value FROM kv WHERE key = ?", (key,))
+    return r["value"] if r else default
+
+
+def kv_set(key: str, value: str) -> None:
+    run("INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", (key, value))
+
+
+# ---- per-workspace settings (JSON values) ----
+def setting_get(workspace: str, key: str, default=None):
+    r = one("SELECT value FROM settings WHERE workspace = ? AND key = ?", (workspace, key))
+    return json.loads(r["value"]) if r else default
+
+
+def setting_set(workspace: str, key: str, value) -> None:
+    run("INSERT INTO settings (workspace, key, value) VALUES (?, ?, ?) ON CONFLICT(workspace, key) DO UPDATE SET value = excluded.value",
+        (workspace, key, json.dumps(value)))
+
+
+# ---- audit ----
+def audit(action: str, detail: str = "", ok: bool = True, workspace: str | None = None) -> None:
+    """Record something that changed or left the app. Never raises: a logging problem must not break the action itself."""
+    try:
+        if workspace is None:
+            from app.services import workspaces
+            workspace = workspaces.active()
+        run("INSERT INTO audit (at, workspace, action, detail, ok) VALUES (?,?,?,?,?)", (now(), workspace, action, detail[:500], 1 if ok else 0))
+        run("DELETE FROM audit WHERE id NOT IN (SELECT id FROM audit ORDER BY id DESC LIMIT 5000)")
+    except Exception:  # noqa: BLE001
+        pass

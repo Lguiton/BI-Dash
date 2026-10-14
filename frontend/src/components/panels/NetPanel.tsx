@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
+import { NetGen } from "./NetGen";
+import { DesignTab } from "./DesignTab";
+import { NetSim, PcapTab } from "./NetSim";
 
 const TABS = [
   { id: "subnet", label: "Subnet and VLSM" }, { id: "config", label: "Config review" }, { id: "capture", label: "Packet capture" },
-  { id: "diag", label: "DNS and reachability" }, { id: "calc", label: "Calculators" }, { id: "ref", label: "Reference" },
+  { id: "diag", label: "DNS and reachability" }, { id: "gen", label: "Config generators" }, { id: "design", label: "Network design" }, { id: "sim", label: "Simulators" }, { id: "pcap", label: "Capture file reader" }, { id: "calc", label: "Calculators" }, { id: "ref", label: "Reference" },
 ];
 
 export function NetPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
@@ -20,6 +23,10 @@ export function NetPanel({ tab, onTab }: { tab: string; onTab: (t: string) => vo
       {tab === "config" && <TextTool kind="config" />}
       {tab === "capture" && <TextTool kind="capture" />}
       {tab === "diag" && <DiagTab />}
+      {tab === "gen" && <NetGen />}
+      {tab === "design" && <DesignTab />}
+      {tab === "sim" && <NetSim />}
+      {tab === "pcap" && <PcapTab />}
       {tab === "calc" && <CalcTab />}
       {tab === "ref" && <RefTab />}
     </div>

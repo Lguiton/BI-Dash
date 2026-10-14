@@ -1,0 +1,227 @@
+{
+ "title": "Cybersecurity: secure what you own, then learn to spot and handle trouble",
+ "intro": "Security is risk reduction, not perfection. Fix the cheap, common problems first, watch the logs, and have a plan for the day something goes wrong. Everything here is defensive and runs against your own app or public sites.",
+ "outcome": "A clean self-audit, one log investigation written up as an incident, and a short playbook you could follow under stress.",
+ "steps": [
+  {
+   "id": "audit",
+   "title": "Audit your own setup",
+   "what": "Most breaches start with a leaked key or an open door you forgot about.",
+   "how": [
+    "Open the Self-audit tab and run it.",
+    "Fix every red item: .env in .gitignore, no secrets in tracked files, tight CORS.",
+    "Run it again and note the score."
+   ],
+   "tool": {
+    "label": "Self-audit",
+    "href": null,
+    "tab": "audit"
+   },
+   "done_when": "Score is up and no red item is left unexplained.",
+   "mistakes": [
+    "Fixing nothing because 'it is only personal'.",
+    "Committing a key, then deleting it (it stays in history; rotate it)."
+   ],
+   "ask": "Which self-audit failures matter most for me?"
+  },
+  {
+   "id": "logs",
+   "title": "Read the logs for patterns",
+   "what": "Attacks leave repeated, boring traces.",
+   "how": [
+    "Open the Logs tab and load the sample.",
+    "Read each detection and the lines behind it.",
+    "Decide for each: attack, noise or a mistake by a real user."
+   ],
+   "tool": {
+    "label": "Log analysis",
+    "href": null,
+    "tab": "logs"
+   },
+   "done_when": "You can explain one detection and the evidence for it.",
+   "mistakes": [
+    "Treating a detection as proof.",
+    "Ignoring a success after many failures from the same address."
+   ],
+   "ask": "Explain this brute-force detection and what I should check."
+  },
+  {
+   "id": "web",
+   "title": "Check what a site shows the world",
+   "what": "Headers and certificates are the cheapest protections.",
+   "how": [
+    "Open Web checks and enter a public site you own.",
+    "Read the missing headers and what each one prevents.",
+    "Note the certificate expiry date."
+   ],
+   "tool": {
+    "label": "Web checks",
+    "href": null,
+    "tab": "web"
+   },
+   "done_when": "You have a list of missing headers ranked by importance.",
+   "mistakes": [
+    "Testing sites you don't own."
+   ],
+   "ask": "Which missing header should I add first?"
+  },
+  {
+   "id": "ports",
+   "title": "Know what your machine exposes",
+   "what": "A service you forgot about is an open door.",
+   "how": [
+    "Open Ports and run the local check.",
+    "For each open port, name the program and why it is needed.",
+    "Close or firewall the rest."
+   ],
+   "tool": {
+    "label": "Local ports",
+    "href": null,
+    "tab": "ports"
+   },
+   "done_when": "Every open port has a reason.",
+   "mistakes": [
+    "Assuming a database port is only reachable locally."
+   ],
+   "ask": "What does an open port 5432 mean?"
+  },
+  {
+   "id": "crypto",
+   "title": "Understand hashes, passwords and 2FA",
+   "what": "Never store passwords; store salted slow hashes. Add a second factor.",
+   "how": [
+    "Hash a word in the Crypto tab and change one letter.",
+    "Test a few passwords for strength and read the assumption behind the crack time.",
+    "Set up the TOTP lab and match the code."
+   ],
+   "tool": {
+    "label": "Crypto labs",
+    "href": null,
+    "tab": "crypto"
+   },
+   "done_when": "You can say why a hash is not encryption.",
+   "mistakes": [
+    "Believing a long common phrase is strong.",
+    "Using SHA-256 alone for passwords."
+   ],
+   "ask": "Why are fast hashes bad for passwords?"
+  },
+  {
+   "id": "incident",
+   "title": "Handle an incident on paper",
+   "what": "In a real incident you won't think clearly; the checklist thinks for you.",
+   "how": [
+    "Open Incidents and log one from the sample log.",
+    "Work through the playbook checklist for its category.",
+    "Close it with a note on what you would change."
+   ],
+   "tool": {
+    "label": "Incidents",
+    "href": null,
+    "tab": "incident"
+   },
+   "done_when": "A closed incident with lessons learned.",
+   "mistakes": [
+    "Deleting evidence while cleaning up.",
+    "No written timeline."
+   ],
+   "ask": "Walk me through the first hour of a suspected key leak."
+  },
+  {
+   "id": "honeypot",
+   "title": "Read honeypot logs like an analyst",
+   "what": "A honeypot is a decoy that records what attackers try. The skill is turning thousands of log lines into a short list of what to block and what to alert on.",
+   "how": [
+    "Open Honeypot logs, load the sample and read the counts: usernames, passwords, source IPs.",
+    "Look at the command classes. Say which command in the sample is recon, which downloads and which executes.",
+    "Notice the URL is shown defanged. Say why you never click or fetch it.",
+    "Read the slips: which files Cowrie really writes, and why 'real attacks' and 'isolated lab' cannot both be true.",
+    "Write two rules for your own servers from what the bots tried (for example, disable password SSH, alert on new cron entries)."
+   ],
+   "tool": {
+    "label": "Honeypot logs",
+    "href": "/tracks/security",
+    "tab": "honeypot"
+   },
+   "done_when": "You can name three things a honeypot log teaches you and one you must never do with its downloads.",
+   "mistakes": [
+    "Running or opening a file the attacker uploaded.",
+    "Exposing a honeypot on the network you use for real work.",
+    "Treating your own test traffic as attacker statistics."
+   ],
+   "ask": "What would you change on a real SSH server after reading this log?"
+  },
+  {
+   "id": "endpoint",
+   "title": "Harden a Windows endpoint, one measured change at a time",
+   "what": "Most breaches use basic gaps: old protocols, exposed remote access, too many admins and missed patches. Hardening is finding those gaps on a machine and closing them safely.",
+   "how": [
+    "Open Endpoint hardening. Copy the read-only script, read it line by line to confirm it only reads settings, then run it in PowerShell on a PC you own.",
+    "Paste the output and grade it. Sort the failures by severity.",
+    "Pick the top failure and write the change, the test and the backout plan before touching anything.",
+    "Make the change on one machine, re-run the script and confirm the line turned to pass.",
+    "Read the slips in the source guide: which claims are unsourced or out of date, and what the guide leaves out (MFA, encryption, backups, LAPS)."
+   ],
+   "tool": {
+    "label": "Endpoint hardening",
+    "href": "/tracks/security",
+    "tab": "endpoint"
+   },
+   "done_when": "You can name three failing checks, the risk behind each and how you would roll one out safely.",
+   "mistakes": [
+    "Turning off SMB1 or NTLM everywhere at once without auditing what still needs it.",
+    "Treating a passing score as proof the PC is secure.",
+    "Running a script from the internet without reading it first."
+   ],
+   "ask": "Which hardening failure on my report should I fix first, and how do I test it?"
+  },
+  {
+   "id": "sec-principles",
+   "title": "Judge a design against the five principles and the CIA triad",
+   "what": "Most security failures are design failures: one layer carrying everything, too much access, one person controlling a process. Five principles (defense in depth, least privilege, separation of duties, security by design, KISS) and one anti-pattern (security by obscurity) give you questions to ask about any system.",
+   "how": [
+    "Open Cybersecurity > Principles and NIST CSF > The principles and read the red flag and the question for each one.",
+    "Open Principles check, load the sample and read which principle each finding breaks and the fix.",
+    "Write two sentences about a setup you know (your home network, a workplace app) and run them through the check.",
+    "Open CIA classifier, load the sample incident and say which of confidentiality, integrity and availability it hit, and which control would have helped.",
+    "Ask the three CIA questions of a project: what was read, what was changed, what stopped working?"
+   ],
+   "tool": {
+    "label": "Principles and NIST CSF",
+    "href": "/tracks/security",
+    "tab": "frame"
+   },
+   "done_when": "You can name the principle a given weakness breaks, and match an attack to the property it hits and one control that counters it.",
+   "mistakes": [
+    "Treating security by obscurity as a sixth principle. It is the anti-pattern: a hidden URL or a secret algorithm is not access control.",
+    "Thinking a keyword check replaces a review. It only points at wording.",
+    "Putting every control at the perimeter and calling it depth."
+   ],
+   "ask": "Here is how our small office is set up. Which of the five principles does it break and what would I change first?"
+  },
+  {
+   "id": "sec-csf",
+   "title": "Run a NIST Cybersecurity Framework self-check",
+   "what": "The NIST CSF organises a security programme into functions: Govern (added in CSF 2.0), Identify, Protect, Detect, Respond and Recover. They are not steps in order; they run together. A self-check shows where you are thin.",
+   "how": [
+    "Open Principles and NIST CSF > NIST CSF self-check.",
+    "Answer yes, partly or no for each question honestly, for a real place (home lab, small business, your employer if allowed).",
+    "Score it and read the weakest function first.",
+    "Take the top three 'do these next' items and write an owner and a date for each.",
+    "Repeat in three months and compare. Notice which function moved."
+   ],
+   "tool": {
+    "label": "NIST CSF self-check",
+    "href": "/tracks/security",
+    "tab": "frame"
+   },
+   "done_when": "You can name the six functions, say which one an action belongs to (an incident plan is Respond, a restore test is Recover) and explain why they are a cycle, not a sequence.",
+   "mistakes": [
+    "Answering yes because a policy exists on paper and nobody follows it.",
+    "Fixing the strongest function because it is easiest.",
+    "Reading the score as an audit result."
+   ],
+   "ask": "My scores are low on Detect and Recover. What are the cheapest first steps for a five-person business?"
+  }
+ ]
+}

@@ -1,6 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { CommandPalette, SearchButton } from "./CommandPalette";
+import { AskBar } from "./AskBar";
 import { NavBar } from "./NavBar";
 import { WebDock } from "./WebDock";
 import { ThemeToggle } from "./ThemeToggle";
@@ -16,6 +17,7 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
         </div>
         <div className="flex flex-wrap items-start gap-2"><NavBar /><SearchButton /><WorkspaceSwitcher /><ThemeToggle /></div>
       </header>
+      <AskBar />
       <CommandPalette />
       <RealBanner />
       {children}

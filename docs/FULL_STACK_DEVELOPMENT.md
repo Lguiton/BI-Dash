@@ -28,3 +28,15 @@ FastAPI + DuckDB backend, a Next.js + React + TypeScript frontend, and pytest te
 The scaffold is generated from columns only. It knows nothing about your business rules, permissions or relationships, so
 treat it as a first draft. The "Stack and config" tab shows facts the running app can see; it is not a security audit.
 The request tester can only call this app's own `/api/` paths, and only sends writes while the Practice workspace is active.
+
+## Software engineering lab
+Open *Software engineering* in the Full Stack tab. Seven sub-tabs:
+- **Process**: the six-phase lifecycle, a Waterfall / V-model / Agile chooser that shows its reasons, and the testing levels and types.
+- **Requirements**: a user-story checker that flags vague words, and a traceability matrix that finds untested requirements and orphan tests.
+- **Versions**: compare two versions, bump major / minor / patch, and test a version against a range such as `^1.2.0` or `~1.2`.
+- **Testing**: a regression-test prioritiser.
+- **Architecture**: a pattern advisor, a production topology that lists single points of failure, a state-diagram checker and a class-diagram builder.
+- **Pseudocode**: turns plain pseudocode (IF, WHILE, FOR, INPUT, PRINT) into a flowchart.
+- **Reference**: documents, tools, stacks, languages, environments and corrections to common course errors.
+
+Limits: CI/CD, containers, load balancers and cloud hosting are explained but cannot run here. Availability figures are illustrative and assume independent failures. The method and architecture scores explain trade-offs; they do not decide for you. Qual templates added: SRS, design document, test plan and SOP.

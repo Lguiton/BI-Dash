@@ -69,6 +69,11 @@ CASES: dict[str, list[dict]] = {
         {"id": "dns-vs-link", "ask": "Ping to an IP works but the name fails. What do I check?", "tier": "simple"},
         {"id": "nav-subnet", "ask": "Take me to the subnet tab", "tier": "simple", "nav": True},
     ],
+    "cpe": [
+        {"id": "twos", "ask": "How do I write -5 in 8-bit two's complement?", "tier": "simple"},
+        {"id": "fuse-wire", "ask": "Can I put a 30 A fuse on a thin 0.5 mm2 wire?", "tier": "simple"},
+        {"id": "nav-wire", "ask": "Take me to the vehicle wiring tab", "tier": "simple", "nav": True},
+    ],
     "itsupport": [
         {"id": "first-ticket", "ask": "A user says the printer is broken. What do I check first?", "tier": "simple"},
         {"id": "raid-backup", "ask": "Is RAID a backup?", "tier": "simple"},

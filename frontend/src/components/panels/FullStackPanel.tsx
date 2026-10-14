@@ -3,18 +3,22 @@ import { useEffect, useMemo, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
 import type { FsApiMap, FsCodebase, FsEndpoint, FsResponse, FsScaffold, FsStack } from "@/lib/types";
+import { CodeWorkbench } from "./CodeWorkbench";
+import { SoftwareEngTab } from "./SoftwareEngTab";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
 
-const TABS = [{ id: "api", label: "API map & tester" }, { id: "scaffold", label: "Scaffold from a table" }, { id: "code", label: "Codebase" }, { id: "stack", label: "Stack & config" }];
+const TABS = [{ id: "bench", label: "Code Workbench" }, { id: "api", label: "API map & tester" }, { id: "scaffold", label: "Scaffold from a table" }, { id: "code", label: "Codebase" }, { id: "stack", label: "Stack & config" }, { id: "se", label: "Software engineering" }];
 
 export function FullStackPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
   return (
     <div className="space-y-4">
       <Tabs tabs={TABS} value={tab} onChange={onTab} label="Full stack tools" />
+      {tab === "bench" && <CodeWorkbench />}
       {tab === "api" && <ApiTester />}
       {tab === "scaffold" && <Scaffold />}
       {tab === "code" && <Codebase />}
       {tab === "stack" && <StackFacts />}
+      {tab === "se" && <SoftwareEngTab />}
     </div>
   );
 }

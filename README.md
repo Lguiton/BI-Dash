@@ -88,6 +88,7 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `GET /api/analytics/records` | paginated, sortable row-level drill-down |
 | `GET /api/analytics/records/export` | CSV download |
 | `GET /api/analytics/insights` | insights across the four analytics types |
+| `/api/stats/*` | Analysis Lab: probability, time series, regression, ML, prescriptive, qualitative, big data (see docs/ANALYSIS_LAB.md) |
 | `GET /api/analytics/forecast` | revenue forecast with 95% range and backtest |
 | `GET /api/analytics/recommendations` | prescriptive actions with estimated impact |
 | `GET /api/analytics/scatter`, `/heatmap` | data for the extra chart types |
@@ -145,6 +146,8 @@ Files are fully validated first; a bad row rejects the whole file with line-numb
 | `/api/security/*` (audit, logs, headers, cert, ports, hash, password, totp, incidents) | Cybersecurity track: defensive tools only |
 | `/api/net/*` (subnet, split, vlsm, contains, overlaps, summarize, config, capture, dns, tcp, transfer, bdp, reference) | Network Engineer track: calculators plus text readers; no scanners |
 | `/api/it/*` (tickets, assets, events, checklists, capacity, availability, raid, cheats) | IT Specialist track: hand-filled helpdesk and inventory, calculators |
+| `/api/cpe/*` (convert, logic, ohm, cache, wire, harness, can-load, ev-charge, pack, precharge) | Computer Engineer track: calculators with the working shown |
+| `/api/system/*` (status, pin, arm, run, preview, jobs, changes, undo, settings) | Computer control, personal edition only (off unless `computer_control.enabled` exists): see docs/COMPUTER_CONTROL.md |
 | `POST /api/sources/web-tables`; source kind `html_table` | Read one table from a public https page |
 | `POST /api/web/read`, `GET/PUT /api/web/bookmarks` | Web panel: text reader view and saved bookmarks |
 | `GET /api/setup` | First-run checklist, computed from what really exists |
@@ -205,6 +208,7 @@ Not tested: Docker Compose and the Superset Docker commands (Docker Hub was unre
 | Cybersecurity track | `/tracks/security` | Defensive only. Detections are leads, not verdicts. Offensive tools are taught, not built. |
 | Network Engineer track | `/tracks/network` | Subnet/VLSM, config review (pattern checks, not CIS), capture reader (text only), DNS and one-port TCP check on public hosts. Scanners and live capture are taught, not built. |
 | IT Specialist track | `/tracks/itsupport` | Helpdesk with SLA clocks and an inventory, both typed by hand; event-log reader; checklists; capacity, availability and RAID. RAID is not a backup. |
+| Computer Engineer track | `/tracks/cpe` | Number systems, logic, DC circuits, architecture, vehicle wiring and CAN, EV charging, and a vehicle systems reference. Calculators that show their working; no hardware, no key or high-voltage work. |
 | Model comparison, tracker, registry | `/ml` | One time split can't crown a winner; ties under 0.02 are flagged. Drift looks at inputs only. |
 | Dataset hub and quality rules | `/hub` | A catalogue and rule checker for imported tables, not a full governance product. |
 | Workflow builder | `/workflow` | Six step types over one table. It writes SQL and the equivalent pandas. |

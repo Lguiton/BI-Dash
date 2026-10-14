@@ -28,3 +28,33 @@ Vocabulary: **data owner vs steward**, **data catalog**, **data classification**
 
 ## Restore drill
 The drill restores the latest backup into a temporary copy, compares row counts and reports pass or fail. It never touches the live workspace.
+
+## Design tab: manager, architect, DBA and warehouse hats
+The one Data Engineer track covers four roles. **Design** (Data Engineering, Tools) has: a Data architecture plan note, a store chooser (database, warehouse or lake), a star-schema suggester for any table (grain, additive and non-additive measures, dimensions, a table sketch), a Warehouse design note, a Data management plan note, and a data-ecosystem summary. Endpoints: `GET /api/pipeline/star?source=`, `POST /api/pipeline/store`. The agent can propose `architecture`, `warehouse` and `dmplan` notes. Not built (do by hand): NoSQL stores, Airflow/Beam, vendor ETL tools, cloud services, Hadoop/Hive/Spark clusters.
+
+## Reliability and handoff tools (Data Engineering)
+- **Stop publishing if checks fail** (Pipeline): the run happens in a staging copy and replaces your data only if quarantine, row accounting and the gold-to-silver reconciliation pass. A blocked run leaves the old data as it was and is marked in the history. Status always shows the reconciliation table.
+- **Schema-change warning** (My data > Bring in a file): compares the incoming columns and types with the table of the same name before you replace it or add to it. The import result lists what changed and the audit log records it.
+- **Add only new rows**: append by key (rows whose key is not already there; duplicates inside the file count once) or by date (rows after the newest date). Running it twice adds nothing the second time.
+- **Health scorecard** (Design): scores each table 0 to 100 on accurate, reliable, compliant and accessible (completeness, duplicates, freshness, backup, protected personal data, classification, owner and steward, description). 80 or more is ready. A weekly review (on by default, can be switched off) records what got worse or better.
+- **Data issues** (Design): analysts, scientists and BI users, or their agents, log data problems; the engineer triages by severity, replies and closes them.
+- **Bundle check**: `python scripts/check_bundle.py ../your.zip` flags `.env` files, API keys, database files, run data and the computer-control flag before you share a zip. Add `--personal` for your own other computer (keys and data allowed, computer control still flagged). The personal bundle script runs it for you.
+Limits: the scorecard is a guide, not a certificate; the check finds common key formats and file types, not every possible secret.
+
+## Change capture (CDC)
+
+Design > **Change capture (CDC)** has two steps. *Compare two snapshots* finds inserted, updated and deleted rows between an old and a new copy of a table, on a key you choose, and can save a change feed (`_op`, `_seq`). *Apply a change feed* turns a feed into a current-state table (SCD type 1) or a full history (SCD type 2, with `__start_at`, `__end_at` and `is_current`). Events are ordered by the sequence column, so late arrivals are placed correctly. Results are always new tables; your inputs are never changed. Log-based capture from a live database and streaming sources are not available here.
+
+## Modern pipeline ideas
+
+Design > **Modern pipeline ideas** maps the Big Book of Data Engineering to this app and lists plainly what is not available (Databricks products, cloud Auto Loader, Kafka and real-time mode). Imports can keep extra columns in a `_rescued` JSON text column (append modes). The pipeline now checks volume against the last run, flags a quarantine jump, and can skip a run when the source file has not changed.
+
+
+## Relational design (ERD, keys, dependencies)
+
+Design tab > Relational design, also under Analysis Lab > Data foundations. From a database fundamentals course.
+
+- **ERD to tables:** list entities, attributes and relationships (1:1, 1:N, M:N). It writes DuckDB `CREATE TABLE` statements in dependency order, adds a primary key if you forget one, builds a link table for many-to-many, and runs everything on a throw-away in-memory database to prove it works. It never changes your data.
+- **Keys and dependencies:** for the built-in example or any imported table (up to 12 columns): degree and cardinality, candidate keys (up to three columns, no blanks), single-column rules A -> B that hold, and hints about partial and transitive dependencies. You can also test a functional or multi-valued rule and see where it breaks. These are findings in the data, not proofs: confirm them with the data's owner.
+- **Reference:** relational model terms, deployment topologies, shared disk vs shared nothing, replication, partitioning and sharding, roles and tools, and Db2, MySQL and PostgreSQL. Those servers cannot run here.
+- The course notes have slips, listed in the tab: reflexivity is not "X -> X", closure is not "the minimal set of FDs", its example calls EmployeeID a candidate key when the real key is EmployeeID + ProjectID, and it stores the author inside the book table. Course statistics and free-tier limits are dated.

@@ -3,6 +3,7 @@ import { Download, RotateCcw, Save, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ExportEverything } from "@/components/DataExtras";
+import { BriefingSettings, LaptopSettings, PasswordSettings } from "@/components/SettingsExtras";
 import { PageShell } from "@/components/PageShell";
 import { AlertsSettings } from "@/components/panels/OpsPanels";
 import { API_BASE, ApiError, deleteJson, getJson, postJson, putJson } from "@/lib/api";
@@ -30,6 +31,9 @@ export default function SettingsPage() {
       {ws?.workspaces.map((w) => <WorkspaceCard key={w.name} w={w} onSaved={() => load()} />)}
       {ws && <Backups workspace={ws.active} />}
       {ws && <AlertsSettings key={ws.active} />}
+      <LaptopSettings />
+      <BriefingSettings />
+      <PasswordSettings />
       <ExportEverything />
       <section className="card space-y-2 p-5 text-sm text-muted" aria-label="About privacy">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-fg">What these settings do and don&apos;t do</h2>

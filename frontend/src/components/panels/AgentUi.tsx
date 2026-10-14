@@ -5,6 +5,7 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { ApiError, getJson, postJson, putJson } from "@/lib/api";
 import type { AgentAction, AgentInfo, AgentMsg, AgentProposal } from "@/lib/types";
 import { Markdown } from "@/components/Markdown";
+import { AiWorkPanel } from "./AiWork";
 import { Badge, errMsg } from "./kit";
 
 interface ChatResp { reply: string; provider: string; model: string; route: { kind: string; reason: string; forced: boolean } | null; proposals: AgentProposal[]; actions: AgentAction[]; tools_used: { tool: string; error: boolean; what: string; chars: number }[]; stopped_early: boolean; usage: { input_tokens: number; output_tokens: number } }
@@ -20,13 +21,18 @@ const DIRECT_EXAMPLES: Record<string, string[]> = {
   security: ["What should I fix first in my self-audit?", "I committed an API key. What now?", "Take me to the logs tab"],
   network: ["How many hosts fit in a /27?", "Ping to an IP works but the name fails. What next?", "Take me to the subnet tab"],
   itsupport: ["A user says the printer is broken. Where do I start?", "Is RAID a backup?", "Take me to the helpdesk tab"],
+  cpe: ["How do I write -5 in 8-bit two's complement?", "Can a 30 A fuse protect a thin 0.5 mm2 wire?", "Take me to the vehicle wiring tab"],
   fullstack: ["Review the SQL safety of a generated router", "What should I test for a POST endpoint?", "Take me to the scaffold tab"],
 };
 
 /** Conversation state lives above the views so it survives switching between Manual, Tools and Agent. */
+export type Persona = "default" | "cfo" | "math" | "engmath";
+
 export function useAgentChat(track: string) {
   const [messages, setMessages] = useState<AgentMsg[]>([]);
   const [busy, setBusy] = useState(false);
+  const [persona, setPersona] = useState<Persona>("default");
+  const canCfo = track === "analyst" || track === "scientist" || track === "ml" || track === "cpe";
   const ref = useRef<AgentMsg[]>([]);
   ref.current = messages;
   const send = useCallback(async (text: string, stepId?: string) => {
@@ -36,19 +42,19 @@ export function useAgentChat(track: string) {
     setMessages((m) => [...m, { role: "user", content: t }]);
     setBusy(true);
     try {
-      const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null });
+      const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null, persona: canCfo ? persona : "default" });
       const used = r.tools_used.length ? ` · used ${r.tools_used.map((x) => x.tool).join(", ")}` : "";
       setMessages((m) => [...m, { role: "agent", content: r.reply, proposals: r.proposals, actions: r.actions, meta: `${r.route?.kind ? `${r.route.kind} → ` : ""}${r.provider}${used}`,
         trace: { route: r.route, model: r.model, provider: r.provider, tools: r.tools_used, tokens_in: r.usage?.input_tokens ?? 0, tokens_out: r.usage?.output_tokens ?? 0 } }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "agent", content: e instanceof ApiError ? e.message : "The agent couldn't answer.", error: true }]);
     } finally { setBusy(false); }
-  }, [track]);
-  return { messages, busy, send, clear: () => setMessages([]) };
+  }, [track, persona, canCfo]);
+  return { messages, busy, send, clear: () => setMessages([]), persona, setPersona, canCfo };
 }
 
 /** The always-visible search bar: ask a question or tell the agent what to do. */
-export function CommandBar({ name, busy, onSend }: { name: string; busy: boolean; onSend: (text: string) => void }) {
+export function CommandBar({ name, busy, onSend, persona, onPersona, track }: { name: string; busy: boolean; onSend: (text: string) => void; persona?: string; onPersona?: (v: Persona) => void; track?: string }) {
   const [q, setQ] = useState("");
   const go = () => { if (q.trim().length >= 2 && !busy) { onSend(q); setQ(""); } };
   return (
@@ -56,6 +62,8 @@ export function CommandBar({ name, busy, onSend }: { name: string; busy: boolean
       <Search className="ml-2 h-4 w-4 shrink-0 text-muted" aria-hidden />
       <input className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none" value={q} maxLength={1200} onChange={(e) => setQ(e.target.value)}
              placeholder={`Ask the ${name} a question, or tell it what to do…`} aria-label={`Message the ${name}`} />
+      {onPersona && <select className="input shrink-0 text-xs" value={persona} onChange={(e) => onPersona(e.target.value as Persona)} aria-label="Ask as">
+        <option value="default">Ask as {name}</option>{track === "cpe" ? <option value="engmath">Ask as Engineering Mathematician</option> : <><option value="cfo">Ask as CFO</option><option value="math">Ask as Mathematician</option></>}</select>}
       <button className="btn btn-primary" type="submit" disabled={busy || q.trim().length < 2}><Send className="h-4 w-4" aria-hidden /> {busy ? "Thinking…" : "Send"}</button>
     </form>
   );
@@ -68,6 +76,9 @@ async function applyProposal(p: AgentProposal): Promise<string> {
     if (p.data.name === "checkpoint") { await postJson("/api/dba/checkpoint", {}); return "Checkpoint done."; }
     const r = await postJson<{ ok?: boolean; detail?: string }>("/api/dba/verify-backup", {}); return `Backup check ${r.ok ? "passed" : "FAILED"}${r.detail ? `: ${r.detail}` : ""}`;
   }
+  if (p.type === "dataissue") { await postJson("/api/pipeline/issues", p.data); return "Sent to the data engineer (Data Engineering, Design, Data issues)."; }
+  if (p.type === "story") { const { title, ...rest } = p.data; await postJson("/api/stats/qual", { kind: "story", title: String(title), data: rest }); return "Saved to your Data story notes (Analysis Lab, Data foundations, Data storytelling)."; }
+  if (p.type === "architecture" || p.type === "warehouse" || p.type === "dmplan") { const { title, ...rest } = p.data; await postJson("/api/stats/qual", { kind: p.type, title: String(title), data: rest }); return "Saved to Data engineering, Design."; }
   await postJson(ENDPOINT[p.type], p.data); return "Added.";
 }
 const TIER_NAME: Record<string, string> = { google: "Gemini", openai: "OpenAI", anthropic: "Claude" };
@@ -95,7 +106,7 @@ function Trace({ t }: { t: NonNullable<AgentMsg["trace"]> }) {
 function Proposal({ p }: { p: AgentProposal }) {
   const [state, setState] = useState<{ s: "idle" | "busy" | "ok" | "err"; msg?: string }>({ s: "idle" });
   const title = String(p.data.title ?? p.data.name ?? p.data.kr ?? p.type);
-  const detail = Object.entries(p.data).filter(([k, v]) => v !== "" && v != null && !["title", "name", "status"].includes(k)).map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`).join(" · ");
+  const detail = Object.entries(p.data).filter(([k, v]) => v !== "" && v != null && !["title", "name", "status"].includes(k) && !(Array.isArray(v) && v.length === 0)).map(([k, v]) => `${k.replace(/_/g, " ")}: ${String(v)}`).join(" · ");
   return (
     <div className="mt-2 rounded-md border border-line bg-panel2 p-3 text-xs">
       <div className="flex flex-wrap items-center gap-2"><Badge>draft {p.type}</Badge><b className="text-sm">{title}</b></div>
@@ -137,6 +148,7 @@ export function AgentPanel({ track, chat, onAction }: { track: string; chat: Ret
         <ul className="list-disc space-y-0.5 pl-5 text-sm">{info.can.map((c) => <li key={c}>{c}</li>)}</ul>
         <p className="text-xs text-muted">It can&apos;t change anything by itself: drafts come with an Add button and links open only when you click. Whatever it reads (per your privacy mode) is sent to the AI provider. {!allowed && "AI is off for this workspace: switch it on in Settings."} {allowed && !ready && "Add a key in backend/.env and restart to enable it: the manual works without one."}</p>
       </section>
+      {(track === "analyst" || track === "scientist") && <AiWorkPanel role={track} title={track === "analyst" ? "Data Analyst" : "Data Scientist"} />}
       <section className="card p-4" aria-label="Examples">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Try asking or directing</h3>
         <div className="flex flex-wrap gap-2">{examples.map((x) => <button key={x} className="btn text-xs" disabled={chat.busy} onClick={() => chat.send(x)}>{x}</button>)}</div>

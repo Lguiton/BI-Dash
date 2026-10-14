@@ -29,3 +29,9 @@ Wireshark, Nmap, Burp Suite, Metasploit, Kali, C2 frameworks and fuzzers are off
 ## Checklist for a personal app
 1. `.env` is ignored by git, readable only by you. 2. No secrets in tracked files. 3. CORS lists real origins. 4. A backup exists and a restore was tested.
 5. Dependencies are audited (`pip-audit`, Dependabot). 6. Only the ports you need are open. 7. You have a written first-hour incident checklist.
+
+## Defender tools
+
+Cybersecurity > Defender tools: JWT inspector (with optional HS256 check), certificate inspector (public certificates only), CVSS 3.1 base score, STRIDE worksheet, code pattern scanner (secrets masked), Sigma-style rule tester, and a playbook simulator that runs nothing and holds destructive steps for a human. Text in, text out; nothing is sent anywhere.
+
+Not built: certificate chain or revocation checks, offensive tools, full static analysis, a real SOAR connection. Files: `services/sec_tools.py`, `routers/sectools.py`, `panels/SecTools.tsx`, `tests/test_sec_tools.py`.
