@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { DatasetStrip } from "@/components/DatasetCard";
 import { BookOpen, FileCode, LayoutDashboard } from "lucide-react";
 import { Suspense, useCallback, useEffect, useState } from "react";
+import { isLearnPath, useMode } from "@/lib/mode";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
@@ -258,7 +259,11 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
   const [prog, setProg] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<{ path: string; content: string } | null>(null);
-  const [view, setView] = useState<"manual" | "tools" | "agent">(() => parseView(sp.get("view")) ?? "manual");
+  const [mode] = useMode();
+  const work = mode === "work";
+  const [viewRaw, setView] = useState<"manual" | "tools" | "agent">(() => parseView(sp.get("view")) ?? "manual");
+  // Work mode has no how-to manual or learning path: it opens on the tools.
+  const view = work && viewRaw === "manual" ? "tools" : viewRaw;
   const [tab, setTab] = useState(() => sp.get("tab") ?? DEFAULT_TAB[id] ?? "");
   const [focusStep, setFocusStep] = useState<string | undefined>(() => sp.get("step") ?? undefined);
   const [agentName, setAgentName] = useState("agent");
@@ -310,24 +315,24 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
   const tickedHere = track ? track.path.filter((s) => prog?.done.includes(s.id)).length : serverTp?.done ?? 0;
   const tp = serverTp && track ? { ...serverTp, done: tickedHere, pct: Math.round((100 * tickedHere) / (track.path.length || 1)) } : serverTp;
   return (
-    <PageShell title={`${track?.name ?? "Career"} dashboard`} subtitle={track?.role ?? "Your practice space for this career."}>
+    <PageShell title={`${track?.name ?? "Career"} dashboard`} subtitle={work ? (track?.role ?? "Tools for this field.") : (track?.role ?? "Your practice space for this career.")}>
       {error && <ErrorBanner message={error} />}
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Link href="/tracks" className="btn">All tracks</Link>
+        {!work && <Link href="/tracks" className="btn">All tracks</Link>}
         <Link href="/company" className="btn">Company plan</Link>
-        {OPEN_LAB[id].map((l) => <Link key={l.href} href={l.href} className="btn">{l.label}</Link>)}
-        {tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
+        {OPEN_LAB[id].filter((l) => !work || !isLearnPath(l.href)).map((l) => <Link key={l.href} href={l.href} className="btn">{l.label}</Link>)}
+        {!work && tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
 
       <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
 
       <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
-        {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).map(([k, l]) => (
+        {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).filter(([k]) => !work || k !== "manual").map(([k, l]) => (
           <button key={k} role="tab" aria-selected={view === k} className={`btn ${view === k ? "btn-primary" : ""}`} onClick={() => setView(k)}>{l}</button>
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className={`grid gap-6 ${work ? "" : "xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"}`}>
         <div className="min-w-0 space-y-4">
           {view === "manual" && <ManualPanel track={id} focus={focusStep} onGo={goTool} onAsk={askAbout} />}
           {view === "agent" && <AgentPanel track={id} chat={chat} onAction={goAction} />}
@@ -336,8 +341,8 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               <DatasetStrip careerId={id} />
               {!dash && !error && <p className="text-sm text-muted">Loading…</p>}
               {dash && id === "analyst" && (<><AnalystPanels d={dash as unknown as AnalystDash} /><BiToolkit /><SurveyPanel /></>)}
-              {dash && id === "scientist" && (<><ScientistPanels d={dash as unknown as ScientistDash} /><BiToolkit /><SurveyPanel /><CoursePanel /></>)}
-              {dash && id === "ml" && (<><MlPanels d={dash as unknown as MlDash} /><LearnToolkit track="ml" /><CoursePanel /><MlopsPanel /><MlBuildPanel /><AiFundamentalsPanel /></>)}
+              {dash && id === "scientist" && (<><ScientistPanels d={dash as unknown as ScientistDash} /><BiToolkit /><SurveyPanel />{!work && <CoursePanel />}</>)}
+              {dash && id === "ml" && (<><MlPanels d={dash as unknown as MlDash} />{!work && <><LearnToolkit track="ml" /><CoursePanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}</>)}
               {dash && id === "engineering" && <EngineeringTabs d={dash as unknown as EngineeringDash} tab={tab} onTab={setTab} />}
               {dash && id === "pm" && (<><PmPanel tab={tab} onTab={setTab} /><LeadPanel /></>)}
               {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
@@ -346,8 +351,8 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
               {dash && id === "itsupport" && <ItPanel tab={tab} onTab={setTab} />}
               {dash && id === "cpe" && <CpePanel tab={tab} onTab={setTab} />}
-              {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} /><LearnToolkit track="ai" /><AiWorkbenchPanel /><GovPanel /><ImplPanel /><CoursePanel /><PyLibPanel /><MlopsPanel /><MlBuildPanel /><AiFundamentalsPanel /><InferencePanel /></>)}
-              {dash && (
+              {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
+              {dash && !work && (
                 <section className="card p-4">
                   <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>
                   <ul className="list-disc space-y-1 pl-5 text-sm">{dash.ideas.map((i) => <li key={i}>{i}</li>)}</ul>
@@ -357,7 +362,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
           )}
         </div>
 
-        <aside className="card h-fit min-w-0 space-y-3 p-5">
+        {!work && <aside className="card h-fit min-w-0 space-y-3 p-5">
           <h2 className="text-sm font-semibold">Learning path</h2>
           <ol className="space-y-3">
             {track?.path.map((s) => <StepRow key={s.id} s={s} done={!!prog?.done.includes(s.id)} onToggle={() => toggle(s)} onOpen={open} />)}
@@ -368,7 +373,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               <ul className="list-disc space-y-1 pl-5 text-xs text-muted">{track.projects.map((p) => <li key={p}>{p}</li>)}</ul>
             </div>
           )}
-        </aside>
+        </aside>}
       </div>
 
       {file && (

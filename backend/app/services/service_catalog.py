@@ -22,7 +22,7 @@ GROUPS = {
     "health": "Health data, informatics and BI",
     "stat": "Statistics, genomics and research",
 }
-DEFAULT_RATES = {"bi": 75, "ds": 95, "data": 80, "cpe": 85, "net": 80, "it": 60, "sec": 90, "ai": 100, "pm": 80, "fs": 90, "biz": 85, "devops": 100, "mkt": 65, "ux": 70, "health": 100, "stat": 95}   # USD per hour, placeholders
+DEFAULT_RATES = {"bi": 75, "ds": 85, "data": 70, "cpe": 85, "net": 85, "it": 75, "sec": 90, "ai": 105, "pm": 90, "fs": 90, "biz": 145, "devops": 95, "mkt": 65, "ux": 70, "health": 100, "stat": 80}   # USD per hour, set from the Las Vegas price research (Oct 2026); change in Services
 
 
 def _s(id_, group, name, deliver, hours, model, tool, needs=""):
@@ -216,3 +216,63 @@ def quote(lines: list[dict], client: str = "", discount_pct: float = 0.0) -> dic
     d = max(0.0, min(float(discount_pct or 0), 50.0)) / 100
     return {"client": client[:80], "lines": out, "subtotal": [round(total_lo, 2), round(total_hi, 2)], "discount_pct": round(d * 100, 1),
             "total": [round(total_lo * (1 - d), 2), round(total_hi * (1 - d), 2)], "note": "A range based on the typical hours. Confirm the final price once you have seen the work."}
+
+
+# ------------------------------------------------------------------ Henderson / Las Vegas price list (researched October 2026)
+# Market = published ranges from Las Vegas firms and national freelance guides; "price" is set roughly 10-20% under them.
+# Rows with market "Estimate" had no direct source. Ranges change; treat as a starting point.
+PRICE_LIST_DATE = "2026-10-13"
+
+
+def _p(service, gets, market, price):
+    return {"service": service, "gets": gets, "market": market, "price": price}
+
+
+PRICE_LIST = [
+    {"group": "Everyday tech help (homes and individuals)", "rows": [
+        _p("Remote tech support", "Fix slowdowns, setup, email, printer and Wi-Fi help over screen share", "$40-50/mo plans; about $60/hr local", "$55/hr, 1 hour minimum"),
+        _p("In-home visit, computer or network", "Virus cleanup, setup, router and Wi-Fi tuning, data transfer", "$50-150 on-site; $125-175/hr at pro shops", "$75/hr + $40 trip (Henderson or Las Vegas)"),
+        _p("Personal data backup setup", "Automatic backup plan and a restore test", "Part of IT plans", "$95 flat"),
+    ]},
+    {"group": "Small business IT and security (1 to 25 staff)", "rows": [
+        _p("IT support, hourly", "Break-fix and help-desk work", "$125-175/hr; after hours $175-250", "$105/hr; after hours $150/hr"),
+        _p("Monthly IT care plan", "Check-ins, updates, backups, user help", "$100-200 per user/mo (average about $145)", "$85-125 per user/mo, 5-user minimum"),
+        _p("Onboarding and setup", "Inventory, accounts, backups, security baseline", "$1,200 to $10,000", "$900-3,500"),
+        _p("Basic security checklist review", "Defensive review of accounts, email, backups and devices with a written fix list", "$5,000-15,000 at firms", "$1,500-4,500 for a small office"),
+        _p("Compliance gap review (starter)", "Gap list against a framework with a plain-English plan", "$8,000-20,000", "$4,500-12,000"),
+    ]},
+    {"group": "Data, BI and analytics", "rows": [
+        _p("Data analyst, hourly", "Cleaning, analysis, answers to business questions", "Mid $65-120/hr; senior $120-200", "$60-95/hr"),
+        _p("Custom dashboard", "A dashboard from your sheets or database with a walkthrough", "Marketplace $90-200 (lowest tier); local pro work is far higher", "$900-3,500"),
+        _p("Monthly reporting retainer", "Refreshed dashboards and a monthly summary", "$300-1,500/mo", "$300-1,200/mo"),
+        _p("Spreadsheet and data cleanup", "Fix, merge, de-duplicate, automate", "Analyst hourly rates", "$60/hr or $250-900 flat"),
+        _p("Statistics and study analysis", "Tests, models and a clear written results summary", "$40-150/hr; from scratch $60-80", "$55-110/hr"),
+    ]},
+    {"group": "Web, design and marketing", "rows": [
+        _p("Small business website", "Up to 5 pages, mobile friendly, contact form", "$1,800-5,500 local freelance", "$1,500-4,800"),
+        _p("Web design, hourly", "Edits and extras", "$75-150/hr", "$65-95/hr"),
+        _p("Website care plan", "Updates, backups, small edits", "$75-200/mo", "$65-175/mo"),
+        _p("Logo", "Concepts, revisions, files for print and web", "$300-800", "$250-700"),
+        _p("Social media graphics", "Posts and story images", "$25-150 each; packages $200-1,500/mo", "$20-120 each; $180-1,300/mo"),
+        _p("Brand starter package", "Logo, colors, fonts, guidelines", "$3,500-12,500", "$2,800-9,500"),
+        _p("Social media management", "Plan, post, reply, monthly report", "$500-2,000/mo", "$450-1,700/mo"),
+        _p("UI/UX design, hourly", "Screens, flows, prototypes", "$65-100/hr mid-level", "$55-90/hr"),
+        _p("App or site design project", "A handful of screens, a visual direction, a component set", "$10,000-25,000 (US)", "$7,500-19,000"),
+    ]},
+    {"group": "Consulting, project management, software and AI", "rows": [
+        _p("Business consulting, hourly", "Process, strategy and leadership advice", "$150-300/hr at advisory firms", "$110-180/hr"),
+        _p("Business assessment", "Review, findings and a prioritized plan", "$1,500-5,000", "$1,200-4,000"),
+        _p("Advisory retainer", "Standing monthly advice and check-ins", "$2,000-10,000/mo", "$1,500-6,000/mo"),
+        _p("Project management, hourly", "Plans, schedules, status, risk tracking", "Estimate (no direct source)", "$70-110/hr"),
+        _p("Software or automation, hourly", "Full-stack features, scripts, integrations", "Estimate (web work $75-150/hr)", "$70-110/hr"),
+        _p("AI and ML project work, hourly", "Models, text tools, data pipelines", "Estimate (analytics up to $200/hr)", "$85-130/hr"),
+    ]},
+]
+
+PRICE_NOTE = ("Set about 10-20% under published Henderson and Las Vegas ranges to stay competitive. Most local figures come from IT firms and agencies, "
+              "which carry more overhead than a freelancer. Rows marked Estimate had no direct source. Nevada requires a business license for most work, "
+              "and security reviews need a written scope. Raise prices as you collect reviews.")
+
+
+def price_list() -> dict:
+    return {"date": PRICE_LIST_DATE, "groups": PRICE_LIST, "note": PRICE_NOTE}

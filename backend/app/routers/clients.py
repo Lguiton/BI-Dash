@@ -20,6 +20,11 @@ def overview():
     return cl.overview()
 
 
+@router.get("/open-jobs")
+def open_jobs():
+    return {"jobs": cl.open_jobs(), "sample": cl.sample()}
+
+
 @router.get("/settings")
 def get_settings():
     return cl.settings()

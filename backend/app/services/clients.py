@@ -345,6 +345,22 @@ def overview(today: date | None = None) -> dict:
             "note": "Unbilled amount uses each job's rate, or your default rate. Paid this month counts invoices marked paid in the current month."}
 
 
+def open_jobs(today: date | None = None) -> list[dict]:
+    """Jobs still in play (lead, quoted, active), soonest due first, with the client name and hours so far."""
+    d = _load()
+    ti = (today or date.today()).isoformat()
+    cname = {c["id"]: c["name"] for c in d["clients"] if not c["archived"]}
+    out = []
+    for j in d["jobs"]:
+        if j["status"] not in ("lead", "quoted", "active") or j["client_id"] not in cname:
+            continue
+        hrs = round(sum(t["hours"] for t in d["time"] if t["job_id"] == j["id"]), 2)
+        out.append({"id": j["id"], "title": j["title"], "status": j["status"], "client_id": j["client_id"], "client": cname[j["client_id"]],
+                    "quote": j["quote"], "hours": hrs, "due": j["due"], "late": bool(j["due"] and j["due"] < ti and j["status"] == "active")})
+    out.sort(key=lambda x: (x["due"] is None, x["due"] or "", x["id"]))
+    return out
+
+
 def client_view(cid: int) -> dict:
     d = _load()
     c = _find(d, "clients", cid)

@@ -23,6 +23,11 @@ def get_catalog():
     return service_catalog.catalog()
 
 
+@router.get("/price-list")
+def get_price_list():
+    return service_catalog.price_list()
+
+
 @router.put("/rates")
 def put_rates(body: dict[str, float]):
     try:

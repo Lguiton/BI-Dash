@@ -1,10 +1,17 @@
 "use client";
 import { Download, RotateCcw, Save, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ExportEverything } from "@/components/DataExtras";
 import { BriefingSettings, LaptopSettings, PasswordSettings } from "@/components/SettingsExtras";
+import { MyFields } from "@/components/MyFields";
+import { BusinessProfile, ServiceRates } from "@/components/BusinessSettings";
 import { PageShell } from "@/components/PageShell";
+import { PwaSetup } from "@/components/PwaSetup";
+import { ThemeChoice } from "@/components/ThemeChoice";
+import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
+import { Tabs } from "@/components/panels/kit";
 import { AlertsSettings } from "@/components/panels/OpsPanels";
 import { API_BASE, ApiError, deleteJson, getJson, postJson, putJson } from "@/lib/api";
 import type { AiMode, BackupItem, WorkspaceInfo, WorkspaceList, WorkspaceSettings } from "@/lib/types";
@@ -16,7 +23,18 @@ const MODES: [AiMode, string, string][] = [
 ];
 const size = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} KB`);
 
-export default function SettingsPage() {
+const TABS = [
+  { id: "general", label: "General" },
+  { id: "business", label: "Business and services" },
+  { id: "ai", label: "AI and privacy" },
+  { id: "data", label: "Data and backups" },
+  { id: "alerts", label: "Alerts and reports" },
+  { id: "security", label: "Security and device" },
+];
+
+function Body() {
+  const sp = useSearchParams();
+  const [tab, setTab] = useState(() => (TABS.some((t) => t.id === sp.get("tab")) ? (sp.get("tab") as string) : "general"));
   const [ws, setWs] = useState<WorkspaceList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback((signal?: AbortSignal) => {
@@ -26,20 +44,65 @@ export default function SettingsPage() {
   useEffect(() => { const ctl = new AbortController(); load(ctl.signal); return () => ctl.abort(); }, [load]);
 
   return (
-    <PageShell title="Settings & backups" subtitle="Per workspace: what the AI may see, and copies of your database you can go back to.">
+    <>
+      <Tabs label="Settings sections" value={tab} onChange={setTab} tabs={TABS} />
       {error && <ErrorBanner message={error} onRetry={() => load()} />}
-      {ws?.workspaces.map((w) => <WorkspaceCard key={w.name} w={w} onSaved={() => load()} />)}
-      {ws && <Backups workspace={ws.active} />}
-      {ws && <AlertsSettings key={ws.active} />}
-      <LaptopSettings />
-      <BriefingSettings />
-      <PasswordSettings />
-      <ExportEverything />
-      <section className="card space-y-2 p-5 text-sm text-muted" aria-label="About privacy">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-fg">What these settings do and don&apos;t do</h2>
-        <p>The AI settings are guardrails, not a vault. They stop the assistant from reading what you blocked through its normal tools, and they stop accidents. Anything it is allowed to see is sent to the provider you chose (Gemini, OpenAI or Claude). For data you can&apos;t share at all, keep AI off.</p>
-        <p>Everything else stays on this computer: your databases, backups and the activity log are plain files next to the app. Nothing here requires a login, so anyone who can open the app on this machine (or your network, if you expose it) can see your data.</p>
-      </section>
+      {tab === "general" && (
+        <div className="grid gap-4">
+          <section className="card space-y-3 p-5" aria-label="Workspace">
+            <h2 className="text-lg font-semibold">Practice or Real</h2>
+            <p className="text-sm text-muted">Practice is for learning and example data. Real is your own business data: the screen turns green and destructive actions take a backup first. Switching reloads the page so every number comes from the other database.</p>
+            <WorkspaceSwitcher />
+          </section>
+          <section className="card space-y-3 p-5" aria-label="Appearance">
+            <h2 className="text-lg font-semibold">Appearance</h2>
+            <ThemeChoice />
+          </section>
+          <MyFields />
+          <section className="card space-y-2 p-5" aria-label="Install on this device">
+            <h2 className="text-lg font-semibold">Install on this device</h2>
+            <p className="text-sm text-muted">Add the dashboard to your home screen or desktop so it opens like an app.</p>
+            <PwaSetup showButton />
+          </section>
+        </div>
+      )}
+      {tab === "business" && <div className="grid gap-4"><BusinessProfile /><ServiceRates /></div>}
+      {tab === "ai" && (
+        <div className="grid gap-4">
+          {ws?.workspaces.map((w) => <WorkspaceCard key={w.name} w={w} onSaved={() => load()} />)}
+          <section className="card space-y-2 p-5 text-sm text-muted" aria-label="About privacy">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-fg">What these settings do and don&apos;t do</h2>
+            <p>The AI settings are guardrails, not a vault. They stop the assistant from reading what you blocked through its normal tools, and they stop accidents. Anything it is allowed to see is sent to the provider you configured, so keep client secrets out of the data.</p>
+            <p>Everything else stays on this computer: your databases, backups and the activity log are plain files next to the app. Set a password in Security and device if anyone else can open the app on this machine or your network.</p>
+          </section>
+        </div>
+      )}
+      {tab === "data" && (
+        <div className="grid gap-4">
+          {ws && <Backups workspace={ws.active} />}
+          <ExportEverything />
+        </div>
+      )}
+      {tab === "alerts" && (
+        <div className="grid gap-4">
+          {ws && <AlertsSettings key={ws.active} />}
+          <BriefingSettings />
+        </div>
+      )}
+      {tab === "security" && (
+        <div className="grid gap-4">
+          <PasswordSettings />
+          <LaptopSettings />
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <PageShell title="Settings" subtitle="Workspace, appearance, business details and service rates, AI access, backups, alerts and security.">
+      <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}><Body /></Suspense>
     </PageShell>
   );
 }

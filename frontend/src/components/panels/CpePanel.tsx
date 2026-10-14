@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { getJson } from "@/lib/api";
 import { Section, Tabs } from "./kit";
 import { ToolView, type ToolSpec } from "./LearnToolkit";
@@ -158,7 +159,8 @@ function Systems({ data }: { data: R | null }) {
   );
 }
 
-export function CpePanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+export function CpePanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["sim", "systems"], wanted);
   const [data, setData] = useState<R | null>(null);
   useEffect(() => { getJson<R>("/api/cpe/reference").then(setData).catch(() => setData(null)); }, []);
   const [sim, setSim] = useState<R | null>(null);
@@ -169,7 +171,7 @@ export function CpePanel({ tab, onTab }: { tab: string; onTab: (t: string) => vo
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
         Practice calculators that show their working. They check your arithmetic; they do not replace building a circuit, using a meter, or reading a vehicle&apos;s service manual. Work on airbags, immobilizers and high-voltage systems is for trained people.
       </p>
-      <Tabs tabs={TABS} value={tab} onChange={onTab} label="Computer engineering tools" />
+      <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="Computer engineering tools" />
       {g ? <Group key={tab} g={g} samples={tab === "sim" || tab === "veh" ? sim : data} /> : <Systems data={data} />}
     </div>
   );

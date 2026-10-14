@@ -1,72 +1,74 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { getJson } from "@/lib/api";
-import { ChevronDown, DatabaseBackup, FlaskConical, Briefcase, Home, Activity, ArrowLeftRight, BarChart3, Building2, Settings2, Table2, Plug, BrainCircuit, Compass, Database, Network, ShieldCheck, Target, Terminal, Workflow, FileSearch, GitBranch, Gauge, LibraryBig, Shapes, ScrollText, Boxes, Sigma, Bot, Sparkles } from "lucide-react";
+import { ALL_FIELDS, FIELD_GROUPS } from "@/lib/fieldMenu";
+import { useMode, useMyFields } from "@/lib/mode";
+import { ChevronDown, DatabaseBackup, FlaskConical, Briefcase, Home, Activity, ArrowLeftRight, BarChart3, Building2, Settings2, Table2, Plug, BrainCircuit, Compass, Database, ShieldCheck, Target, Terminal, Workflow, FileSearch, GitBranch, Gauge, LibraryBig, Shapes, ScrollText, Boxes, Sigma, Layers, BookOpen, GraduationCap, ClipboardCheck, HelpCircle, Wrench, Receipt } from "lucide-react";
 
-type Item = { href: string; label: string; Icon: typeof Database };
-// The top bar holds working tools only. Everything meant for learning lives inside Tracks (see LEARN in app/tracks/page.tsx).
-const MAIN: Item[] = [
-  { href: "/", label: "Home", Icon: Home },
-  { href: "/bi", label: "Dashboard", Icon: BarChart3 },
-  { href: "/company", label: "Company", Icon: Building2 },
-  { href: "/packs", label: "Business dashboards", Icon: Boxes },
-  { href: "/intake", label: "Data Intake", Icon: Workflow },
+type Icon = typeof Database;
+type Item = { href: string; label: string; Icon: Icon };
+type Group = { label?: string; items: Item[] };
+
+// Work mode: only what is used to earn money. Learning pages live in Learn mode.
+const DATA: Group[] = [{ items: [
   { href: "/data", label: "My data", Icon: Table2 },
-  { href: "/kpis", label: "KPIs", Icon: Target },
-  { href: "/clients", label: "Clients", Icon: Briefcase },
-  { href: "/services", label: "Services", Icon: Briefcase },
+  { href: "/intake", label: "Data Intake", Icon: Workflow },
   { href: "/quality", label: "Data quality", Icon: ShieldCheck },
+] }];
+const DASHBOARDS: Group[] = [{ items: [
+  { href: "/bi", label: "Dashboard", Icon: BarChart3 },
+  { href: "/packs", label: "Business dashboards", Icon: Boxes },
+  { href: "/kpis", label: "KPIs", Icon: Target },
+  { href: "/company", label: "Company", Icon: Building2 },
+] }];
+const MORE: Group[] = [
+  { label: "Build and connect", items: [
+    { href: "/sources", label: "Sources", Icon: Plug },
+    { href: "/pipelines", label: "Pipelines", Icon: LibraryBig },
+    { href: "/workflow", label: "Workflow builder", Icon: GitBranch },
+    { href: "/hub", label: "Dataset hub", Icon: Layers },
+    { href: "/knowledge", label: "Knowledge search", Icon: FileSearch },
+  ] },
+  { label: "Watch", items: [
+    { href: "/ops", label: "Ops monitor", Icon: Gauge },
+    { href: "/logs", label: "Log explorer", Icon: ScrollText },
+    { href: "/activity", label: "Activity log", Icon: Activity },
+  ] },
+  { label: "Settings", items: [{ href: "/settings", label: "Settings", Icon: Settings2 }] },
 ];
-const LABS: Item[] = [
-  { href: "/toolbox", label: "Data Toolbox", Icon: Table2 },
-  { href: "/lab", label: "SQL Lab", Icon: Database },
-  { href: "/analysis", label: "Analysis Lab", Icon: Sigma },
-  { href: "/studio", label: "Model Studio", Icon: BrainCircuit },
-  { href: "/nlp-dl", label: "NLP & Deep Learning", Icon: BrainCircuit },
-  { href: "/design", label: "Systems Design", Icon: Boxes },
-  { href: "/workflow", label: "Workflow builder", Icon: GitBranch },
-  { href: "/diagrams", label: "Diagram studio", Icon: Shapes },
-  { href: "/hub", label: "Dataset hub", Icon: Boxes },
-  { href: "/knowledge", label: "Knowledge search", Icon: FileSearch },
-];
-const MANAGE: Item[] = [
-  { href: "/sources", label: "Sources", Icon: Plug },
-  { href: "/pipelines", label: "Pipelines", Icon: LibraryBig },
-  { href: "/compare", label: "Practice vs Real", Icon: ArrowLeftRight },
-  { href: "/ops", label: "Ops monitor", Icon: Gauge },
-  { href: "/logs", label: "Log explorer", Icon: ScrollText },
-  { href: "/settings", label: "Settings & backups", Icon: Settings2 },
-  { href: "/activity", label: "Activity log", Icon: Activity },
+// Learn mode: study and practice.
+const LABS: Group[] = [
+  { label: "Labs", items: [
+    { href: "/lab", label: "SQL Lab", Icon: Database },
+    { href: "/analysis", label: "Analysis Lab", Icon: Sigma },
+    { href: "/studio", label: "Model Studio", Icon: BrainCircuit },
+    { href: "/nlp-dl", label: "NLP & Deep Learning", Icon: BrainCircuit },
+    { href: "/design", label: "Systems Design", Icon: Boxes },
+    { href: "/diagrams", label: "Diagram studio", Icon: Shapes },
+    { href: "/compare", label: "Practice vs Real", Icon: ArrowLeftRight },
+  ] },
+  { label: "Practice", items: [
+    { href: "/python", label: "Python practice", Icon: Terminal },
+    { href: "/ml", label: "ML practice lab", Icon: FlaskConical },
+    { href: "/mlhand", label: "Learn ML by hand", Icon: Sigma },
+    { href: "/ai", label: "AI practice lab", Icon: BrainCircuit },
+    { href: "/apache", label: "Apache practice", Icon: Wrench },
+    { href: "/pipeline", label: "Learn pipelines", Icon: LibraryBig },
+    { href: "/scd", label: "Learn history tracking", Icon: Receipt },
+    { href: "/schema", label: "Learn star schemas", Icon: Shapes },
+    { href: "/toolmap", label: "Tool map", Icon: Compass },
+    { href: "/portfolio", label: "Portfolio builder", Icon: Briefcase },
+  ] },
 ];
 
-// The fields you work in. Each opens that field's tools.
-const FIELDS: { href: string; label: string; Icon: typeof Database; match: (path: string, role: string | null, f: string | null) => boolean }[] = [
-  { href: "/toolbox?role=analyst", label: "Data Analyst", Icon: BarChart3, match: (p, r) => p === "/toolbox" && r === "analyst" },
-  { href: "/toolbox?role=bi", label: "BI", Icon: Target, match: (p, r) => p === "/toolbox" && r === "bi" },
-  { href: "/toolbox?role=science", label: "Data Science", Icon: BrainCircuit, match: (p, r) => p === "/toolbox" && r === "science" },
-  { href: "/toolbox?role=eng", label: "Data Engineering", Icon: Database, match: (p, r) => p === "/toolbox" && r === "eng" },
-  { href: "/tracks/security?view=tools", label: "Cybersecurity", Icon: ShieldCheck, match: (p) => p.startsWith("/tracks/security") },
-  { href: "/tracks/network?view=tools", label: "Network", Icon: Network, match: (p) => p.startsWith("/tracks/network") },
-  { href: "/tracks/itsupport?view=tools", label: "IT repair", Icon: Settings2, match: (p) => p.startsWith("/tracks/itsupport") },
-  { href: "/toolbox?role=cpe", label: "Computer engineering", Icon: Terminal, match: (p, r) => (p === "/toolbox" && r === "cpe") || p.startsWith("/tracks/cpe") },
-  { href: "/toolbox?role=ai", label: "AI engineering", Icon: Bot, match: (p, r) => (p === "/toolbox" && r === "ai") || p.startsWith("/tracks/ai") },
-  { href: "/toolbox?role=ml", label: "ML, NLP and DL", Icon: Sparkles, match: (p, r) => (p === "/toolbox" && r === "ml") || p.startsWith("/tracks/ml") },
-  { href: "/toolbox?role=pm", label: "Project management", Icon: Compass, match: (p, r) => (p === "/toolbox" && r === "pm") || p.startsWith("/tracks/pm") },
-  { href: "/toolbox?role=fs", label: "Full stack", Icon: GitBranch, match: (p, r) => (p === "/toolbox" && r === "fs") || p.startsWith("/tracks/fullstack") },
-  { href: "/toolbox?role=sec", label: "DevSecOps", Icon: ShieldCheck, match: (p, r) => p === "/toolbox" && r === "sec" },
-  { href: "/fields?f=health", label: "Health data", Icon: Activity, match: (p, _r, f) => p === "/fields" && (f === "health" || !f) },
-  { href: "/fields?f=science", label: "Science and research", Icon: FlaskConical, match: (p, _r, f) => p === "/fields" && f === "science" },
-  { href: "/fields?f=cloud", label: "Cloud and design", Icon: Shapes, match: (p, _r, f) => p === "/fields" && f === "cloud" },
-];
-
-function Menu({ label, Icon, items, path }: { label: string; Icon: typeof Database; items: Item[]; path: string }) {
+function Menu({ label, Icon, groups, path, active, footer, wide }: { label: string; Icon: Icon; groups: Group[]; path: string; active?: boolean; footer?: { href: string; label: string }; wide?: boolean }) {
   // Remember the path the menu was opened on: navigating elsewhere closes it without an effect.
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === path;
   const box = useRef<HTMLDivElement>(null);
-  const inside = items.some((l) => l.href === path);
+  const inside = active ?? groups.some((g) => g.items.some((l) => l.href === path));
 
   useEffect(() => {
     if (!open) return;
@@ -83,57 +85,79 @@ function Menu({ label, Icon, items, path }: { label: string; Icon: typeof Databa
         <Icon className="h-4 w-4" aria-hidden /> {label} <ChevronDown className="h-3.5 w-3.5" aria-hidden />
       </button>
       {open && (
-        <ul className="card absolute left-0 z-20 mt-1 w-52 space-y-0.5 p-1 shadow-lg">
-          {items.map(({ href, label: l, Icon: I }) => (
-            <li key={href}>
-              <Link href={href} aria-current={path === href ? "page" : undefined} className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-panel2 ${path === href ? "bg-panel2 font-semibold" : ""}`}>
-                <I className="h-4 w-4" aria-hidden /> {l}
-              </Link>
-            </li>
+        <div className={`card absolute left-0 z-20 mt-1 max-h-[75vh] overflow-y-auto p-1 shadow-lg ${wide ? "w-64" : "w-56"}`}>
+          {groups.map((g, gi) => (
+            <div key={g.label ?? gi} role="group" aria-label={g.label ?? label}>
+              {g.label && <div className="px-2.5 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{g.label}</div>}
+              <ul className="space-y-0.5">
+                {g.items.map(({ href, label: l, Icon: I }) => (
+                  <li key={href}>
+                    <Link href={href} aria-current={path === href ? "page" : undefined} className={`flex items-center gap-2 rounded-md px-2.5 py-2 text-sm hover:bg-panel2 ${path === href ? "bg-panel2 font-semibold" : ""}`}>
+                      <I className="h-4 w-4" aria-hidden /> {l}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+          {footer && <Link href={footer.href} className="mt-1 block border-t border-line px-2.5 py-2 text-xs underline">{footer.label}</Link>}
+        </div>
       )}
     </div>
   );
 }
 
-function FieldsRow({ path }: { path: string }) {
-  const sp = useSearchParams();
-  const role = sp.get("role");
-  const fld = sp.get("f");
+function Plain({ href, label, Icon, active }: Item & { active: boolean }) {
   return (
-    <div role="group" aria-label="Fields" className="flex flex-wrap items-center gap-1">
-      <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-muted">Fields</span>
-      {FIELDS.map(({ href, label, Icon, match }) => {
-        const active = match(path, role, fld);
-        return (
-          <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`btn ${active ? "btn-primary" : ""}`}>
-            <Icon className="h-4 w-4" aria-hidden /> {label}
-          </Link>
-        );
-      })}
-    </div>
+    <Link href={href} aria-current={active ? "page" : undefined} className={`btn ${active ? "btn-primary" : ""}`}>
+      <Icon className="h-4 w-4" aria-hidden /> {label}
+    </Link>
   );
+}
+
+function FieldsMenu({ path }: { path: string }) {
+  const [mine] = useMyFields();
+  const keep = (id: string) => mine.length === 0 || mine.includes(id);
+  const groups: Group[] = [
+    { items: [{ href: "/fields", label: "All fields (main screen)", Icon: Compass }] },
+    ...FIELD_GROUPS.map((g) => ({ label: g.label, items: g.items.filter((i) => keep(i.id)).map((i) => ({ href: i.href, label: i.label, Icon: Compass })) })).filter((g) => g.items.length > 0),
+  ];
+  const active = path === "/fields" || ALL_FIELDS.some((i) => i.match(path));
+  return <Menu label={mine.length ? `Fields (${mine.length})` : "Fields"} Icon={Compass} groups={groups} path={path} active={active} wide footer={{ href: "/settings#my-fields", label: mine.length ? "Change my fields" : "Show only my fields…" }} />;
 }
 
 export function NavBar() {
   const path = usePathname();
+  const [mode] = useMode();
   const [cc, setCc] = useState(false);
   useEffect(() => { getJson<{ enabled: boolean }>("/api/system/status").then((s) => setCc(!!s.enabled)).catch(() => setCc(false)); }, []);
-  const inTracks = path.startsWith("/tracks") && !FIELDS.some((f) => f.match(path, null, null) && path.startsWith("/tracks/"));
+  const inTracks = path.startsWith("/tracks") && !ALL_FIELDS.some((f) => f.match(path) && path.startsWith("/tracks/"));
+  const more: Group[] = cc ? [...MORE.slice(0, 2), { label: "Settings", items: [...MORE[2].items, { href: "/computer", label: "Computer control", Icon: Terminal }] }] : MORE;
 
   return (
     <nav aria-label="Primary" className="grid gap-2">
-      <Suspense fallback={null}><FieldsRow path={path} /></Suspense>
       <div className="flex flex-wrap gap-1">
-        {MAIN.map(({ href, label, Icon }) => (
-          <Link key={href} href={href} aria-current={path === href ? "page" : undefined} className={`btn ${path === href ? "btn-primary" : ""}`}>
-            <Icon className="h-4 w-4" aria-hidden /> {label}
-          </Link>
-        ))}
-        <Menu label="Labs" Icon={FlaskConical} items={LABS} path={path} />
-        <Menu label="Manage" Icon={DatabaseBackup} items={cc ? [...MANAGE, { href: "/computer", label: "Computer control", Icon: Terminal }] : MANAGE} path={path} />
-        <Link href="/tracks" aria-current={inTracks ? "page" : undefined} className={`btn ${inTracks ? "btn-primary" : ""}`}><Compass className="h-4 w-4" aria-hidden /> Tracks</Link>
+        <Plain href="/" label="Home" Icon={Home} active={path === "/"} />
+        {mode === "work" ? (
+          <>
+            <Plain href="/clients" label="Clients" Icon={Briefcase} active={path === "/clients"} />
+            <Plain href="/services" label="Services" Icon={Receipt} active={path === "/services"} />
+            <Menu label="Data" Icon={Table2} groups={DATA} path={path} />
+            <Menu label="Dashboards" Icon={BarChart3} groups={DASHBOARDS} path={path} />
+            <FieldsMenu path={path} />
+            <Menu label="More" Icon={DatabaseBackup} groups={more} path={path} />
+          </>
+        ) : (
+          <>
+            <Plain href="/tracks" label="Tracks" Icon={Compass} active={inTracks || path === "/tracks"} />
+            <Plain href="/quiz" label="Quiz" Icon={HelpCircle} active={path === "/quiz"} />
+            <Plain href="/review" label="Review" Icon={ClipboardCheck} active={path === "/review"} />
+            <Plain href="/glossary" label="Glossary" Icon={BookOpen} active={path === "/glossary"} />
+            <Menu label="Labs and practice" Icon={FlaskConical} groups={LABS} path={path} />
+            <FieldsMenu path={path} />
+            <Plain href="/toolbox?role=howto" label="How-to guides" Icon={GraduationCap} active={false} />
+          </>
+        )}
       </div>
     </nav>
   );

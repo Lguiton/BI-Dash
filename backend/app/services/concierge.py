@@ -61,6 +61,12 @@ def _pack_dests() -> list[tuple]:
     return [(x["href"], x["label"] + " tools", x["blurb"], x["keywords"] + " " + x["examples"], "Data") for x in fieldpacks.listing()]
 
 
+DEST += [
+    ("/tracks/itsupport?view=tools&tab=fixlog", "IT fix log", "Find what you did last time for a repair problem, write each fix down with steps and result, and print a client copy",
+     "fix log history past fixed before again same problem repeat document write down steps taken knowledge base notes ticket resolution", "IT"),
+    ("/tracks/security?view=tools&tab=fixlog", "Cybersecurity fix log", "Record each incident or finding fix with the steps taken, search past fixes, and print a write-up",
+     "fix log incident history past fixed before again same problem document write down steps taken knowledge base security response remediation", "Security"),
+]
 DEST += _pack_dests()
 DEST.append(("/fields", "More fields: health data, science, cloud and design", "Health data (clinical, analytics, BI, informatics), statistics, genomics, research, cloud, UI/UX and marketing tools", "fields health clinical genomic statistics research cloud ux marketing hl7 fhir kpi hospital nursing", "Data"))
 

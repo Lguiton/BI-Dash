@@ -1,5 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
+import { FixLog } from "./FixLog";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ApiError, deleteJson, getJson, patchJson, postFile, postJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
@@ -14,11 +16,12 @@ import { PhishBreach } from "./PhishBreach";
 import { UnixAudit } from "./UnixAudit";
 
 const TABS = [
-  { id: "report", label: "Checkup report" }, { id: "fix", label: "How to fix" }, { id: "records", label: "Client records" }, { id: "phish", label: "Phishing and breach" }, { id: "unix", label: "Mac and Linux audit" }, { id: "audit", label: "Self-audit" }, { id: "logs", label: "Log analysis" }, { id: "web", label: "Web checks" },
+  { id: "report", label: "Checkup report" }, { id: "fix", label: "How to fix" }, { id: "fixlog", label: "Fix log" }, { id: "records", label: "Client records" }, { id: "phish", label: "Phishing and breach" }, { id: "unix", label: "Mac and Linux audit" }, { id: "audit", label: "Self-audit" }, { id: "logs", label: "Log analysis" }, { id: "web", label: "Web checks" },
   { id: "ports", label: "Local ports" }, { id: "endpoint", label: "Endpoint hardening" }, { id: "honeypot", label: "Honeypot logs" }, { id: "frame", label: "Principles and NIST CSF" }, { id: "tools", label: "Defender tools" }, { id: "crypto", label: "Crypto labs" }, { id: "incident", label: "Incidents" },
 ];
 
-export function SecPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+export function SecPanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["frame", "crypto"], wanted);
   const [fixId, setFixId] = useState<string | undefined>(undefined);
   const openFix = (id: string) => { setFixId(id); onTab("fix"); };
   return (
@@ -26,9 +29,10 @@ export function SecPanel({ tab, onTab }: { tab: string; onTab: (t: string) => vo
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
         Defensive tools for things you own. Web checks only work on public sites; offensive tools are explained in the Tool map, not built.
       </p>
-      <Tabs tabs={TABS} value={tab} onChange={onTab} label="Cybersecurity tools" />
+      <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="Cybersecurity tools" />
       {tab === "report" && <CheckupReport onFix={openFix} />}
       {tab === "fix" && <FixGuides openId={fixId} />}
+      {tab === "fixlog" && <FixLog area="security" />}
       {tab === "records" && <ClientRecords onFix={openFix} />}
       {tab === "phish" && <PhishBreach onFix={openFix} />}
       {tab === "unix" && <UnixAudit onFix={openFix} />}

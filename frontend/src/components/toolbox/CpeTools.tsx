@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { postJson } from "@/lib/api";
 import { Section, Tabs } from "@/components/panels/kit";
@@ -11,10 +12,11 @@ const BOARDS = [{ id: "uno", label: "Arduino Uno (5 V)" }, { id: "esp32", label:
 const PARTS_HELP = "One part per line: name, quantity, unit cost, current in mA, pins used, voltage (3.3, 5 or both)";
 
 export function CpeTools() {
-  const [tab, setTab] = useState("how");
+  const [want, setTab] = useState("how");
+  const { tabs, current: tab } = useWorkTabs(TABS, ["how"], want, true); // the field dashboard has its own fix-it panel
   return (
     <div className="grid gap-4">
-      <Tabs label="Computer engineering tools" value={tab} onChange={setTab} tabs={TABS} />
+      <Tabs label="Computer engineering tools" value={tab} onChange={setTab} tabs={tabs} />
       {tab === "how" && <FieldHowTo area="Computer engineering" agent="cpe" examples="e.g. board resets when the motor starts, battery dies too fast" />}
       {tab === "parts" && <Parts />}
       {tab === "battery" && <Battery />}

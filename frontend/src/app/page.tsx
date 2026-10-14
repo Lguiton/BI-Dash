@@ -4,28 +4,64 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PwaSetup } from "@/components/PwaSetup";
 import { PageShell } from "@/components/PageShell";
+import { Badge } from "@/components/panels/kit";
 import { ApiError, getJson } from "@/lib/api";
+import { useMode } from "@/lib/mode";
 
 type Pack = { id: string; industry: string; dept: string; title: string; rows: number | null };
 type Briefing = { subject: string; items: number; sections: { title: string; items: string[] }[] };
 type Health = { score: number; grade: string; needs_attention: { name: string; detail: string }[] };
+type Fu = { id: number; due: string; note: string; client?: string };
+type Over = { sample: boolean; clients: number; jobs_active: number; pipeline: number; outstanding: number; overdue: { id: number; number: string; client: string; total: number; days_late: number }[]; paid_this_month: number; unbilled_hours: number; unbilled_amount: number; followups_due: Fu[] };
+type OpenJob = { id: number; title: string; status: string; client: string; client_id: number; quote: number; hours: number; due: string | null; late: boolean };
 
-const PLACES = [
-  { href: "/bi", label: "Main dashboard", note: "Your uploaded data: trend, entities, insights" },
-  { href: "/packs", label: "Business dashboards", note: "Industry and department views, reports, imports" },
-  { href: "/company", label: "Company", note: "Plan, goals and company health" },
-  { href: "/kpis", label: "KPIs", note: "Targets and how you are doing" },
-  { href: "/tracks", label: "Tracks", note: "Analyst, data science, IT, engineering tools" },
-  { href: "/services", label: "Services", note: "What you can sell, with a quote builder" },
-  { href: "/intake", label: "Data Intake", note: "Upload a file; the agents process it end to end" },
-  { href: "/data", label: "My data", note: "Tables, charts and imports" },
+const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+const QUICK = [
+  { href: "/clients", label: "New client", note: "Add a client, a job or an invoice" },
+  { href: "/intake", label: "Import data", note: "Drop in a file; it is cleaned and checked" },
+  { href: "/packs", label: "Make a dashboard", note: "Industry and department views" },
+  { href: "/services", label: "Quote a job", note: "Price list and quote builder" },
+];
+const STUDY = [
+  { href: "/tracks", label: "Tracks", note: "Career paths with a learning path each" },
+  { href: "/quiz", label: "Practice quiz", note: "Test what you know" },
+  { href: "/review", label: "Spaced review", note: "Come back to what you missed" },
+  { href: "/glossary", label: "Data glossary", note: "Plain-English definitions" },
+  { href: "/lab", label: "SQL Lab", note: "Practice queries" },
+  { href: "/analysis", label: "Analysis Lab", note: "Statistics and forecasting practice" },
+  { href: "/studio", label: "Model Studio", note: "Build and test models" },
+  { href: "/nlp-dl", label: "NLP & Deep Learning", note: "Hands-on text and neural nets" },
+  { href: "/design", label: "Systems Design", note: "Design practice" },
+  { href: "/toolbox?role=howto", label: "How-to guides", note: "Search how to do or fix anything" },
 ];
 
 export default function HomePage() {
+  const [mode] = useMode();
+  return (
+    <PageShell title="Home" subtitle={mode === "work" ? "Today's work: jobs, follow-ups, money and quick starts." : "Learn mode: study, practice and how-to guides."}>
+      {mode === "work" ? <WorkHome /> : <LearnHome />}
+    </PageShell>
+  );
+}
+
+function LearnHome() {
+  return (
+    <>
+      <section aria-label="Study" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {STUDY.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
+      </section>
+      <p className="text-xs text-muted">Switch back to Work mode with the button in the top corner when you are ready for clients.</p>
+    </>
+  );
+}
+
+function WorkHome() {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [pick, setPick] = useState("");
   const [brief, setBrief] = useState<Briefing | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
+  const [ov, setOv] = useState<Over | null>(null);
+  const [jobs, setJobs] = useState<OpenJob[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,14 +69,47 @@ export default function HomePage() {
     getJson<{ packs: Pack[] }>("/api/biz-packs").then((r) => setPacks(r.packs)).catch((e) => setErr(m(e)));
     getJson<Briefing>("/api/briefing/preview").then(setBrief).catch(() => setBrief(null));
     getJson<Health>("/api/health-check").then(setHealth).catch(() => setHealth(null));
+    getJson<Over>("/api/clients/overview").then(setOv).catch(() => setOv(null));
+    getJson<{ jobs: OpenJob[] }>("/api/clients/open-jobs").then((r) => setJobs(r.jobs)).catch(() => setJobs([]));
   }, []);
 
   const industries = [...new Set(packs.map((p) => p.industry))];
+  const todo = [
+    ...(ov?.overdue ?? []).map((i) => ({ key: `inv${i.id}`, text: `Invoice ${i.number} for ${i.client} is ${i.days_late} day${i.days_late === 1 ? "" : "s"} late (${usd(i.total)})`, href: "/clients" })),
+    ...(ov?.followups_due ?? []).map((f) => ({ key: `fu${f.id}`, text: `Follow up${f.client ? ` with ${f.client}` : ""}: ${f.note || "check in"} (due ${f.due})`, href: "/clients" })),
+  ];
   return (
-    <PageShell title="Home" subtitle="Everything in one place: today's briefing, your system health and a shortcut to any dashboard.">
+    <>
       {err && <ErrorBanner message={err} />}
+      <section aria-label="Quick starts" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {QUICK.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="card space-y-2 p-4" aria-label="Today">
+          <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Today</h2>{ov?.sample && <Badge tone="warn">Sample data</Badge>}</div>
+          {!ov && <p className="text-sm text-muted">Loading…</p>}
+          {ov && todo.length === 0 && <p className="text-sm">Nothing is late and no follow-ups are due.</p>}
+          {todo.length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm">{todo.map((t) => <li key={t.key}><Link href={t.href} className="underline">{t.text}</Link></li>)}</ul>}
+          {ov && <p className="text-xs text-muted">{usd(ov.outstanding)} outstanding · {usd(ov.paid_this_month)} paid this month · {usd(ov.unbilled_amount)} unbilled ({ov.unbilled_hours} h) · {usd(ov.pipeline)} in quotes</p>}
+        </section>
+        <section className="card space-y-2 p-4" aria-label="Open jobs">
+          <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Open jobs{ov ? ` (${jobs?.length ?? 0})` : ""}</h2><Link href="/clients" className="text-xs underline">All clients</Link></div>
+          {jobs === null && <p className="text-sm text-muted">Loading…</p>}
+          {jobs?.length === 0 && <p className="text-sm">No open jobs. <Link href="/clients" className="underline">Add a client and a job</Link>, or <Link href="/services" className="underline">quote one</Link>.</p>}
+          <ul className="space-y-1 text-sm">
+            {jobs?.slice(0, 8).map((j) => (
+              <li key={j.id} className="flex flex-wrap items-baseline justify-between gap-2">
+                <span><strong>{j.title}</strong> <span className="text-muted">for {j.client}</span></span>
+                <span className="text-xs text-muted">{j.status}{j.due ? ` · due ${j.due}` : ""}{j.late ? " · late" : ""}{j.quote ? ` · ${usd(j.quote)}` : ""}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
       <section className="card space-y-2 p-4" aria-label="Dashboards">
-        <h2 className="text-sm font-semibold">Dashboards</h2>
+        <h2 className="text-sm font-semibold">Open a dashboard</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select className="input min-w-72" aria-label="Choose a dashboard" value={pick} onChange={(e) => setPick(e.target.value)}>
             <option value="">Choose a dashboard…</option>
@@ -52,6 +121,7 @@ export default function HomePage() {
           <Link href={pick || "#"} aria-disabled={!pick} className={`btn btn-primary ${pick ? "" : "pointer-events-none opacity-50"}`}>Open</Link>
         </div>
       </section>
+
       <div className="grid gap-4 md:grid-cols-2">
         <section className="card space-y-2 p-4" aria-label="Today's briefing">
           <h2 className="text-sm font-semibold">Today&apos;s briefing</h2>
@@ -72,9 +142,6 @@ export default function HomePage() {
         </section>
       </div>
       <div><PwaSetup showButton /></div>
-      <section aria-label="Places" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {PLACES.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
-      </section>
-    </PageShell>
+    </>
   );
 }

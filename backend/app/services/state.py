@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS incidents (id INTEGER PRIMARY KEY AUTOINCREMENT, work
 CREATE TABLE IF NOT EXISTS sys_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, workspace TEXT, action TEXT, title TEXT, risk TEXT, params TEXT, status TEXT, output TEXT, undo_data TEXT, undone_at TEXT, revert_at REAL, kept INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS it_tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, category TEXT, priority TEXT, status TEXT, requester TEXT,
     opened_at TEXT, resolved_at TEXT, timeline TEXT, checklist TEXT);
+CREATE TABLE IF NOT EXISTS fix_log (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, area TEXT, title TEXT, category TEXT, device TEXT, symptoms TEXT, cause TEXT,
+    steps TEXT, result TEXT, minutes INTEGER, tools TEXT, prevention TEXT, client TEXT, ticket_id INTEGER, tags TEXT, created_at TEXT, updated_at TEXT);
 CREATE TABLE IF NOT EXISTS it_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, hostname TEXT, kind TEXT, os TEXT, owner TEXT, serial TEXT, purchased TEXT,
     warranty_end TEXT, status TEXT, notes TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS drift_history (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, model TEXT, version INTEGER, overall TEXT, worst_feature TEXT, worst_psi REAL, recent_rows INTEGER, detail TEXT);

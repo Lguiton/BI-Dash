@@ -25,3 +25,19 @@ def test_services_point_at_real_repair_areas():
     assert {"Laptops by make", "Phones by make", "Wi-Fi mesh"} <= areas
     assert len(it_repair.GUIDES) >= 75
     assert service_catalog.SERVICES
+
+
+def test_price_list_is_served_and_complete(client):
+    p = client.get("/api/service-list/price-list").json()
+    assert p["date"] and p["note"] and len(p["groups"]) == 5
+    rows = [r for g in p["groups"] for r in g["rows"]]
+    assert len(rows) >= 28
+    assert all(r["service"] and r["market"] and r["price"].startswith("$") for r in rows)
+    assert len({r["service"] for r in rows}) == len(rows)
+
+
+def test_default_rates_follow_the_price_research(client):
+    c = client.get("/api/service-list").json()
+    rate = {g["id"]: g["rate"] for g in c["groups"]}
+    assert rate["biz"] == 145 and rate["it"] == 75 and rate["ai"] == 105
+    assert all(60 <= v <= 150 for v in rate.values())

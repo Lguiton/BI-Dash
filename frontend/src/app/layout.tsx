@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "BI Dash", statusBarStyle: "black-translucent" },
 };
+// Development-only hint: this app is a signed-in dashboard, not a statically prefetched site, so skip instant-navigation validation.
+export const instant = false;
 export const viewport = { themeColor: "#0f172a" };
 
 // Apply a saved theme before first paint to avoid a light/dark flash.

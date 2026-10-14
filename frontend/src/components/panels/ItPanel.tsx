@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { deleteJson, getJson, patchJson, postFile, postJson, putJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg, num } from "./kit";
@@ -9,21 +10,24 @@ import { FundTab } from "./FundTab";
 import { InfraTab } from "./InfraTab";
 import { CoachTab } from "./CoachTab";
 import { BackupLab, InventoryImport } from "./ItBuild";
+import { FixForm, FixLog, SeenBefore, type Fix } from "./FixLog";
 
 const TABS = [
-  { id: "tickets", label: "Helpdesk" }, { id: "repair", label: "How to repair" }, { id: "assets", label: "Inventory" }, { id: "backup", label: "Backup lab" }, { id: "events", label: "Event logs" },
+  { id: "tickets", label: "Helpdesk" }, { id: "fixlog", label: "Fix log" }, { id: "repair", label: "How to repair" }, { id: "assets", label: "Inventory" }, { id: "backup", label: "Backup lab" }, { id: "events", label: "Event logs" },
   { id: "checklists", label: "Checklists" }, { id: "capacity", label: "Capacity and RAID" }, { id: "cheats", label: "Cheat sheets" }, { id: "keys", label: "Windows shortcuts" }, { id: "software", label: "Software guide" }, { id: "virt", label: "Virtualization (vSphere)" }, { id: "aplus", label: "CompTIA A+" }, { id: "fund", label: "IT fundamentals" }, { id: "infra", label: "Infrastructure labs" }, { id: "coach", label: "Ticket coach" },
 ];
 
-export function ItPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+export function ItPanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["cheats", "aplus", "fund", "infra", "virt", "coach", "keys"], wanted);
   const [ver, setVer] = useState(0);
   return (
     <div className="space-y-4">
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
         Personal-scale practice tools: a helpdesk and an inventory you fill in by hand, plus calculators and checklists. They don&apos;t discover or manage real machines.
       </p>
-      <Tabs tabs={TABS} value={tab} onChange={onTab} label="IT tools" />
+      <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="IT tools" />
       {tab === "tickets" && <TicketsTab />}
+      {tab === "fixlog" && <FixLog area="it" />}
       {tab === "repair" && <RepairTab />}
       {tab === "assets" && <><AssetsTab key={ver} /><InventoryImport onDone={() => setVer((v) => v + 1)} /></>}
       {tab === "backup" && <BackupLab />}
@@ -53,6 +57,9 @@ function TicketsTab() {
   const [f, setF] = useState({ title: "", category: "software", priority: "medium", requester: "", note: "" });
   const [sel, setSel] = useState<number | null>(null);
   const [note, setNote] = useState("");
+  const [seenQ, setSeenQ] = useState("");
+  const [draft, setDraft] = useState<{ id: number; d: Partial<Fix> } | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
   const load = useCallback(async () => { try { setD(await getJson<TicketData>("/api/it/tickets")); } catch (e) { setErr(errMsg(e, "Couldn't load tickets.")); } }, []);
   useEffect(() => { getJson<TicketData>("/api/it/tickets").then(setD).catch((e) => setErr(errMsg(e, "Couldn't load tickets."))); }, []);
   const act = async (fn: () => Promise<unknown>, m: string) => { setErr(null); try { await fn(); await load(); } catch (e) { setErr(errMsg(e, m)); } };
@@ -70,11 +77,12 @@ function TicketsTab() {
       )}
       <Section title="Open a ticket" note={d?.note}>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Field label="What is wrong?"><input className="field" maxLength={140} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
+          <Field label="What is wrong?"><input className="field" maxLength={140} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} onBlur={(e) => setSeenQ(e.target.value)} /></Field>
           <Field label="Who asked?"><input className="field" maxLength={80} value={f.requester} onChange={(e) => setF({ ...f, requester: e.target.value })} /></Field>
           <Field label="Category"><select className="field" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}>{(d?.categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select></Field>
           <Field label="Priority"><select className="field" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })}>{Object.keys(d?.sla ?? { medium: 24 }).map((p) => <option key={p} value={p}>{p}</option>)}</select></Field>
         </div>
+        <div className="mt-2"><SeenBefore q={seenQ} area="it" /></div>
         <button className="btn btn-primary mt-2" onClick={() => act(async () => { await postJson("/api/it/tickets", f); setF({ ...f, title: "", note: "" }); }, "Couldn't open the ticket.")}>Open ticket</button>
       </Section>
       <Section title="Tickets">
@@ -98,6 +106,7 @@ function TicketsTab() {
               <Field label="Status"><select className="field" value={cur.status} onChange={(e) => act(() => patchJson(`/api/it/tickets/${cur.id}`, { status: e.target.value }), "Couldn't update.")}>{STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}</select></Field>
               <button className="btn" onClick={() => act(async () => { await deleteJson(`/api/it/tickets/${cur.id}`); setSel(null); }, "Couldn't delete.")}>Delete</button>
             </div>
+            {cur.is_open && <SeenBefore q={cur.title} area={cur.category === "network" ? "network" : "it"} />}
             <div>
               <div className="mb-1 text-xs uppercase tracking-wide text-muted">Troubleshooting steps</div>
               <ul className="space-y-1">
@@ -113,6 +122,17 @@ function TicketsTab() {
                 <input className="field min-w-0 flex-1" aria-label="Add a note" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder="What did you try or learn?" />
                 <button className="btn" disabled={!note.trim()} onClick={() => act(async () => { await patchJson(`/api/it/tickets/${cur.id}`, { note }); setNote(""); }, "Couldn't add the note.")}>Add</button>
               </div>
+            </div>
+            <div>
+              {draft?.id === cur.id ? (
+                <FixForm key={cur.id} area={(draft.d.area as "it" | "network") ?? "it"} draft={draft.d} ticketId={cur.id} onSaved={() => { setDraft(null); setSaved(`Saved ticket #${cur.id} to the fix log.`); void load(); }} onCancel={() => setDraft(null)} />
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button className="btn" onClick={() => act(async () => { setSaved(null); setDraft({ id: cur.id, d: await getJson<Partial<Fix>>(`/api/fixlog/draft/ticket/${cur.id}`) }); }, "Couldn't start the fix record.")}>Save this fix to the fix log</button>
+                  <span className="text-xs text-muted">Starts from the steps you ticked and the notes you added. You can edit before saving.</span>
+                  {saved && <span className="text-sm text-emerald-600" role="status">{saved}</span>}
+                </div>
+              )}
             </div>
           </div>
         )}

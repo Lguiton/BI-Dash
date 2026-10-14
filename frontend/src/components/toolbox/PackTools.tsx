@@ -49,7 +49,7 @@ function ToolForm({ pack, tool }: { pack: string; tool: ToolDef }) {
 export function PackTools({ pack }: { pack: string }) {
   const [def, setDef] = useState<PackDef | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [tab, setTab] = useState("how");
+  const [want, setTab] = useState("how");
   useEffect(() => {
     let live = true;
     getJson<PackDef>(`/api/fieldpacks/${pack}`).then((r) => { if (live) { setDef(r); setTab("how"); } }).catch((e) => { if (live) setErr(errMsg(e, "Could not load this field.")); });
@@ -57,11 +57,13 @@ export function PackTools({ pack }: { pack: string }) {
   }, [pack]);
   if (err) return <ErrorBanner message={err} />;
   if (!def) return <p className="text-sm text-muted">Loading…</p>;
+  const work = true; // every field dashboard has its own fix-it panel, so the tool tabs skip the how-to tab
+  const tab = work && (want === "how" || !def.tools.some((t) => t.id === want)) ? def.tools[0]?.id ?? "how" : want;
   const cur = def.tools.find((t) => t.id === tab);
   return (
     <div className="grid gap-4">
       <p className="text-sm text-muted">{def.blurb}</p>
-      <Tabs label={`${def.label} tools`} value={tab} onChange={setTab} tabs={[{ id: "how", label: "How to do / fix" }, ...def.tools.map((t) => ({ id: t.id, label: t.title }))]} />
+      <Tabs label={`${def.label} tools`} value={tab} onChange={setTab} tabs={[...(work ? [] : [{ id: "how", label: "How to do / fix" }]), ...def.tools.map((t) => ({ id: t.id, label: t.title }))]} />
       {tab === "how" && <FieldHowTo area={def.label} agent={def.agent} examples={def.examples} />}
       {cur && <ToolForm key={`${pack}-${cur.id}`} pack={pack} tool={cur} />}
     </div>

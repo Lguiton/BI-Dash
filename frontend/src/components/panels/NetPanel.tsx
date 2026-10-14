@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
+import { FixLog } from "./FixLog";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
@@ -8,18 +10,20 @@ import { DesignTab } from "./DesignTab";
 import { NetSim, PcapTab } from "./NetSim";
 
 const TABS = [
-  { id: "subnet", label: "Subnet and VLSM" }, { id: "config", label: "Config review" }, { id: "capture", label: "Packet capture" },
+  { id: "subnet", label: "Subnet and VLSM" }, { id: "fixlog", label: "Fix log" }, { id: "config", label: "Config review" }, { id: "capture", label: "Packet capture" },
   { id: "diag", label: "DNS and reachability" }, { id: "gen", label: "Config generators" }, { id: "design", label: "Network design" }, { id: "sim", label: "Simulators" }, { id: "pcap", label: "Capture file reader" }, { id: "calc", label: "Calculators" }, { id: "ref", label: "Reference" },
 ];
 
-export function NetPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+export function NetPanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["sim", "ref"], wanted);
   return (
     <div className="space-y-4">
       <p className="rounded border border-line bg-panel2 p-3 text-xs text-muted">
         Practice tools for networks you own. They work on text you paste and on public hosts; scanners and live captures are explained in the Tool map, not built.
       </p>
-      <Tabs tabs={TABS} value={tab} onChange={onTab} label="Network tools" />
+      <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="Network tools" />
       {tab === "subnet" && <SubnetTab />}
+      {tab === "fixlog" && <FixLog area="network" />}
       {tab === "config" && <TextTool kind="config" />}
       {tab === "capture" && <TextTool kind="capture" />}
       {tab === "diag" && <DiagTab />}

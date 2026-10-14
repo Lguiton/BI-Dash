@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FlaskRound, Landmark } from "lucide-react";
+import { FlaskRound, Landmark, Settings2 } from "lucide-react";
 import { ApiError, getJson, postJson } from "@/lib/api";
 import type { WorkspaceList, WorkspaceName } from "@/lib/types";
 
@@ -74,5 +74,21 @@ export function RealBanner() {
       <span>AI: {ai === "off" ? "off" : ai === "aggregate" ? "summaries only" : "full access"}.</span>
       <Link href="/settings" className="ml-auto underline">Settings</Link>
     </div>
+  );
+}
+
+/** Header button: opens Settings and shows which workspace is open. Also tints the screen green in Real so every page paints right away. */
+export function SettingsButton() {
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    const ctl = new AbortController();
+    getJson<WorkspaceList>("/api/workspaces", ctl.signal).then((w) => { tintForWorkspace(w.active); setActive(w.active); }).catch(() => { /* the page itself shows API errors */ });
+    return () => ctl.abort();
+  }, []);
+  return (
+    <Link href="/settings" className="btn" aria-label={`Settings${active ? `, ${active} workspace open` : ""}`}>
+      <Settings2 className="h-4 w-4" aria-hidden /> Settings
+      {active && <span className="rounded-full px-2 py-0.5 text-xs" style={{ background: active === "real" ? "var(--good-bg)" : "var(--info-bg)" }}>{active === "real" ? "Real" : "Practice"}</span>}
+    </Link>
   );
 }

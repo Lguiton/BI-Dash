@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { deleteJson, getJson, postJson } from "@/lib/api";
 import { Badge, Section, Tabs, errMsg } from "@/components/panels/kit";
@@ -9,10 +10,11 @@ import { FieldHowTo, Out, TA, TI, lines, useRun } from "./fieldcommon";
 const TABS = [{ id: "how", label: "How to do / fix" }, { id: "evals", label: "Eval runner" }, { id: "prompts", label: "Prompt library" }, { id: "cost", label: "Cost estimator" }, { id: "risk", label: "Risk register" }, { id: "handoff", label: "Handoff pack" }];
 
 export function AiTools() {
-  const [tab, setTab] = useState("how");
+  const [want, setTab] = useState("how");
+  const { tabs, current: tab } = useWorkTabs(TABS, ["how"], want, true); // the field dashboard has its own fix-it panel
   return (
     <div className="grid gap-4">
-      <Tabs label="AI engineering tools" value={tab} onChange={setTab} tabs={TABS} />
+      <Tabs label="AI engineering tools" value={tab} onChange={setTab} tabs={tabs} />
       {tab === "how" && <FieldHowTo area="AI engineering" agent="ai" examples="e.g. assistant got worse after a change, bill is too high" />}
       {tab === "evals" && <Evals />}
       {tab === "prompts" && <Prompts />}

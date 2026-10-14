@@ -147,6 +147,7 @@ def test_demo_unknown_key(client):
 
 @pytest.mark.parametrize("key", ["pandas", "numpy", "sklearn", "fastapi", "matplotlib"])
 def test_core_demos_run_offline(key):
+    pytest.importorskip(key)   # matplotlib is an optional library; the demo reports "missing" without it
     r = pm.demo(key)
     assert r["status"] == "ok" and r["output"]
 

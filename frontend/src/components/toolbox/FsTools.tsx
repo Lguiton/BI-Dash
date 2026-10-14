@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { postJson } from "@/lib/api";
 import { Section, Tabs } from "@/components/panels/kit";
@@ -9,10 +10,11 @@ import { FieldHowTo, Out, TA, TI, lines, cols, useRun } from "./fieldcommon";
 const TABS = [{ id: "how", label: "How to do / fix" }, { id: "scaffold", label: "Scaffold writer" }, { id: "contract", label: "API contract" }, { id: "review", label: "Code review report" }, { id: "deploy", label: "Deploy runbook" }, { id: "quote", label: "Quote helper" }];
 
 export function FsTools() {
-  const [tab, setTab] = useState("how");
+  const [want, setTab] = useState("how");
+  const { tabs, current: tab } = useWorkTabs(TABS, ["how"], want, true); // the field dashboard has its own fix-it panel
   return (
     <div className="grid gap-4">
-      <Tabs label="Full stack tools" value={tab} onChange={setTab} tabs={TABS} />
+      <Tabs label="Full stack tools" value={tab} onChange={setTab} tabs={tabs} />
       {tab === "how" && <FieldHowTo area="Full stack" agent="fullstack" examples="e.g. api has no login, how do I deploy safely" />}
       {tab === "scaffold" && <Scaffold />}
       {tab === "contract" && <Contract />}

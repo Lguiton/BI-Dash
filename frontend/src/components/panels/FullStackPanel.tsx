@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
 import type { FsApiMap, FsCodebase, FsEndpoint, FsResponse, FsScaffold, FsStack } from "@/lib/types";
@@ -9,10 +10,11 @@ import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
 
 const TABS = [{ id: "bench", label: "Code Workbench" }, { id: "api", label: "API map & tester" }, { id: "scaffold", label: "Scaffold from a table" }, { id: "code", label: "Codebase" }, { id: "stack", label: "Stack & config" }, { id: "se", label: "Software engineering" }];
 
-export function FullStackPanel({ tab, onTab }: { tab: string; onTab: (t: string) => void }) {
+export function FullStackPanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
+  const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["se"], wanted);
   return (
     <div className="space-y-4">
-      <Tabs tabs={TABS} value={tab} onChange={onTab} label="Full stack tools" />
+      <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="Full stack tools" />
       {tab === "bench" && <CodeWorkbench />}
       {tab === "api" && <ApiTester />}
       {tab === "scaffold" && <Scaffold />}

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { API_BASE, apiFetch, deleteJson, getJson, postJson } from "@/lib/api";
 import { Section, Tabs, errMsg } from "@/components/panels/kit";
@@ -9,10 +10,11 @@ import { FieldHowTo, Out, TA, TI, lines, useRun } from "./fieldcommon";
 const TABS = [{ id: "how", label: "How to do / fix" }, { id: "label", label: "Text classifier" }, { id: "extract", label: "Extraction tester" }, { id: "exp", label: "Experiment tracker" }];
 
 export function MlTools() {
-  const [tab, setTab] = useState("how");
+  const [want, setTab] = useState("how");
+  const { tabs, current: tab } = useWorkTabs(TABS, ["how"], want, true); // the field dashboard has its own fix-it panel
   return (
     <div className="grid gap-4">
-      <Tabs label="ML and NLP tools" value={tab} onChange={setTab} tabs={TABS} />
+      <Tabs label="ML and NLP tools" value={tab} onChange={setTab} tabs={tabs} />
       {tab === "how" && <FieldHowTo area="ML, NLP and deep learning" agent="ml" examples="e.g. text sorter barely better than guessing, overfitting" />}
       {tab === "label" && <Labeling />}
       {tab === "extract" && <Extract />}

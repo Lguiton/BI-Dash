@@ -50,3 +50,17 @@ def test_validation_and_overdue(client):
     client.post("/api/clients/followups/add", json={"client_id": cid, "note": "Chase", "due": "2026-01-20"})
     assert cl.overview(date(2026, 2, 1))["followups_due"][0]["client"] == "A"
     client.delete(f"/api/clients/{cid}")
+
+
+def test_open_jobs_lists_jobs_in_play_soonest_first(client):
+    a = client.post("/api/clients", json={"name": "Alpha"}).json()["id"]
+    b = client.post("/api/clients", json={"name": "Beta"}).json()["id"]
+    j1 = client.post("/api/clients/jobs/add", json={"client_id": a, "title": "Later", "status": "active", "due": "2099-02-01", "quote": 500}).json()["id"]
+    client.post("/api/clients/jobs/add", json={"client_id": b, "title": "Sooner", "status": "quoted", "due": "2099-01-01", "quote": 300})
+    client.post("/api/clients/jobs/add", json={"client_id": b, "title": "Finished", "status": "done"})
+    client.post("/api/clients/jobs/add", json={"client_id": a, "title": "Overdue", "status": "active", "due": "2020-01-01"})
+    r = client.get("/api/clients/open-jobs").json()
+    titles = [j["title"] for j in r["jobs"]]
+    assert "Finished" not in titles and titles[0] == "Overdue" and titles.index("Sooner") < titles.index("Later")
+    assert next(j for j in r["jobs"] if j["title"] == "Overdue")["late"] is True
+    assert next(j for j in r["jobs"] if j["id"] == j1)["client"] == "Alpha"
