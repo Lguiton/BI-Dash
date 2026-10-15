@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Badge, errMsg } from "@/components/panels/kit";
 import { deleteJson, getJson, putJson } from "@/lib/api";
 
-type Q = { key: string; kind: "item" | "table" | "job"; title: string; text: string; auto?: boolean; edited?: boolean };
+type Q = { key: string; kind: "item" | "table" | "job" | "team"; title: string; text: string; auto?: boolean; edited?: boolean };
 type Stats = { drafts_total: number; drafts_today: number; accepted: number; discarded: number; edited: number; examples_saved: number; used_rate: number | null };
 type Role = { track: string; title: string; does: string; never: string; custom: boolean };
 type Mine = { id: number; problem: string; steps: string[]; saved: string };
@@ -46,12 +46,12 @@ export function AssistantDesk() {
       <ul className="space-y-3">
         {q.map((r) => (
           <li key={r.key} className="space-y-1 rounded border border-line p-2">
-            <div className="flex flex-wrap items-center gap-2 text-sm"><Badge tone="muted">{r.kind === "item" ? "work item" : r.kind === "job" ? "closing note" : "table"}</Badge><strong>{r.title}</strong>{r.auto && <Badge tone="warn">automatic</Badge>}</div>
+            <div className="flex flex-wrap items-center gap-2 text-sm"><Badge tone="muted">{r.kind === "item" ? "work item" : r.kind === "job" ? "closing note" : r.kind === "team" ? "team draft" : "table"}</Badge><strong>{r.title}</strong>{r.auto && <Badge tone="warn">automatic</Badge>}</div>
             <p className="text-xs text-muted">AI first pass. It can be wrong. Edit it, then accept or discard.</p>
-            <textarea aria-label={`Draft for ${r.title}`} className="input w-full text-xs" rows={6} value={text[r.key] ?? r.text} onChange={(e) => setText({ ...text, [r.key]: e.target.value })} />
+            <textarea aria-label={`Draft for ${r.title}`} className="input w-full text-xs" rows={r.kind === "team" ? 14 : 6} value={text[r.key] ?? r.text} onChange={(e) => setText({ ...text, [r.key]: e.target.value })} />
             <div className="flex flex-wrap gap-2">
               <button className="btn" onClick={() => decide(r, "accepted")}>Accept</button>
-              {r.kind !== "table" && <button className="btn" onClick={() => decide(r, "accepted", true)}>Accept and save as my example</button>}
+              {(r.kind === "item" || r.kind === "job") && <button className="btn" onClick={() => decide(r, "accepted", true)}>Accept and save as my example</button>}
               <button className="btn" onClick={() => decide(r, "discarded")}>Discard</button>
             </div>
           </li>

@@ -127,7 +127,7 @@ def update_draft(key: str, body: dict) -> dict:
         raise PrepError("No such draft.", 404)
     r = d[key]
     if "text" in body:
-        text = str(body["text"] or "").strip()[:MAX_TEXT]
+        text = str(body["text"] or "").strip()[: (6000 if r.get("kind") == "team" else MAX_TEXT)]
         if not text:
             raise PrepError("The draft can't be empty. Discard it instead.")
         if text != r.get("text"):

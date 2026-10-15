@@ -8,6 +8,7 @@ import { deleteJson, getJson, postJson, putJson } from "@/lib/api";
 import { useActiveJob } from "@/lib/activeJob";
 import { useStoredJson } from "@/lib/useStoredJson";
 import { downloadFile } from "@/lib/download";
+import { WorkTeam } from "@/components/WorkTeam";
 
 type Fld = { key: string; label: string; href: string };
 type Over = { job: { id: number; title: string; status: string; quote: number; field_info: Fld | null }; client: { id: number; name: string } | null; hours: number; unbilled_hours: number; unbilled_amount: number; ready_to_close?: boolean };
@@ -145,6 +146,7 @@ export function JobBar() {
                   <button className="btn" disabled={!note.trim()} onClick={() => run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); })}>Add note</button>
                 </div>
               )}
+              <WorkTeam key={id} jobId={id} advice={["itsupport", "network", "security"].includes(field?.key ?? "")} />
               {o.ready_to_close && <p role="status" className="text-xs">Every step is done. You can close the job.</p>}
               <div className="space-y-2 border-t border-line pt-2">
                 <fieldset className="flex flex-wrap items-center gap-3">

@@ -9,6 +9,7 @@ import { isLearnPath, useMode } from "@/lib/mode";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
+import { KnownIssues } from "@/components/KnownIssues";
 import { PipelinePanel } from "@/components/PipelinePanel";
 import { PmPanel } from "@/components/panels/PmPanel";
 import { FullStackPanel } from "@/components/panels/FullStackPanel";
@@ -347,9 +348,9 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "pm" && (<><PmPanel tab={tab} onTab={setTab} /><LeadPanel /></>)}
               {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
               {dash && id === "fullstack" && <FullStackPanel tab={tab} onTab={setTab} />}
-              {dash && id === "security" && <SecPanel tab={tab} onTab={setTab} />}
+              {dash && id === "security" && (<><SecPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="exploited" />}</>)}
               {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
-              {dash && id === "itsupport" && <ItPanel tab={tab} onTab={setTab} />}
+              {dash && id === "itsupport" && (<><ItPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="support" />}</>)}
               {dash && id === "cpe" && <CpePanel tab={tab} onTab={setTab} />}
               {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
               {dash && !work && (

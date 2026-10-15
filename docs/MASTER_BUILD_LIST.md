@@ -12,6 +12,8 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 
 ## Done recently
 
+- [x] **Known issues and support dates** on the IT repair and Cybersecurity dashboards (work mode): CISA's list of flaws attackers are using (downloaded once a day, searched on your computer) and endoflife.date support dates (only the product name is sent). Free, no key, passive reads. Not yet tested against the live sites; if one cannot be reached it shows the last saved copy with its date. Other free APIs considered: AbuseIPDB (1,000 checks a day, free account), RIPEstat, FRED, Census, Open-Meteo (non-commercial only).
+
 - [x] **One-place job flow**: type the job in the top box and click Go (it suggests dashboards) or **Start as job** (picks a client and a field from your words, creates the job and a first step, opens that field's dashboard). A **pinned job bar** under the top box on every page holds the timer, steps, a quick note, a Field switcher, Switch job and Close job. Home's open jobs have **Work on it**. Fields: IT repair, Networking, Cybersecurity, Data analyst, Data scientist, Machine learning, AI engineering, Engineering, Data engineering, Full stack, Project management, Systems analysis. The field guess uses a "Field:" title prefix, then keywords; you can change it.
 - [x] Dropdown lists readable in dark mode.
 
@@ -40,6 +42,8 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [x] Generate code tab (Full Stack field and track): describe it, get checked, risk-scanned code to copy. Never run.
 - [x] Agent checks: past-work lookup (free) and field-work questions with a rubric (live).
 - [x] AI routing: simple to Gemini, medium to OpenAI, complex (ML, NLP, statistics, math, code) to Claude.
+- [x] Practice kits: 20 of the 24 practice jobs now have made-up files to work on, a plain brief, "what done looks like", and a hidden answer key computed from the same data (job page > Practice materials). IT repair and Cybersecurity jobs have none: use your own gear.
+- [x] Work team (Practice and Real): type the job in the pinned job bar, "Draft with the team": Gemini, OpenAI and Claude each do it, Claude judges and writes one final draft. Draft only (Assistant desk), off by default, own daily cap, IT/Network/Security give checklists and advice only. In Real, only your instructions and pasted material are seen (client names removed; tables summarised locally).
 
 ## Waiting for your go-ahead
 - [ ] **Portfolio page** (sample work for prospects): a simple public-facing page, separate from the dashboard, which stays private. Starts after you finish a few practice jobs. Rules: every item labeled "sample" or "practice", no fake reviews or testimonials, no client names or data, made-up data for any sample dashboard. Use before/after, the written quote, and the job summary or checklist PDF as the pieces.

@@ -66,7 +66,7 @@ function Dax() {
       {ref.res && <Section title="Examples, SQL equivalents and slips">
         <Table head={["Measure", "DAX", "Same idea in SQL"]} rows={(ref.res.examples as R[]).map((e) => [e.name, <code key="a">{e.dax}</code>, <code key="b">{e.sql}</code>])} caption="DAX examples" />
         <h4 className="mt-3 text-sm font-semibold">Not in this lab, and the SQL way</h4>
-        <Table head={["Function", "Instead"]} rows={Object.entries(ref.res.unsupported as R).map(([k, v]) => [k, String(v)])} caption="Unsupported" />
+        <Table head={["Function", "Instead"]} rows={(ref.res.unsupported as { function: string; sql: string }[]).map((u) => [u.function, u.sql])} caption="Unsupported" />
         <h4 className="mt-3 text-sm font-semibold">Mistakes seen in teaching material</h4>
         <ul className="list-disc space-y-1 pl-5 text-sm">{(ref.res.slips as string[]).map((s) => <li key={s}>{s}</li>)}</ul>
         <p className="mt-2 text-xs text-muted">Not built: {(ref.res.not_built as string[]).join(" ")}</p>

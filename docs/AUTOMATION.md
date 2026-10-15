@@ -64,3 +64,18 @@ Every page also has a "Save page as PDF" button in the header. It opens the brow
 - The pinned bar (work mode, every page) shows the job, its total time, a Start/Stop timer per step, Done, add a step, a note on the current step, Field, Switch job, and Close job (choose what to invoice; a draft invoice only, nothing is sent). Collapse it with the arrow; Unpin removes it. It is remembered in this browser only.
 - Only one timer runs at a time. If one runs on another job, the bar says so and has Stop it.
 - Home > Open jobs: **Work on it** pins that job and opens its field dashboard.
+
+## Known issues and support dates
+
+On the IT repair and Cybersecurity dashboards (work mode), under the tools: **Is this still supported?** (endoflife.date: type windows, ubuntu, macos and so on, with an optional version) and **Flaws attackers are using now** (CISA Known Exploited Vulnerabilities: search by vendor, product or CVE). No key. The CISA list is downloaded about once a day and searched locally, so your search words stay on your computer; only the product name goes to endoflife.date. Both keep a saved copy for 24 hours and fall back to it, with its date, if the site is unreachable. A match means check the vendor's fix; no match does not prove a machine is safe. Dates can change, so confirm on the vendor's page before telling a client.
+
+## Work team and practice kits
+
+**Practice kits** (job page > Practice materials, Practice workspace only): each practice job except IT repair and Cybersecurity has made-up files (download, copy or look), the ask, what done looks like, and an answer key you reveal after trying. The data is generated the same every time and the key is computed from it. Everything is labelled practice.
+
+**Work team** (pinned job bar > Draft with the team): off until you turn it on, with a daily run cap (default 3, max 20; each run is up to four AI calls: Gemini, OpenAI and Claude draft, Claude judges, falling back to another judge if Claude fails). Works in both workspaces.
+- Practice: the team reads the job's practice files automatically (never the answer key).
+- Real: AI access must be allowed for the workspace in Settings (off by default). The team sees only the title, your instructions and what you paste; client names and secrets are removed; a pasted table is summarised on this computer (counts, ranges, duplicates, blanks) and the rows are not sent.
+- IT repair, Networking, Cybersecurity: advice and checklists only, never "it is fixed".
+- The result (final, judge notes, the three drafts) is a draft in the Assistant desk. Nothing is sent to a client and nothing is run. Check it against the real data or equipment, then accept or discard.
+- If one AI has no key or fails, the others continue; with one answer there is no judge and it says so. Not yet tested against the live providers.
