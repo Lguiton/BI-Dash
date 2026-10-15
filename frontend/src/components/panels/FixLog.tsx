@@ -160,6 +160,7 @@ export function FixLog({ area }: { area: FixArea }) {
                   <button className="btn" onClick={() => show(x.id)}>Write-up</button>
                   <button className="btn" onClick={() => dl(`/api/fixlog/${x.id}/doc?format=md`, `fix-${x.id}.md`)}>Download (.md)</button>
                   <button className="btn" onClick={() => dl(`/api/fixlog/${x.id}/doc?format=html&client=true`, `fix-${x.id}-client-copy.html`)}>Client copy (.html)</button>
+                  <button className="btn" onClick={() => dl(`/api/fixlog/${x.id}/checklist.pdf`, `fix-${x.id}-checklist.pdf`)}>Checklist (PDF)</button>
                   <button className="btn" onClick={() => setEditing(x)}>Edit</button>
                   <button className="btn" onClick={() => deleteJson(`/api/fixlog/${x.id}`).then(reload).catch((e) => setErr(errMsg(e, "Could not delete.")))}>Delete</button>
                 </div>

@@ -115,3 +115,18 @@ body {
 .td { padding: 0.65rem 1rem; white-space: nowrap; }
 
 .th-r { text-align: right; }
+
+/* Printing and Save as PDF: always light and readable, without the menus and buttons. */
+@media print {
+  :root, :root[data-theme], :root[data-workspace], :root[data-theme][data-workspace] {
+    --bg: #ffffff !important; --panel: #ffffff !important; --panel-2: #f8fafc !important; --fg: #0f172a !important; --muted: #475569 !important;
+    --line: #cbd5e1 !important; --grid: #e2e8f0 !important; --accent: #1d4ed8 !important; --accent-fg: #ffffff !important;
+    --good: #047857 !important; --bad: #b91c1c !important; --warn-bg: #fef3c7 !important; --good-bg: #d1fae5 !important; --info-bg: #e0e7ff !important; --bad-bg: #fee2e2 !important;
+    color-scheme: light;
+  }
+  body { background: #ffffff !important; border-top: 0 !important; }
+  button:not([role="tab"]), .btn, nav, [role="dialog"] { display: none !important; }
+  .card, section, article, table, figure, svg { break-inside: avoid; }
+  a { text-decoration: none; }
+  * { box-shadow: none !important; }
+}

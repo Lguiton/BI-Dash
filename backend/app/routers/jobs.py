@@ -1,6 +1,6 @@
 """One page per job: overview, close (with optional invoice), and a client summary."""
 from fastapi import APIRouter, Body, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 
 from app.services import clients as cl
 from app.services import jobpage as jobs
@@ -23,6 +23,12 @@ def overview(jid: int):
 @router.post("/{jid}/close")
 def close(jid: int, body: dict = Body(default={})):
     return _g(jobs.close, jid, str(body.get("bill") or "time"))
+
+
+@router.get("/{jid}/summary.pdf")
+def summary_pdf(jid: int):
+    data, name = _g(jobs.summary_pdf, jid)
+    return Response(data, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @router.get("/{jid}/summary")

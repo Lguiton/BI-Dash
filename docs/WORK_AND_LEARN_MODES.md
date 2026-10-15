@@ -2,7 +2,7 @@
 
 The dashboard has two modes, switched with the button in the top corner. The choice is remembered in this browser.
 
-**Work mode (default)** shows only what you use to earn money: Home, Clients, Services (with the Henderson and Las Vegas price list), Data, Dashboards, Fields and More.
+**Work mode (default)** shows only what you use to earn money: Home, Clients (the service catalog, quote builder and Henderson and Las Vegas price list are in Settings, Quotes and prices), Data, Dashboards, Fields and More.
 Every learning page is hidden. If you open one by link, you see a prompt to switch. Nothing is deleted.
 
 **Learn mode** shows Tracks, Quiz, Review, Glossary, the labs (SQL, Analysis, Model Studio, NLP and Deep Learning, Systems Design, Diagram studio, Practice vs Real), the practice pages,

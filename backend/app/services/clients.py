@@ -134,6 +134,11 @@ def delete_client(cid: int) -> dict:
     d["time"] = [t for t in d["time"] if t["job_id"] in jobs]
     d["clients"] = [c for c in d["clients"] if c["id"] != cid]
     _save(d)
+    try:
+        from app.services import clientnotes
+        clientnotes.purge(cid)
+    except Exception:  # noqa: BLE001 - the client is already gone; leftover notes are harmless
+        pass
     state.audit("client.delete", f"id {cid}")
     return {"deleted": cid}
 
@@ -459,3 +464,47 @@ def close_job(jid: int, bill: str = "time") -> dict:
     _save(d)
     state.audit("job.close", f"id {jid} bill={bill}" + (f" {invoice['number']}" if invoice else ""))
     return {"job": update_job(jid, {"status": "done"}), "invoice": invoice, "note": why}
+
+
+# ------------------------------------------------------------------ quote -> job -> invoice
+
+
+def quote_to_job(b: dict) -> dict:
+    """Save a quote from the quote builder as a job in 'quoted' status, so it can be accepted and later invoiced without retyping.
+    pick = low, mid or high chooses which end of the quote's range becomes the job's price."""
+    from app.services import service_catalog
+    pick = b.get("pick") or "mid"
+    if pick not in ("low", "mid", "high"):
+        raise ClientError("pick must be low, mid or high.")
+    cid = b.get("client_id")
+    if cid:
+        _find(_load(), "clients", int(cid))
+    elif b.get("client_name"):
+        cid = add_client({"name": b["client_name"]})["id"]
+    else:
+        raise ClientError("Choose a client, or type a new client's name.")
+    try:
+        q = service_catalog.quote(b.get("lines") or [], "", b.get("discount_pct") or 0)
+    except (ValueError, TypeError):
+        raise ClientError("Check the services on the quote.") from None
+    if not q["lines"]:
+        raise ClientError("Add at least one service to the quote.")
+    lo, hi = q["total"]
+    price = {"low": lo, "high": hi, "mid": round((lo + hi) / 2, 2)}[pick]
+    title = _txt(b.get("title") or ", ".join(x["name"] for x in q["lines"][:2]), "title", 120)
+    notes = "Quoted: " + "; ".join(f"{x['name']} x{x['qty']}" for x in q["lines"])
+    j = add_job({"client_id": int(cid), "title": title, "quote": price, "status": "quoted", "notes": notes[:1000], "due": b.get("due")})
+    return {"job": j, "client_id": int(cid), "price": price, "range": q["total"]}
+
+
+def accept_quote(jid: int) -> dict:
+    """The client said yes: the job becomes active, with the date noted."""
+    d = _load()
+    j = _find(d, "jobs", jid)
+    if j["status"] not in ("lead", "quoted"):
+        raise ClientError(f"This job is already {j['status']}.", 409)
+    j["status"] = "active"
+    j["accepted"] = date.today().isoformat()
+    _save(d)
+    state.audit("job.accept", f"id {jid}")
+    return j

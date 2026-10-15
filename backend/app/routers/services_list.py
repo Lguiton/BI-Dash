@@ -1,8 +1,9 @@
 """Your service list and a quick quote builder."""
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from app.services import service_catalog
+from app.services import pdfdocs, service_catalog
 
 router = APIRouter(prefix="/api/service-list", tags=["services"])
 
@@ -43,3 +44,18 @@ def post_quote(b: QuoteIn):
         return service_catalog.quote([x.model_dump() for x in b.lines], b.client, b.discount_pct)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
+
+
+@router.post("/quote/pdf")
+def post_quote_pdf(b: QuoteIn):
+    try:
+        data, name = pdfdocs.quote(service_catalog.quote([x.model_dump() for x in b.lines], b.client, b.discount_pct))
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    return Response(data, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+@router.get("/price-list/pdf")
+def get_price_list_pdf():
+    data, name = pdfdocs.price_list(service_catalog.price_list())
+    return Response(data, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"'})

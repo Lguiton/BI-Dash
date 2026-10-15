@@ -53,7 +53,7 @@ function Sell({ groups }: { groups: string[] }) {
   if (!svcs || svcs.length === 0) return null;
   return (
     <section className="card space-y-2 p-4" aria-label="Services you can sell here">
-      <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-semibold">Services you can sell in this field</h2><Link href="/services" className="text-xs underline">Price list and quotes</Link></div>
+      <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-sm font-semibold">Services you can sell in this field</h2><Link href="/settings?tab=quotes" className="text-xs underline">Quotes and prices</Link></div>
       <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {svcs.slice(0, 6).map((s) => (
           <li key={s.id} className="rounded border border-line p-2 text-sm"><div className="font-medium">{s.name}</div><div className="text-xs text-muted">{usd(s.low)} to {usd(s.high)}{s.model === "monthly" ? " / month" : ""} at {usd(s.rate)}/hour</div></li>

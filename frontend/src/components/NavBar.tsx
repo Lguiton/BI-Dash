@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { getJson } from "@/lib/api";
 import { ALL_FIELDS, FIELD_GROUPS } from "@/lib/fieldMenu";
 import { useMode, useMyFields } from "@/lib/mode";
-import { ChevronDown, DatabaseBackup, FlaskConical, Briefcase, Home, Activity, ArrowLeftRight, BarChart3, Building2, Settings2, Table2, Plug, BrainCircuit, Compass, Database, ShieldCheck, Target, Terminal, Workflow, FileSearch, GitBranch, Gauge, LibraryBig, Shapes, ScrollText, Boxes, Sigma, Layers, BookOpen, GraduationCap, ClipboardCheck, HelpCircle, Wrench, Receipt } from "lucide-react";
+import { ChevronDown, DatabaseBackup, FlaskConical, Briefcase, Home, Activity, ArrowLeftRight, BarChart3, Building2, Settings2, Table2, Plug, BrainCircuit, Compass, Database, ShieldCheck, Target, Terminal, Workflow, FileSearch, GitBranch, Gauge, LibraryBig, Shapes, ScrollText, Boxes, Sigma, Layers, BookOpen, GraduationCap, ClipboardCheck, HelpCircle, Wrench, Receipt, Video, Wallet, UserPlus } from "lucide-react";
 
 type Icon = typeof Database;
 type Item = { href: string; label: string; Icon: Icon };
@@ -31,7 +31,9 @@ const MORE: Group[] = [
     { href: "/hub", label: "Dataset hub", Icon: Layers },
     { href: "/knowledge", label: "Knowledge search", Icon: FileSearch },
   ] },
-  { label: "Watch", items: [
+  { label: "Watch and learn", items: [
+    { href: "/howto", label: "How-to videos", Icon: Video },
+    { href: "/checklists", label: "Triage checklists", Icon: ClipboardCheck },
     { href: "/ops", label: "Ops monitor", Icon: Gauge },
     { href: "/logs", label: "Log explorer", Icon: ScrollText },
     { href: "/activity", label: "Activity log", Icon: Activity },
@@ -141,7 +143,8 @@ export function NavBar() {
         {mode === "work" ? (
           <>
             <Plain href="/clients" label="Clients" Icon={Briefcase} active={path === "/clients"} />
-            <Plain href="/services" label="Services" Icon={Receipt} active={path === "/services"} />
+            <Plain href="/money" label="Money" Icon={Wallet} active={path === "/money"} />
+            <Plain href="/leads" label="Leads" Icon={UserPlus} active={path === "/leads"} />
             <Menu label="Data" Icon={Table2} groups={DATA} path={path} />
             <Menu label="Dashboards" Icon={BarChart3} groups={DASHBOARDS} path={path} />
             <FieldsMenu path={path} />

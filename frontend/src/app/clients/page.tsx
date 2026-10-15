@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
 import { API_BASE, apiFetch, getJson, postJson } from "@/lib/api";
+import { downloadFile } from "@/lib/download";
 import { RecurringJobs } from "@/components/RecurringJobs";
+import { ClientNotes } from "@/components/ClientNotes";
 import { Badge, Field, Section, Stat } from "@/components/panels/kit";
 
 type Client = { id: number; name: string; contact: string; email: string; notes: string; archived: boolean; jobs?: number };
@@ -107,13 +109,15 @@ export default function ClientsPage() {
 
           <Section title="Invoices" note="An invoice is built from unbilled billable hours (hours x rate) plus any extra line you add. Marking one void gives the hours back.">
             <table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted"><th>Number</th><th>Due</th><th>Status</th><th className="text-right">Total</th><th /></tr></thead>
-              <tbody>{v.invoices.map((i) => <tr key={i.id}><td>{i.number}</td><td>{i.due}</td><td><select aria-label={`Status of ${i.number}`} className="input" value={i.status} onChange={(e) => act(() => put(`/api/clients/invoices/${i.id}`, { status: e.target.value }))}>{["draft", "sent", "paid", "void"].map((s) => <option key={s}>{s}</option>)}</select></td><td className="text-right">{money(i.total)}</td><td><a className="underline" href={`${API_BASE}/api/clients/invoices/${i.id}/view`} target="_blank" rel="noopener noreferrer">Open</a></td></tr>)}</tbody></table>
+              <tbody>{v.invoices.map((i) => <tr key={i.id}><td>{i.number}</td><td>{i.due}</td><td><select aria-label={`Status of ${i.number}`} className="input" value={i.status} onChange={(e) => act(() => put(`/api/clients/invoices/${i.id}`, { status: e.target.value }))}>{["draft", "sent", "paid", "void"].map((s) => <option key={s}>{s}</option>)}</select></td><td className="text-right">{money(i.total)}</td><td><a className="underline" href={`${API_BASE}/api/clients/invoices/${i.id}/view`} target="_blank" rel="noopener noreferrer">Open</a> · <button className="underline" aria-label={`Download PDF of ${i.number}`} onClick={() => downloadFile(`/api/clients/invoices/${i.id}/pdf`, `invoice-${i.number}.pdf`).catch(fail)}>PDF</button></td></tr>)}</tbody></table>
             <p className="mt-2 text-sm">Ready to bill: {v.unbilled.reduce((s, t) => s + t.hours, 0)} hours.</p>
             <div className="mt-2 flex flex-wrap items-end gap-2"><Field label="Extra line (optional)"><input aria-label="Extra line description" className="input" value={extra.desc} onChange={(e) => setExtra({ ...extra, desc: e.target.value })} /></Field>
               <Field label="Qty"><input aria-label="Extra line quantity" className="input w-20" value={extra.qty} onChange={(e) => setExtra({ ...extra, qty: e.target.value })} /></Field>
               <Field label="Rate $"><input aria-label="Extra line rate" className="input w-24" value={extra.rate} onChange={(e) => setExtra({ ...extra, rate: e.target.value })} /></Field>
               <button className="btn" onClick={() => act(async () => { await postJson("/api/clients/invoices/create", { client_id: v.client.id, extra: extra.desc ? [{ desc: extra.desc, qty: extra.qty, rate: extra.rate || 0 }] : [] }); setExtra({ desc: "", qty: "1", rate: "" }); })}>Create invoice</button></div>
           </Section>
+
+          <ClientNotes key={v.client.id} clientId={v.client.id} />
 
           <RecurringJobs clientId={v.client.id} />
 

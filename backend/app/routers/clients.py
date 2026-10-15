@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import HTMLResponse, Response
 
 from app.services import clients as cl
+from app.services import pdfdocs
 
 router = APIRouter(prefix="/api/clients", tags=["clients"])
 
@@ -60,6 +61,16 @@ def delete(cid: int):
     return _g(cl.delete_client, cid)
 
 
+@router.post("/jobs/from-quote")
+def job_from_quote(body: dict = Body(...)):
+    return _g(cl.quote_to_job, body)
+
+
+@router.post("/jobs/{jid}/accept")
+def accept_job(jid: int):
+    return _g(cl.accept_quote, jid)
+
+
 @router.post("/jobs/add")
 def add_job(body: dict = Body(...)):
     return _g(cl.add_job, body)
@@ -113,6 +124,12 @@ def set_invoice(iid: int, body: dict = Body(...)):
 @router.get("/invoices/{iid}/view")
 def invoice_view(iid: int):
     return HTMLResponse(_g(cl.invoice_html, iid), headers={"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"})
+
+
+@router.get("/invoices/{iid}/pdf")
+def invoice_pdf(iid: int):
+    data, name = _g(pdfdocs.invoice, iid)
+    return Response(data, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @router.post("/{cid}/pack")

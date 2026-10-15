@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { WorkLog } from "@/components/WorkLog";
 import { TodayPanel } from "@/components/TodayPanel";
+import { MoreToday } from "@/components/MoreToday";
 import { AssistantDesk } from "@/components/AssistantDesk";
 import { PwaSetup } from "@/components/PwaSetup";
 import { PageShell } from "@/components/PageShell";
@@ -22,7 +23,9 @@ const QUICK = [
   { href: "/clients", label: "New client", note: "Add a client, a job or an invoice" },
   { href: "/intake", label: "Import data", note: "Drop in a file; it is cleaned and checked" },
   { href: "/packs", label: "Make a dashboard", note: "Industry and department views" },
-  { href: "/services", label: "Quote a job", note: "Price list and quote builder" },
+  { href: "/settings?tab=quotes", label: "Quote a job", note: "Quote builder and price list, by field" },
+  { href: "/money", label: "Money", note: "Who owes you, profit per job, expenses and tax set-aside" },
+  { href: "/leads", label: "Leads", note: "Where leads come from and which ones you won" },
 ];
 const STUDY = [
   { href: "/tracks", label: "Tracks", note: "Career paths with a learning path each" },
@@ -79,7 +82,7 @@ function WorkHome() {
   return (
     <>
       {err && <ErrorBanner message={err} />}
-      <section aria-label="Quick starts" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Quick starts" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {QUICK.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
       </section>
 
@@ -92,7 +95,7 @@ function WorkHome() {
         <section className="card space-y-2 p-4" aria-label="Open jobs">
           <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Open jobs{ov ? ` (${jobs?.length ?? 0})` : ""}</h2><Link href="/clients" className="text-xs underline">All clients</Link></div>
           {jobs === null && <p className="text-sm text-muted">Loading…</p>}
-          {jobs?.length === 0 && <p className="text-sm">No open jobs. <Link href="/clients" className="underline">Add a client and a job</Link>, or <Link href="/services" className="underline">quote one</Link>.</p>}
+          {jobs?.length === 0 && <p className="text-sm">No open jobs. <Link href="/clients" className="underline">Add a client and a job</Link>, or <Link href="/settings?tab=quotes" className="underline">quote one</Link>.</p>}
           <ul className="space-y-1 text-sm">
             {jobs?.slice(0, 8).map((j) => (
               <li key={j.id} className="flex flex-wrap items-baseline justify-between gap-2">
@@ -103,6 +106,8 @@ function WorkHome() {
           </ul>
         </section>
       </div>
+
+      <MoreToday />
 
       <section className="card space-y-2 p-4" aria-label="Dashboards">
         <h2 className="text-sm font-semibold">Open a dashboard</h2>

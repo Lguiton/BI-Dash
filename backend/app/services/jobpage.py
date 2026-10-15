@@ -32,6 +32,51 @@ def close(jid: int, bill: str = "time") -> dict:
     return res
 
 
+def _summary_parts(jid: int) -> dict:
+    """What a client summary says, for the PDF (the web page above builds the same content as HTML)."""
+    o = overview(jid)
+    done = []
+    if (o["job"].get("notes") or "").strip():
+        done.append(o["job"]["notes"].strip())
+    for it in o["work_items"]:
+        manual = [x["text"] for x in it["log"] if not x["text"].startswith(SYSTEM_LOG)]
+        done.append(it["title"] + (": " + "; ".join(manual) if manual else ""))
+    fixes = [fixlog.get(f["id"]) for f in o["fixes"]]
+    note = ""
+    try:
+        from app.services import prep
+        dr = prep._drafts().get(f"job:{jid}")
+        if dr and dr.get("status") == "accepted" and dr.get("text"):
+            note = dr["text"]
+    except Exception:  # noqa: BLE001 - the summary still works without it
+        pass
+    return {"o": o, "done": done or ["Work completed as agreed."], "fixes": fixes, "note": note}
+
+
+def summary_pdf(jid: int) -> tuple[bytes, str]:
+    from app.services import pdfdocs
+    p = _summary_parts(jid)
+    o = p["o"]
+    j, c = o["job"], o["client"] or {}
+    blocks: list[tuple] = [("h", "What was done"), ("bullets", p["done"])]
+    if p["note"]:
+        blocks += [("h", "Closing note"), ("p", p["note"])]
+    if p["fixes"]:
+        blocks.append(("h", "Fixes and write-ups"))
+        for rec in p["fixes"]:
+            blocks.append(("p", rec["title"]))
+            if rec["symptoms"]:
+                blocks.append(("kv", [("Problem", rec["symptoms"])]))
+            if rec["steps"]:
+                blocks.append(("bullets", rec["steps"]))
+            blocks.append(("kv", [("Result", rec["result_label"])] + ([("How to avoid it next time", rec["prevention"])] if rec["prevention"] else [])))
+    if o["invoices"]:
+        blocks += [("h", "Invoices"), ("bullets", [f"{i['number']} ({i['status']}): ${i['total']:,.2f}" for i in o["invoices"]])]
+    blocks += [("sp", 8), ("small", "Please keep this summary for your records. Questions? Contact me and mention the job title above.")]
+    sub = f"For {c.get('name', '')} - started {j['created']} - status: {j['status']} - {o['hours']:g} hours recorded"
+    return pdfdocs.build(f"Job summary: {j['title']}", blocks, subtitle=sub, sample=o["sample"]), f"job-summary-{jid}.pdf"
+
+
 def summary_html(jid: int) -> str:
     o = overview(jid)
     j, c, e = o["job"], o["client"] or {}, html.escape

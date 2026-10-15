@@ -1,8 +1,9 @@
 """Fix log: record each fix, find past fixes, and write them up."""
 from fastapi import APIRouter, Body, HTTPException, Query
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 
 from app.services import fixlog as fl
+from app.services import pdfdocs
 
 router = APIRouter(prefix="/api/fixlog", tags=["fixlog"])
 
@@ -60,3 +61,9 @@ def put(fid: int, body: dict = Body(...)):
 def delete(fid: int):
     _g(fl.delete, fid)
     return {"ok": True}
+
+
+@router.get("/{fid}/checklist.pdf")
+def checklist_pdf(fid: int):
+    data, name = pdfdocs.fix_checklist(_g(fl.get, fid))
+    return Response(data, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"'})

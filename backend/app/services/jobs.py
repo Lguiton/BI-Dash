@@ -44,6 +44,11 @@ def tick() -> list[str]:
     except Exception:  # noqa: BLE001
         pass
     try:
+        from app.services import bizbackup
+        ran += bizbackup.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
         from app.services import briefing
         ran += briefing.tick()
     except Exception:  # noqa: BLE001

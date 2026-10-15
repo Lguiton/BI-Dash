@@ -9,6 +9,7 @@ import { AskBar } from "./AskBar";
 import { NavBar } from "./NavBar";
 import { WebDock } from "./WebDock";
 import { RealBanner, SettingsButton } from "./WorkspaceSwitcher";
+import { FileDown } from "lucide-react";
 
 export function PageShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   const path = usePathname();
@@ -21,13 +22,14 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
-        <div className="flex flex-wrap items-start gap-2"><NavBar /><SearchButton /><ModeToggle /><SettingsButton /></div>
+        <div className="flex flex-wrap items-start gap-2 print:hidden"><NavBar /><SearchButton /><ModeToggle /><SettingsButton />
+          <button className="btn" onClick={() => window.print()} title="Opens the print window. Choose Save as PDF as the printer."><FileDown className="h-4 w-4" aria-hidden /> Save page as PDF</button></div>
       </header>
-      <AskBar />
+      <div className="print:hidden"><AskBar /></div>
       <CommandPalette />
-      <RealBanner />
+      <div className="print:hidden"><RealBanner /></div>
       {blocked ? <LearnGate /> : children}
-      <WebDock />
+      <div className="print:hidden"><WebDock /></div>
     </div>
   );
 }

@@ -7,7 +7,11 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { WorkLog } from "@/components/WorkLog";
 import { PrepDraft } from "@/components/PrepDraft";
 import { EivantaNote } from "@/components/EivantaNote";
+import { JobVideos } from "@/components/HowTo";
+import { JobChecklists } from "@/components/Checklists";
+import { ClientNotes } from "@/components/ClientNotes";
 import { API_BASE, apiFetch, getJson, postJson } from "@/lib/api";
+import { downloadFile } from "@/lib/download";
 import { Badge, Section } from "@/components/panels/kit";
 
 type Time = { id: number; date: string; hours: number; note: string; billable: boolean; invoice: string | null };
@@ -44,6 +48,9 @@ function JobView({ id }: { id: number }) {
       setConfirm(false); setTick((t) => t + 1);
     } catch (e) { setErr(e instanceof Error ? e.message : "Close failed"); setConfirm(false); }
   }
+  async function accept() {
+    try { await postJson(`/api/clients/jobs/${id}/accept`, {}); setMsg("Quote accepted. The job is now active."); setTick((t) => t + 1); } catch (e) { setErr(e instanceof Error ? e.message : "Could not accept"); }
+  }
   async function summary() {
     try {
       const r = await apiFetch(`${API_BASE}/api/jobs/${id}/summary`);
@@ -68,6 +75,8 @@ function JobView({ id }: { id: number }) {
         <p className="mt-1 text-sm">Not yet billed: <strong>{o.unbilled_hours} h = {usd(o.unbilled_amount)}</strong></p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button className="btn" onClick={summary}>Client summary</button>
+          <button className="btn" onClick={() => downloadFile(`/api/jobs/${id}/summary.pdf`, `job-summary-${id}.pdf`).catch((e) => setErr(e instanceof Error ? e.message : "Download failed"))}>Client summary (PDF)</button>
+          {(o.job.status === "quoted" || o.job.status === "lead") && <button className="btn btn-primary" onClick={accept}>Quote accepted: start the job</button>}
           {o.client && <Link href="/clients" className="text-xs underline">Open clients</Link>}
         </div>
       </Section>
@@ -75,6 +84,9 @@ function JobView({ id }: { id: number }) {
       {o.ready_to_close && <p role="status" className="card p-3 text-sm">Every work item on this job is done. Time to close it and invoice. Scroll down to <strong>Close job</strong>.</p>}
 
       <WorkLog jobId={id} />
+      <JobChecklists jobId={id} />
+      <JobVideos jobId={id} />
+      {o.client && <ClientNotes key={o.client.id} clientId={o.client.id} />}
 
       <Section title="Hours">
         {o.time.length === 0 ? <p className="text-sm text-muted">No hours yet. Start a timer on a work item above, or add hours on the Clients page.</p> : (

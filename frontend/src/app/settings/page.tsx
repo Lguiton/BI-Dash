@@ -8,6 +8,8 @@ import { BriefingSettings, LaptopSettings, PasswordSettings } from "@/components
 import { MyFields } from "@/components/MyFields";
 import { ProjectLinks } from "@/components/ProjectLinks";
 import { BusinessProfile, ServiceRates } from "@/components/BusinessSettings";
+import { PriceList } from "@/components/PriceList";
+import { QuoteBuilder } from "@/components/QuoteBuilder";
 import { PageShell } from "@/components/PageShell";
 import { PwaSetup } from "@/components/PwaSetup";
 import { ThemeChoice } from "@/components/ThemeChoice";
@@ -15,6 +17,7 @@ import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { Tabs } from "@/components/panels/kit";
 import { AlertsSettings } from "@/components/panels/OpsPanels";
 import { API_BASE, ApiError, deleteJson, getJson, postJson, putJson } from "@/lib/api";
+import { BizBackup } from "@/components/BizBackup";
 import type { AiMode, BackupItem, WorkspaceInfo, WorkspaceList, WorkspaceSettings } from "@/lib/types";
 
 const MODES: [AiMode, string, string][] = [
@@ -27,6 +30,7 @@ const size = (b: number) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.ma
 const TABS = [
   { id: "general", label: "General" },
   { id: "business", label: "Business and services" },
+  { id: "quotes", label: "Quotes and prices" },
   { id: "ai", label: "AI and privacy" },
   { id: "data", label: "Data and backups" },
   { id: "alerts", label: "Alerts and reports" },
@@ -69,6 +73,7 @@ function Body() {
         </div>
       )}
       {tab === "business" && <div className="grid gap-4"><BusinessProfile /><ServiceRates /></div>}
+      {tab === "quotes" && <div className="grid gap-6"><QuoteBuilder /><section className="space-y-3" aria-label="Price list"><h2 className="text-sm font-semibold">Henderson and Las Vegas price list</h2><PriceList /></section></div>}
       {tab === "ai" && (
         <div className="grid gap-4">
           {ws?.workspaces.map((w) => <WorkspaceCard key={w.name} w={w} onSaved={() => load()} />)}
@@ -82,6 +87,7 @@ function Body() {
       {tab === "data" && (
         <div className="grid gap-4">
           {ws && <Backups workspace={ws.active} />}
+          <BizBackup />
           <ExportEverything />
         </div>
       )}
