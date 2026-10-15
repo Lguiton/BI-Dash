@@ -44,7 +44,7 @@ def stubs(**kw): return {p: Stub(p, text=f"answer from {p}", fail=kw.get(p)) for
 @pytest.mark.parametrize("q,kind", [
     ("How many records are there?", "simple"), ("Which entity earns the most?", "simple"),
     ("Write python code to compute margin", "complex"), ("Why did revenue drop in March?", "complex"), ("Compare revenue by entity", "medium"), ("Summarise last week", "medium"),
-    ("Top 5 entities by cost", "medium"), ("Draft three risks for my plan", "medium"),
+    ("Top 5 entities by cost", "medium"), ("Train a neural network on my data", "complex"), ("What is the standard deviation of revenue?", "complex"), ("Explain tokenization in NLP", "complex"), ("Solve this equation for x", "complex"), ("How does gradient descent work?", "complex"), ("Draft three risks for my plan", "medium"),
     ("Is there a seasonal trend?", "complex"), ("x" * 300, "complex"),
 ])
 def test_classify(q, kind):

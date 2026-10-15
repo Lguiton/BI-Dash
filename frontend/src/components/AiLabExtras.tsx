@@ -77,11 +77,11 @@ export function UsagePanel() {
 function RunView({ r }: { r: EvalRun }) {
   return (
     <div className="space-y-2">
-      <p className="text-sm"><b>{r.passed}/{r.total} passed ({r.pct}%)</b> · {r.mode === "live" ? `live run on ${r.models.join(", ") || "no model"}` : "route check (free)"} · {r.at} UTC</p>
+      <p className="text-sm"><b>{r.passed}/{r.total} passed ({r.pct}%)</b> · {r.mode === "live" || r.mode === "field" ? `${r.mode === "field" ? "field-work" : "live"} run on ${r.models.join(", ") || "no model"}` : r.mode === "knowledge" ? "past-work lookup check (free)" : "route check (free)"} · {r.at} UTC</p>
       <ul className="space-y-2">
         {r.results.map((x) => (
           <li key={x.id} className="rounded-md border border-line p-3 text-sm">
-            <div className="flex flex-wrap items-center gap-2"><Badge tone={x.ok ? "ok" : "bad"}>{x.ok ? "pass" : "fail"}</Badge><span className="font-medium">{x.ask}</span><Badge>{x.expected_tier}</Badge></div>
+            <div className="flex flex-wrap items-center gap-2"><Badge tone={x.ok ? "ok" : "bad"}>{x.ok ? "pass" : "fail"}</Badge><span className="font-medium">{x.ask}</span>{x.expected_tier && <Badge>{x.expected_tier}</Badge>}</div>
             <ul className="mt-1 space-y-0.5 text-xs text-muted">{x.checks.map((k, i) => <li key={i}>{k.ok ? "✓" : "✗"} {k.name}{k.detail ? `: ${k.detail}` : ""}</li>)}</ul>
             {x.reply && <details className="mt-1 text-xs"><summary className="cursor-pointer text-muted">Read the reply ({x.provider}{x.seconds != null ? `, ${x.seconds}s` : ""})</summary><p className="mt-1 whitespace-pre-wrap">{x.reply}</p></details>}
           </li>
@@ -96,7 +96,7 @@ export function EvalsPanel() {
   const [track, setTrack] = useState("pm");
   const [confirm, setConfirm] = useState(false);
   const [shown, setShown] = useState<EvalRun | null>(null);
-  const [busy, setBusy] = useState<"route" | "live" | null>(null);
+  const [busy, setBusy] = useState<"route" | "live" | "knowledge" | "field" | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [ver, setVer] = useState(0);
   useEffect(() => {
@@ -104,9 +104,9 @@ export function EvalsPanel() {
     getJson<EvalOverview>("/api/agent-evals", ctl.signal).then(setOv).catch((e) => { if (!ctl.signal.aborted) setErr(errMsg(e, "Couldn't load the evals.")); });
     return () => ctl.abort();
   }, [ver]);
-  const run = async (mode: "route" | "live") => {
+  const run = async (mode: "route" | "live" | "knowledge" | "field") => {
     setBusy(mode); setErr(null);
-    try { const r = await postJson<EvalRun>("/api/agent-evals/run", { track, mode, confirm: mode === "live" && confirm }); setShown(r); setVer((v) => v + 1); setConfirm(false); }
+    try { const r = await postJson<EvalRun>("/api/agent-evals/run", { track, mode, confirm: (mode === "live" || mode === "field") && confirm }); setShown(r); setVer((v) => v + 1); setConfirm(false); }
     catch (e) { setErr(errMsg(e, "The run failed.")); }
     finally { setBusy(null); }
   };
@@ -122,8 +122,10 @@ export function EvalsPanel() {
           <button className="btn" disabled={busy !== null} onClick={() => run("route")}>{busy === "route" ? "Checking…" : "Run route check (free)"}</button>
           <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} /> I understand a live run makes real API calls (up to {ov.max_live_cases})</label>
           <button className="btn btn-primary" disabled={busy !== null || !confirm} onClick={() => run("live")}>{busy === "live" ? "Asking the agent…" : "Run live check"}</button>
+          {ov.knowledge_tracks?.includes(track) && <button className="btn" disabled={busy !== null} onClick={() => run("knowledge")}>{busy === "knowledge" ? "Checking…" : "Check past-work lookup (free)"}</button>}
+          {ov.field_tracks?.[track] && <button className="btn btn-primary" disabled={busy !== null || !confirm} onClick={() => run("field")}>{busy === "field" ? "Asking the agent…" : "Run field-work questions (live)"}</button>}
         </div>
-        {cur && <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm">{cur.cases.map((c) => <li key={c.id}>{c.ask} <Badge>{c.tier}</Badge></li>)}</ul>}
+        {cur && <ul className="mt-3 list-disc space-y-0.5 pl-5 text-sm">{cur.cases.map((c) => <li key={c.id}>{c.ask} <Badge>{c.tier}</Badge></li>)}{(ov.field_tracks?.[track] ?? []).map((c) => <li key={`f-${c.id}`}>{c.ask} <Badge>field work</Badge></li>)}</ul>}
       </Section>
       {shown && <Section title="This run"><RunView r={shown} /></Section>}
       <Section title="History for this discipline" note="Compare the score before and after you change a model, a key or a routing rule. A drop means look at the failing checks.">

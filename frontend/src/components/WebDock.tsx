@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Globe, X } from "lucide-react";
 import { getJson, postJson, putJson } from "@/lib/api";
+import { WebToAgent } from "@/components/WebToAgent";
 
 interface Mark { title: string; url: string }
 interface Read { url: string; host: string; title: string; text: string; truncated: boolean; links: { text: string; url: string }[]; note: string }
@@ -22,6 +23,8 @@ export function WebDock() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const [sel, setSel] = useState("");
 
   // Reading localStorage must wait until after hydration, so this one-time setState in an effect is intended.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -71,6 +74,7 @@ export function WebDock() {
         {s.url && !saved && <button className="btn" onClick={() => saveMarks([...marks, { title: new URL(s.url).hostname.replace(/^www\./, ""), url: s.url }])}>Save</button>}
         {s.url && saved && <button className="btn" onClick={() => saveMarks(marks.filter((m) => m.url !== s.url))}>Unsave</button>}
         {s.url && <a className="btn" href={s.url} target="_blank" rel="noopener noreferrer">New tab ↗</a>}
+        <button className={`btn ${agentOpen ? "btn-primary" : ""}`} aria-pressed={agentOpen} onClick={() => setAgentOpen((v) => !v)}>Send to agent</button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
         {err && <p role="alert" className="m-2 rounded-lg p-2 text-sm" style={{ background: "var(--bad-bg)", color: "var(--bad)" }}>{err}</p>}
@@ -81,11 +85,12 @@ export function WebDock() {
           <div className="space-y-2 p-3 text-sm">
             <h3 className="font-semibold">{rd.title || rd.host}</h3>
             <p className="text-xs text-muted">{rd.note}</p>
-            <pre className="whitespace-pre-wrap break-words font-sans text-sm">{rd.text}{rd.truncated ? "\n…(shortened)" : ""}</pre>
+            <pre className="whitespace-pre-wrap break-words font-sans text-sm" onMouseUp={() => setSel(window.getSelection()?.toString().trim() ?? "")} onKeyUp={() => setSel(window.getSelection()?.toString().trim() ?? "")}>{rd.text}{rd.truncated ? "\n…(shortened)" : ""}</pre>
             {rd.links.length > 0 && <details><summary className="cursor-pointer text-xs text-muted">Links on the page ({rd.links.length})</summary><ul className="mt-1 space-y-0.5 text-xs">{rd.links.map((l) => <li key={l.url}><button className="underline" onClick={() => void go(l.url)}>{l.text}</button></li>)}</ul></details>}
           </div>
         )}
       </div>
+      {agentOpen && <div className="max-h-[55%] overflow-auto"><WebToAgent url={s.url} selection={sel} /></div>}
     </aside>
   );
 }

@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS it_tickets (id INTEGER PRIMARY KEY AUTOINCREMENT, wor
     opened_at TEXT, resolved_at TEXT, timeline TEXT, checklist TEXT);
 CREATE TABLE IF NOT EXISTS fix_log (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, area TEXT, title TEXT, category TEXT, device TEXT, symptoms TEXT, cause TEXT,
     steps TEXT, result TEXT, minutes INTEGER, tools TEXT, prevention TEXT, client TEXT, ticket_id INTEGER, tags TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE IF NOT EXISTS work_items (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, title TEXT, client TEXT, status TEXT, due TEXT, note TEXT,
+    log TEXT, created_at TEXT, updated_at TEXT, done_at TEXT, job_id INTEGER, timer_start TEXT, seconds INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS it_assets (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, hostname TEXT, kind TEXT, os TEXT, owner TEXT, serial TEXT, purchased TEXT,
     warranty_end TEXT, status TEXT, notes TEXT, created_at TEXT);
 CREATE TABLE IF NOT EXISTS drift_history (id INTEGER PRIMARY KEY AUTOINCREMENT, workspace TEXT, at TEXT, model TEXT, version INTEGER, overall TEXT, worst_feature TEXT, worst_psi REAL, recent_rows INTEGER, detail TEXT);
@@ -90,6 +92,10 @@ def _migrate(c: sqlite3.Connection) -> None:
     for col in ("prev_hash", "hash"):
         if have and col not in have:
             c.execute(f"ALTER TABLE audit ADD COLUMN {col} TEXT")
+    have = {r[1] for r in c.execute("PRAGMA table_info(work_items)").fetchall()}
+    for col, typ in (("job_id", "INTEGER"), ("timer_start", "TEXT"), ("seconds", "INTEGER DEFAULT 0")):
+        if have and col not in have:
+            c.execute(f"ALTER TABLE work_items ADD COLUMN {col} {typ}")
     have = {r[1] for r in c.execute("PRAGMA table_info(ml_runs)").fetchall()}
     for col, typ in (("note", "TEXT"), ("starred", "INTEGER DEFAULT 0"), ("params", "TEXT"), ("metrics", "TEXT"),
                      ("cv_mean", "REAL"), ("seconds", "REAL"), ("batch", "TEXT")):

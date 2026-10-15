@@ -1,8 +1,10 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
 import { API_BASE, apiFetch, getJson, postJson } from "@/lib/api";
+import { RecurringJobs } from "@/components/RecurringJobs";
 import { Badge, Field, Section, Stat } from "@/components/panels/kit";
 
 type Client = { id: number; name: string; contact: string; email: string; notes: string; archived: boolean; jobs?: number };
@@ -88,7 +90,7 @@ export default function ClientsPage() {
         <>
           <Section title={`${v.client.name}: jobs`}>
             <table className="w-full text-sm"><thead><tr className="text-left text-xs text-muted"><th>Job</th><th>Status</th><th className="text-right">Hours</th><th className="text-right">Quote</th><th>Due</th><th /></tr></thead>
-              <tbody>{v.jobs.map((j) => <tr key={j.id}><td>{j.title}</td><td><select aria-label={`Status of ${j.title}`} className="input" value={j.status} onChange={(e) => act(() => put(`/api/clients/jobs/${j.id}`, { status: e.target.value }))}>{STATUS.map((s) => <option key={s}>{s}</option>)}</select></td><td className="text-right">{j.hours}</td><td className="text-right">{money(j.quote)}</td><td>{j.due ?? ""}</td><td><button className="btn" aria-label={`Delete job ${j.title}`} onClick={() => act(() => del(`/api/clients/jobs/${j.id}`))}>Delete</button></td></tr>)}</tbody></table>
+              <tbody>{v.jobs.map((j) => <tr key={j.id}><td><Link href={`/job?id=${j.id}`} className="underline">{j.title}</Link></td><td><select aria-label={`Status of ${j.title}`} className="input" value={j.status} onChange={(e) => act(() => put(`/api/clients/jobs/${j.id}`, { status: e.target.value }))}>{STATUS.map((s) => <option key={s}>{s}</option>)}</select></td><td className="text-right">{j.hours}</td><td className="text-right">{money(j.quote)}</td><td>{j.due ?? ""}</td><td><button className="btn" aria-label={`Delete job ${j.title}`} onClick={() => act(() => del(`/api/clients/jobs/${j.id}`))}>Delete</button></td></tr>)}</tbody></table>
             <div className="mt-3 flex flex-wrap items-end gap-2"><Field label="Job title"><input aria-label="Job title" className="input" value={job.title} onChange={(e) => setJob({ ...job, title: e.target.value })} /></Field>
               <Field label="Quote $"><input aria-label="Job quote" className="input w-28" value={job.quote} onChange={(e) => setJob({ ...job, quote: e.target.value })} /></Field>
               <Field label="Due (YYYY-MM-DD)"><input aria-label="Job due date" className="input w-36" value={job.due} onChange={(e) => setJob({ ...job, due: e.target.value })} /></Field>
@@ -112,6 +114,8 @@ export default function ClientsPage() {
               <Field label="Rate $"><input aria-label="Extra line rate" className="input w-24" value={extra.rate} onChange={(e) => setExtra({ ...extra, rate: e.target.value })} /></Field>
               <button className="btn" onClick={() => act(async () => { await postJson("/api/clients/invoices/create", { client_id: v.client.id, extra: extra.desc ? [{ desc: extra.desc, qty: extra.qty, rate: extra.rate || 0 }] : [] }); setExtra({ desc: "", qty: "1", rate: "" }); })}>Create invoice</button></div>
           </Section>
+
+          <RecurringJobs clientId={v.client.id} />
 
           <Section title="Follow-ups">
             <ul className="text-sm">{v.followups.map((f) => <li key={f.id} className="flex items-center gap-2"><input type="checkbox" aria-label={`Done: ${f.note}`} checked={f.done} onChange={(e) => act(() => put(`/api/clients/followups/${f.id}`, { done: e.target.checked }))} /><span className={f.done ? "line-through text-muted" : ""}>{f.due}: {f.note}</span><button className="btn" aria-label={`Delete follow-up ${f.note}`} onClick={() => act(() => del(`/api/clients/followups/${f.id}`))}>Delete</button></li>)}</ul>

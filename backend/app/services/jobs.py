@@ -69,4 +69,14 @@ def tick() -> list[str]:
         ran += pipelines.tick()
     except Exception:  # noqa: BLE001
         pass
+    try:
+        from app.services import automation
+        ran += automation.tick()
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from app.services import prep
+        ran += prep.tick()
+    except Exception:  # noqa: BLE001
+        pass
     return ran

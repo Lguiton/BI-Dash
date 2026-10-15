@@ -6,6 +6,7 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { ExportEverything } from "@/components/DataExtras";
 import { BriefingSettings, LaptopSettings, PasswordSettings } from "@/components/SettingsExtras";
 import { MyFields } from "@/components/MyFields";
+import { ProjectLinks } from "@/components/ProjectLinks";
 import { BusinessProfile, ServiceRates } from "@/components/BusinessSettings";
 import { PageShell } from "@/components/PageShell";
 import { PwaSetup } from "@/components/PwaSetup";
@@ -59,6 +60,7 @@ function Body() {
             <ThemeChoice />
           </section>
           <MyFields />
+          <ProjectLinks />
           <section className="card space-y-2 p-5" aria-label="Install on this device">
             <h2 className="text-lg font-semibold">Install on this device</h2>
             <p className="text-sm text-muted">Add the dashboard to your home screen or desktop so it opens like an app.</p>

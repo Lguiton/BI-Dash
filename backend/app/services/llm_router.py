@@ -3,7 +3,7 @@
 Policy (edit ORDER and DEFAULT_LIMITS to taste):
   simple questions   Google Gemini first (free tier), then OpenAI, then Claude
   medium questions   OpenAI first (comparisons, trends, summaries, drafts), then Gemini, then Claude
-  complex / code     Claude first (best at multi-step reasoning and code), then OpenAI, then Gemini
+  complex / code     Claude first: ML, deep learning, NLP, data science, statistics, math, code and multi-step reasoning, then OpenAI, then Gemini
 Rules that spread the load:
   * a provider is skipped when it has no key, no installed SDK, or has used up its daily cap
   * if a provider errors (rate limit, bad key, outage) the next one in the order is tried automatically
@@ -21,14 +21,17 @@ from app.services import ai_agent, providers
 from app.services.ai_agent import AiError, AskResult
 
 ORDER = {"simple": ["google", "openai", "anthropic", "ollama"], "medium": ["openai", "google", "anthropic", "ollama"], "complex": ["anthropic", "openai", "google", "ollama"]}
-DEFAULT_LIMITS = {"google": 200, "openai": 100, "anthropic": 40, "ollama": 100000}   # questions per UTC day, override with BI_LIMIT_<PROVIDER>
+DEFAULT_LIMITS = {"google": 200, "openai": 100, "anthropic": 150, "ollama": 100000}   # questions per UTC day, override with BI_LIMIT_<PROVIDER>
 
 _lock = threading.Lock()
 _usage: dict[str, list] = {}      # provider -> [utc_date, count]
 
 COMPLEX_HINTS = re.compile(
     r"\b(code|script|function|python|debug|refactor|regression|correlat\w*|forecast\w*|predict\w*|statistic\w*|"
-    r"significan\w*|outlier\w*|root cause|why|step[- ]by[- ]step|seasonal\w*|cohort\w*|window function|"
+    r"significan\w*|outlier\w*|machine learning|deep learning|neural|\bnlp\b|natural language|transformer\w*|embedding\w*|tokeni[sz]\w*|"
+    r"classif\w*|clustering|gradient|backprop\w*|overfit\w*|feature engineering|hyperparameter\w*|data scien\w*|"
+    r"statistic\w*|hypothesis|p-value|confidence interval|probabilit\w*|distribution|varian\w*|standard deviation|bayes\w*|"
+    r"matri(?:x|ces)|derivative\w*|integral\w*|equation\w*|algebra|calculus|proof|theorem|math\w*|root cause|why|step[- ]by[- ]step|seasonal\w*|cohort\w*|window function|"
     r"analy[sz]e\w*|analysis|assess\w*|evaluat\w*|trade-?offs?|strateg\w*|optimi[sz]\w*|diagnos\w*|simulat\w*|scenario\w*|"
     r"architect\w*|critique|justify|prove)\b", re.I)
 MEDIUM_HINTS = re.compile(
@@ -88,7 +91,7 @@ def status() -> dict:
                      "used_today": used_today(p), "daily_limit": limit_for(p), "pip": info["pip"],
                      "key_env": info["keys"][0],
                      "role": "default for simple questions" if p == "google" else
-                             "backup" if p == "openai" else "local, free, last resort" if p == "ollama" else "complex questions and code"})
+                             "backup" if p == "openai" else "local, free, last resort" if p == "ollama" else "complex questions: ML, NLP, statistics, math, code"})
     return {"providers": rows, "ready": [r["id"] for r in rows if r["configured"] and r["sdk_installed"]],
             "max_steps": ai_agent.MAX_STEPS}
 

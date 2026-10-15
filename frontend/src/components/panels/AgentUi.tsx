@@ -8,7 +8,7 @@ import { Markdown } from "@/components/Markdown";
 import { AiWorkPanel } from "./AiWork";
 import { Badge, errMsg } from "./kit";
 
-interface ChatResp { reply: string; provider: string; model: string; route: { kind: string; reason: string; forced: boolean } | null; proposals: AgentProposal[]; actions: AgentAction[]; tools_used: { tool: string; error: boolean; what: string; chars: number }[]; stopped_early: boolean; usage: { input_tokens: number; output_tokens: number } }
+interface ChatResp { reply: string; provider: string; model: string; route: { kind: string; reason: string; forced: boolean } | null; proposals: AgentProposal[]; actions: AgentAction[]; tools_used: { tool: string; error: boolean; what: string; chars: number }[]; past_work?: { id: number; title: string; result: string }[]; examples?: { problem: string }[]; stopped_early: boolean; usage: { input_tokens: number; output_tokens: number } }
 
 const DIRECT_EXAMPLES: Record<string, string[]> = {
   pm: ["Draft 5 backlog items for a customer-reporting feature", "Add the top 3 risks you see in my plan", "Which item should I do first?", "Take me to the schedule tab"],
@@ -43,7 +43,7 @@ export function useAgentChat(track: string) {
     setBusy(true);
     try {
       const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null, persona: canCfo ? persona : "default" });
-      const used = r.tools_used.length ? ` · used ${r.tools_used.map((x) => x.tool).join(", ")}` : "";
+      const used = (r.tools_used.length ? ` · used ${r.tools_used.map((x) => x.tool).join(", ")}` : "") + (r.past_work?.length ? ` · started from your past fix${r.past_work.length > 1 ? "es" : ""}: ${r.past_work.map((x) => x.title).join("; ")}` : "") + (r.examples?.length ? ` · used ${r.examples.length} worked example${r.examples.length > 1 ? "s" : ""}` : "");
       setMessages((m) => [...m, { role: "agent", content: r.reply, proposals: r.proposals, actions: r.actions, meta: `${r.route?.kind ? `${r.route.kind} → ` : ""}${r.provider}${used}`,
         trace: { route: r.route, model: r.model, provider: r.provider, tools: r.tools_used, tokens_in: r.usage?.input_tokens ?? 0, tokens_out: r.usage?.output_tokens ?? 0 } }]);
     } catch (e) {

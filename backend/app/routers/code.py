@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.routers import ai as ai_router
-from app.services import agents, code_check as cc
+from app.services import agents, code_check as cc, codegen
 
 router = APIRouter(prefix="/api/code", tags=["code"])
 AI_MAX = 8000
@@ -45,6 +45,23 @@ def fix(body: dict = Body(...)):
     out["mode"], out["provider"] = "ai", r.provider
     out["note"] = "Suggested by the assistant, then re-checked offline. Nothing was applied. Read the differences first."
     return out
+
+
+@router.get("/generate/languages")
+def gen_languages():
+    return {"languages": [{"id": k, "label": v} for k, v in codegen.LANGUAGES.items()], "max_request": codegen.MAX_REQUEST, "max_context": codegen.MAX_CONTEXT}
+
+
+@router.post("/generate")
+def generate(body: dict = Body(...)):
+    try:
+        if agents.ai_policy.describe()["allowed"]:
+            ai_router._check_rate()
+        else:
+            return JSONResponse({"detail": "AI is switched off for this workspace. Turn it on in Settings to generate code.", "needs_ai": True}, status_code=403)
+        return codegen.generate(str(body.get("language") or "python"), body.get("request") or "", body.get("context") or "", str(body.get("provider") or "auto"))
+    except codegen.GenError as e:
+        raise HTTPException(e.status, e.message) from None
 
 
 @router.post("/notebook")

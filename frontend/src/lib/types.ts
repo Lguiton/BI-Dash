@@ -471,10 +471,10 @@ export interface AiUsage {
 }
 export interface EvalCheck { name: string; ok: boolean; detail: string }
 export interface EvalRun {
-  at: string; track: string; mode: "route" | "live"; models: string[]; passed: number; total: number; pct: number;
+  at: string; track: string; mode: "route" | "live" | "knowledge" | "field"; models: string[]; passed: number; total: number; pct: number;
   results: { id: string; ask: string; expected_tier: string; ok: boolean; reply: string; provider: string; model: string; seconds: number | null; checks: EvalCheck[] }[];
 }
-export interface EvalOverview { tracks: { track: string; name: string; cases: { id: string; ask: string; tier: string }[] }[]; runs: EvalRun[]; max_live_cases: number; note: string }
+export interface EvalOverview { tracks: { track: string; name: string; cases: { id: string; ask: string; tier: string }[] }[]; runs: EvalRun[]; max_live_cases: number; note: string; field_tracks?: Record<string, { id: string; ask: string }[]>; knowledge_tracks?: string[] }
 export interface CoSnapshot { id?: number; at: string; kind: string; done: number; total: number; pct: number; brief: string; ai: boolean; provider?: string; model?: string }
 export interface AlertItem { id: string; level: "red" | "warn"; title: string; detail: string; href: string }
 export interface AlertStatus {

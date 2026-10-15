@@ -419,3 +419,43 @@ def handoff_pack(cid: int, notes: dict, pack_id: str | None = None, days: int = 
     _save(d)
     state.audit("handoff.pack", f"client {cid}, {len(files)} files")
     return buf.getvalue(), rec
+
+
+# ------------------------------------------------------------------ one job: totals, and closing it
+def job_totals(jid: int) -> dict:
+    """Hours and money for one job, so the job page and the close step use the same arithmetic."""
+    d = _load()
+    j = _find(d, "jobs", jid)
+    c = next((x for x in d["clients"] if x["id"] == j["client_id"]), None)
+    rate = j["rate"] or d["settings"]["rate"]
+    times = sorted([t for t in d["time"] if t["job_id"] == jid], key=lambda t: (t["date"], t["id"]))
+    inv = {i["id"]: i for i in d["invoices"]}
+    hours = round(sum(t["hours"] for t in times), 2)
+    unb = round(sum(t["hours"] for t in times if t["billable"] and not t["invoice_id"]), 2)
+    inv_ids = sorted({t["invoice_id"] for t in times if t["invoice_id"]})
+    return {"job": j, "client": c, "rate": rate, "time": [{**t, "invoice": inv[t["invoice_id"]]["number"] if t["invoice_id"] in inv else None} for t in times],
+            "hours": hours, "unbilled_hours": unb, "unbilled_amount": round(unb * rate, 2),
+            "invoices": [{"id": i, "number": inv[i]["number"], "status": inv[i]["status"], "total": inv_total(inv[i])} for i in inv_ids if i in inv], "sample": sample()}
+
+
+def close_job(jid: int, bill: str = "time") -> dict:
+    """Mark the job done and optionally invoice it. bill='time' invoices unbilled billable hours; 'quote' invoices the quoted price as one line; 'none' only closes."""
+    if bill not in ("time", "quote", "none"):
+        raise ClientError("bill must be 'time', 'quote' or 'none'.")
+    t = job_totals(jid)
+    j = t["job"]
+    invoice, why = None, ""
+    if bill == "time":
+        if t["unbilled_hours"] > 0:
+            invoice = create_invoice({"client_id": j["client_id"], "job_id": jid})
+        else:
+            why = "There was no unbilled billable time, so nothing was invoiced."
+    elif bill == "quote":
+        if not j["quote"] or j["quote"] <= 0:
+            raise ClientError("This job has no quoted price. Add one, or choose to bill the hours.")
+        invoice = create_invoice({"client_id": j["client_id"], "from_time": False, "extra": [{"desc": f"{j['title']} (fixed price)", "qty": 1, "rate": j["quote"]}]})
+    d = _load()
+    _find(d, "jobs", jid)["status"] = "done"
+    _save(d)
+    state.audit("job.close", f"id {jid} bill={bill}" + (f" {invoice['number']}" if invoice else ""))
+    return {"job": update_job(jid, {"status": "done"}), "invoice": invoice, "note": why}

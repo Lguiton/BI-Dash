@@ -1,0 +1,512 @@
+{
+ "note": "Hand-written worked examples. They show a way to approach a problem; they are not facts about the user's data.",
+ "examples": [
+  {
+   "track": "analyst",
+   "keywords": [
+    "revenue",
+    "drop",
+    "dip",
+    "decline",
+    "sales",
+    "month",
+    "fell"
+   ],
+   "problem": "Monthly revenue fell 18% and the owner wants to know why.",
+   "steps": [
+    "Confirm the drop is real: same date range, same definition of revenue, no missing days or a late data load.",
+    "Split by segment (product, customer, channel, region) and compare each to the prior period.",
+    "Separate volume from price: orders x average order value.",
+    "Check the biggest segment moves for one-offs (a lost large customer, a refund batch).",
+    "State the finding with numbers, and what you could not check."
+   ],
+   "check": "Segment changes should add up to the total change; if they don't, a segment is missing."
+  },
+  {
+   "track": "analyst",
+   "keywords": [
+    "duplicate",
+    "duplicates",
+    "rows",
+    "join",
+    "inflated",
+    "total",
+    "double",
+    "count"
+   ],
+   "problem": "A total is higher than the source system after joining two tables.",
+   "steps": [
+    "Count rows before and after the join.",
+    "Check the join key is unique on the side you expected to be one row per key.",
+    "Aggregate the many-side first, then join.",
+    "Re-check the total against the source."
+   ],
+   "check": "Row count after the join should equal the left table's count when the right side is one row per key."
+  },
+  {
+   "track": "scientist",
+   "keywords": [
+    "ab",
+    "test",
+    "significance",
+    "conversion",
+    "experiment",
+    "lift",
+    "p-value"
+   ],
+   "problem": "An A/B test shows 5.2% vs 4.8% conversion and someone wants to ship the winner.",
+   "steps": [
+    "Check sample size per arm and that the split was random.",
+    "Run a two-proportion test and report the confidence interval of the difference, not only the p-value.",
+    "Compare the interval to the smallest lift that matters to the business.",
+    "Do not stop early on a good-looking day; use the sample size you planned.",
+    "Report as: lift, interval, decision, caveats."
+   ],
+   "check": "If the interval includes zero, say the test is inconclusive rather than calling a winner."
+  },
+  {
+   "track": "scientist",
+   "keywords": [
+    "correlation",
+    "causation",
+    "relationship",
+    "regression",
+    "outlier",
+    "skew"
+   ],
+   "problem": "Two columns look strongly correlated and someone claims one causes the other.",
+   "steps": [
+    "Plot it first and look for outliers or clusters.",
+    "Check the correlation with and without outliers, and use a rank correlation if the data is skewed.",
+    "List other variables that could drive both (season, size, time).",
+    "Say it is an association unless there was an experiment."
+   ],
+   "check": "A correlation that vanishes after removing one or two points is not a reliable finding."
+  },
+  {
+   "track": "ml",
+   "keywords": [
+    "overfit",
+    "overfitting",
+    "train",
+    "test",
+    "validation",
+    "accuracy",
+    "leakage",
+    "model"
+   ],
+   "problem": "Training accuracy is 99% but accuracy on new data is 70%.",
+   "steps": [
+    "Check for leakage: a feature derived from the target, or rows of the same entity in both train and test.",
+    "Split by time or by entity when the real use is on new ones.",
+    "Compare with a simple baseline (majority class, linear model).",
+    "Reduce complexity or add regularisation and watch the validation score, not the training score.",
+    "Report the metric that matches the cost of mistakes (recall, precision, error in dollars)."
+   ],
+   "check": "Fit any scaling or encoding on the training split only, then apply it to the test split."
+  },
+  {
+   "track": "ml",
+   "keywords": [
+    "imbalanced",
+    "imbalance",
+    "rare",
+    "fraud",
+    "class",
+    "precision",
+    "recall",
+    "threshold"
+   ],
+   "problem": "Only 2% of rows are positive and the model predicts 'no' for everything with 98% accuracy.",
+   "steps": [
+    "Drop accuracy as the headline metric.",
+    "Look at precision, recall and the precision-recall curve.",
+    "Choose the threshold from the cost of a miss versus a false alarm.",
+    "Try class weights before resampling, and resample only the training split."
+   ],
+   "check": "Compare against the baseline of always predicting the majority class."
+  },
+  {
+   "track": "engineering",
+   "keywords": [
+    "beam",
+    "load",
+    "stress",
+    "deflection",
+    "unit",
+    "units",
+    "calculation",
+    "safety"
+   ],
+   "problem": "A calculation gives a result that looks off by a factor of 10 or 1000.",
+   "steps": [
+    "Write every input with its unit.",
+    "Convert all inputs to one consistent system before calculating.",
+    "Do a rough estimate by hand to see the right order of magnitude.",
+    "Carry units through the formula and check the result's unit is the one you expect.",
+    "State the assumptions and that a qualified engineer must verify safety-critical numbers."
+   ],
+   "check": "The answer's units must match the quantity asked for; if not, the formula or a conversion is wrong."
+  },
+  {
+   "track": "engineering",
+   "keywords": [
+    "tolerance",
+    "fit",
+    "sizing",
+    "margin",
+    "factor",
+    "safety",
+    "estimate"
+   ],
+   "problem": "Choosing a part size and wanting to know how much margin is enough.",
+   "steps": [
+    "List the loads and the worst case they could reach.",
+    "Find the part's rated capacity from the datasheet.",
+    "Divide capacity by worst-case load to get the margin.",
+    "Compare with the margin the standard or customer requires."
+   ],
+   "check": "Use the datasheet rating at the real operating conditions, not the headline number."
+  },
+  {
+   "track": "ai",
+   "keywords": [
+    "prompt",
+    "hallucination",
+    "wrong",
+    "answer",
+    "rag",
+    "retrieval",
+    "grounding",
+    "eval"
+   ],
+   "problem": "An AI feature gives confident wrong answers.",
+   "steps": [
+    "Collect 10 to 20 real failing questions with the right answers.",
+    "Check whether the needed information was even given to the model.",
+    "Fix retrieval or the prompt first: give sources, ask it to say when it does not know.",
+    "Re-run the same questions and compare before and after.",
+    "Keep the question set as a regression test."
+   ],
+   "check": "A change counts as better only if the fixed set improves without breaking questions that already passed."
+  },
+  {
+   "track": "ai",
+   "keywords": [
+    "cost",
+    "tokens",
+    "latency",
+    "model",
+    "choose",
+    "cheaper",
+    "slow"
+   ],
+   "problem": "AI calls are too slow or too expensive.",
+   "steps": [
+    "Measure tokens in and out per call and the call count.",
+    "Trim the prompt and cache what repeats.",
+    "Use a smaller model for simple steps and a larger one for hard steps.",
+    "Check quality on a test set after each change."
+   ],
+   "check": "Never judge a cheaper model by a few examples; use the same test set."
+  },
+  {
+   "track": "pm",
+   "keywords": [
+    "scope",
+    "creep",
+    "timeline",
+    "deadline",
+    "slip",
+    "estimate",
+    "plan",
+    "risk"
+   ],
+   "problem": "A project is slipping and the client keeps adding requests.",
+   "steps": [
+    "List what was agreed in writing.",
+    "List each new request with its effort estimate.",
+    "Show the effect on the date, and offer the choices: add time, add cost, or swap something out.",
+    "Get the decision in writing before continuing."
+   ],
+   "check": "Every change should have an owner, a date impact and a yes or no."
+  },
+  {
+   "track": "pm",
+   "keywords": [
+    "status",
+    "report",
+    "update",
+    "weekly",
+    "stakeholder",
+    "blocked",
+    "risk"
+   ],
+   "problem": "Writing a weekly status for a non-technical client.",
+   "steps": [
+    "Start with overall status in one line (on track, at risk, late) and why.",
+    "Done this week, next week, blockers and what you need from them.",
+    "Keep dates and numbers specific.",
+    "Name the top risk with the plan for it."
+   ],
+   "check": "A reader should be able to act after the first three lines."
+  },
+  {
+   "track": "sysanalyst",
+   "keywords": [
+    "requirements",
+    "ambiguous",
+    "user",
+    "story",
+    "acceptance",
+    "criteria",
+    "stakeholders"
+   ],
+   "problem": "A request says 'make the report better'.",
+   "steps": [
+    "Ask who uses it and what decision it supports.",
+    "Turn each wish into a testable statement: given, when, then.",
+    "List what is out of scope.",
+    "Confirm the list with the requester."
+   ],
+   "check": "Each requirement must be something a person could check as done or not done."
+  },
+  {
+   "track": "sysanalyst",
+   "keywords": [
+    "process",
+    "flow",
+    "handoff",
+    "manual",
+    "spreadsheet",
+    "bottleneck",
+    "workflow"
+   ],
+   "problem": "Mapping a manual process that is slow and error-prone.",
+   "steps": [
+    "Write the steps as they happen today, including workarounds.",
+    "Mark each handoff and where data is retyped.",
+    "Time the waiting steps.",
+    "Pick the one change that removes the most waiting or retyping."
+   ],
+   "check": "Walk the map with someone who does the work; they will find steps you missed."
+  },
+  {
+   "track": "security",
+   "keywords": [
+    "phishing",
+    "suspicious",
+    "email",
+    "link",
+    "password",
+    "compromised",
+    "account"
+   ],
+   "problem": "A user clicked a link in a suspicious email and entered their password.",
+   "steps": [
+    "Change the password now from a clean device and sign out all sessions.",
+    "Turn on multi-factor authentication.",
+    "Check the account's mail rules, forwarding and recent sign-ins.",
+    "Check where else that password was used and change those.",
+    "Report it to whoever owns the account and note what happened."
+   ],
+   "check": "Look for forwarding rules and added recovery details; attackers use them to stay in."
+  },
+  {
+   "track": "security",
+   "keywords": [
+    "ransomware",
+    "malware",
+    "infected",
+    "virus",
+    "encrypted",
+    "files",
+    "isolate",
+    "backup"
+   ],
+   "problem": "A computer shows signs of ransomware.",
+   "steps": [
+    "Disconnect it from the network but leave it powered on.",
+    "Do not pay or delete anything yet; photograph the message.",
+    "Identify what was reachable from it (shares, backups).",
+    "Restore from a backup you have verified is clean and offline.",
+    "Find how it got in before reconnecting."
+   ],
+   "check": "Treat other machines on the same network as suspect until checked."
+  },
+  {
+   "track": "network",
+   "keywords": [
+    "slow",
+    "wifi",
+    "internet",
+    "dns",
+    "latency",
+    "packet",
+    "loss",
+    "router",
+    "dropped"
+   ],
+   "problem": "Internet is slow for everyone on the network.",
+   "steps": [
+    "Test a wired connection to see if it is Wi-Fi or the line.",
+    "Ping the router, then an outside address, and note loss and time.",
+    "Test a lookup by IP and by name to separate DNS from the connection.",
+    "Restart the modem and router, then check channel crowding on Wi-Fi.",
+    "If the wired speed is below the plan, call the provider with the test times."
+   ],
+   "check": "Change one thing at a time and re-test, or you won't know what fixed it."
+  },
+  {
+   "track": "network",
+   "keywords": [
+    "vlan",
+    "subnet",
+    "ip",
+    "conflict",
+    "dhcp",
+    "gateway",
+    "cannot",
+    "reach",
+    "printer"
+   ],
+   "problem": "Two devices have the same IP address.",
+   "steps": [
+    "Find the conflicting address and both devices' MAC addresses.",
+    "Check whether one device is set to a static address inside the DHCP range.",
+    "Move static devices outside the DHCP range or reserve them in the router.",
+    "Renew the lease on the other device."
+   ],
+   "check": "Document the final address plan so the conflict doesn't return."
+  },
+  {
+   "track": "itsupport",
+   "keywords": [
+    "slow",
+    "computer",
+    "startup",
+    "disk",
+    "full",
+    "memory",
+    "laptop",
+    "windows"
+   ],
+   "problem": "A laptop is very slow after startup.",
+   "steps": [
+    "Check free disk space and memory use in Task Manager.",
+    "Check startup programs and disable the unneeded.",
+    "Check disk health and run updates and a malware scan.",
+    "If it still crawls, consider an SSD or more memory.",
+    "Back up the data before any bigger change."
+   ],
+   "check": "Record what you changed in the fix log so the next case starts from it."
+  },
+  {
+   "track": "itsupport",
+   "keywords": [
+    "printer",
+    "offline",
+    "driver",
+    "spooler",
+    "queue",
+    "not",
+    "printing"
+   ],
+   "problem": "A printer shows offline and nothing prints.",
+   "steps": [
+    "Check power, paper and the cable or network link.",
+    "Clear the print queue and restart the print spooler.",
+    "Reinstall or update the driver.",
+    "Make sure the printer has a fixed address and the computer points to it."
+   ],
+   "check": "Print a test page from the printer itself to separate printer from computer."
+  },
+  {
+   "track": "cpe",
+   "keywords": [
+    "timing",
+    "clock",
+    "setup",
+    "hold",
+    "fpga",
+    "register",
+    "logic",
+    "verilog",
+    "testbench"
+   ],
+   "problem": "A digital design works in simulation but fails on hardware.",
+   "steps": [
+    "Check the clock and reset reach every part and are not gated oddly.",
+    "Look for signals crossing clock domains without synchronisers.",
+    "Compare simulation timing assumptions with the real timing report.",
+    "Add a probe or counter at the failing point and compare."
+   ],
+   "check": "Simulation does not show metastability or timing violations unless you test them."
+  },
+  {
+   "track": "cpe",
+   "keywords": [
+    "microcontroller",
+    "adc",
+    "voltage",
+    "divider",
+    "sensor",
+    "reading",
+    "noisy",
+    "embedded"
+   ],
+   "problem": "A sensor reading is noisy on a microcontroller.",
+   "steps": [
+    "Check power supply noise and the ground connection.",
+    "Add a small capacitor close to the sensor and average several samples.",
+    "Make sure the source impedance suits the ADC input.",
+    "Calibrate against a known reference."
+   ],
+   "check": "Compare readings with a meter before blaming the code."
+  },
+  {
+   "track": "fullstack",
+   "keywords": [
+    "api",
+    "error",
+    "500",
+    "cors",
+    "fetch",
+    "request",
+    "failing",
+    "frontend",
+    "backend"
+   ],
+   "problem": "The frontend calls the API and gets an error.",
+   "steps": [
+    "Open the browser network tab and read the status and response.",
+    "Reproduce the same request with curl or a test.",
+    "Read the backend log for the matching error.",
+    "Check CORS, the URL and the data shape.",
+    "Fix it and add a test that fails without the fix."
+   ],
+   "check": "A 4xx points at the request, a 5xx at the server; start on the right side."
+  },
+  {
+   "track": "fullstack",
+   "keywords": [
+    "sql",
+    "injection",
+    "input",
+    "validation",
+    "form",
+    "security",
+    "database",
+    "query"
+   ],
+   "problem": "Reviewing a form handler that builds a SQL string from user input.",
+   "steps": [
+    "Find where user text enters a query.",
+    "Replace string building with parameterised queries.",
+    "Validate type and length on the server, not only in the browser.",
+    "Add a test with a quote character in the input."
+   ],
+   "check": "Never trust client-side checks; the server must enforce them."
+  }
+ ]
+}

@@ -4,10 +4,11 @@ import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { postJson } from "@/lib/api";
 import { Section, Tabs } from "@/components/panels/kit";
+import { GenerateCode } from "@/components/panels/GenerateCode";
 import { fetchText, HtmlFrame, Pick } from "./common";
 import { FieldHowTo, Out, TA, TI, lines, cols, useRun } from "./fieldcommon";
 
-const TABS = [{ id: "how", label: "How to do / fix" }, { id: "scaffold", label: "Scaffold writer" }, { id: "contract", label: "API contract" }, { id: "review", label: "Code review report" }, { id: "deploy", label: "Deploy runbook" }, { id: "quote", label: "Quote helper" }];
+const TABS = [{ id: "how", label: "How to do / fix" }, { id: "gen", label: "Generate code" }, { id: "scaffold", label: "Scaffold writer" }, { id: "contract", label: "API contract" }, { id: "review", label: "Code review report" }, { id: "deploy", label: "Deploy runbook" }, { id: "quote", label: "Quote helper" }];
 
 export function FsTools() {
   const [want, setTab] = useState("how");
@@ -16,6 +17,7 @@ export function FsTools() {
     <div className="grid gap-4">
       <Tabs label="Full stack tools" value={tab} onChange={setTab} tabs={tabs} />
       {tab === "how" && <FieldHowTo area="Full stack" agent="fullstack" examples="e.g. api has no login, how do I deploy safely" />}
+      {tab === "gen" && <GenerateCode />}
       {tab === "scaffold" && <Scaffold />}
       {tab === "contract" && <Contract />}
       {tab === "review" && <Review />}

@@ -5,10 +5,11 @@ import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
 import type { FsApiMap, FsCodebase, FsEndpoint, FsResponse, FsScaffold, FsStack } from "@/lib/types";
 import { CodeWorkbench } from "./CodeWorkbench";
+import { GenerateCode } from "./GenerateCode";
 import { SoftwareEngTab } from "./SoftwareEngTab";
 import { Badge, Field, Section, Stat, Table, Tabs, errMsg } from "./kit";
 
-const TABS = [{ id: "bench", label: "Code Workbench" }, { id: "api", label: "API map & tester" }, { id: "scaffold", label: "Scaffold from a table" }, { id: "code", label: "Codebase" }, { id: "stack", label: "Stack & config" }, { id: "se", label: "Software engineering" }];
+const TABS = [{ id: "bench", label: "Code Workbench" }, { id: "gen", label: "Generate code" }, { id: "api", label: "API map & tester" }, { id: "scaffold", label: "Scaffold from a table" }, { id: "code", label: "Codebase" }, { id: "stack", label: "Stack & config" }, { id: "se", label: "Software engineering" }];
 
 export function FullStackPanel({ tab: wanted, onTab }: { tab: string; onTab: (t: string) => void }) {
   const { tabs: shownTabs, current: tab } = useWorkTabs(TABS, ["se"], wanted);
@@ -16,6 +17,7 @@ export function FullStackPanel({ tab: wanted, onTab }: { tab: string; onTab: (t:
     <div className="space-y-4">
       <Tabs tabs={shownTabs} value={tab} onChange={onTab} label="Full stack tools" />
       {tab === "bench" && <CodeWorkbench />}
+      {tab === "gen" && <GenerateCode />}
       {tab === "api" && <ApiTester />}
       {tab === "scaffold" && <Scaffold />}
       {tab === "code" && <Codebase />}

@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
+import { WorkLog } from "@/components/WorkLog";
+import { TodayPanel } from "@/components/TodayPanel";
+import { AssistantDesk } from "@/components/AssistantDesk";
 import { PwaSetup } from "@/components/PwaSetup";
 import { PageShell } from "@/components/PageShell";
-import { Badge } from "@/components/panels/kit";
 import { ApiError, getJson } from "@/lib/api";
 import { useMode } from "@/lib/mode";
 
@@ -74,10 +76,6 @@ function WorkHome() {
   }, []);
 
   const industries = [...new Set(packs.map((p) => p.industry))];
-  const todo = [
-    ...(ov?.overdue ?? []).map((i) => ({ key: `inv${i.id}`, text: `Invoice ${i.number} for ${i.client} is ${i.days_late} day${i.days_late === 1 ? "" : "s"} late (${usd(i.total)})`, href: "/clients" })),
-    ...(ov?.followups_due ?? []).map((f) => ({ key: `fu${f.id}`, text: `Follow up${f.client ? ` with ${f.client}` : ""}: ${f.note || "check in"} (due ${f.due})`, href: "/clients" })),
-  ];
   return (
     <>
       {err && <ErrorBanner message={err} />}
@@ -85,14 +83,12 @@ function WorkHome() {
         {QUICK.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
       </section>
 
+      <AssistantDesk />
+
+      <WorkLog />
+
       <div className="grid gap-4 md:grid-cols-2">
-        <section className="card space-y-2 p-4" aria-label="Today">
-          <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Today</h2>{ov?.sample && <Badge tone="warn">Sample data</Badge>}</div>
-          {!ov && <p className="text-sm text-muted">Loading…</p>}
-          {ov && todo.length === 0 && <p className="text-sm">Nothing is late and no follow-ups are due.</p>}
-          {todo.length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm">{todo.map((t) => <li key={t.key}><Link href={t.href} className="underline">{t.text}</Link></li>)}</ul>}
-          {ov && <p className="text-xs text-muted">{usd(ov.outstanding)} outstanding · {usd(ov.paid_this_month)} paid this month · {usd(ov.unbilled_amount)} unbilled ({ov.unbilled_hours} h) · {usd(ov.pipeline)} in quotes</p>}
-        </section>
+        <TodayPanel footer={ov ? `${usd(ov.outstanding)} outstanding · ${usd(ov.paid_this_month)} paid this month · ${usd(ov.unbilled_amount)} unbilled (${ov.unbilled_hours} h) · ${usd(ov.pipeline)} in quotes` : undefined} />
         <section className="card space-y-2 p-4" aria-label="Open jobs">
           <div className="flex items-center justify-between"><h2 className="text-sm font-semibold">Open jobs{ov ? ` (${jobs?.length ?? 0})` : ""}</h2><Link href="/clients" className="text-xs underline">All clients</Link></div>
           {jobs === null && <p className="text-sm text-muted">Loading…</p>}
@@ -100,7 +96,7 @@ function WorkHome() {
           <ul className="space-y-1 text-sm">
             {jobs?.slice(0, 8).map((j) => (
               <li key={j.id} className="flex flex-wrap items-baseline justify-between gap-2">
-                <span><strong>{j.title}</strong> <span className="text-muted">for {j.client}</span></span>
+                <span><Link href={`/job?id=${j.id}`} className="underline"><strong>{j.title}</strong></Link> <span className="text-muted">for {j.client}</span></span>
                 <span className="text-xs text-muted">{j.status}{j.due ? ` · due ${j.due}` : ""}{j.late ? " · late" : ""}{j.quote ? ` · ${usd(j.quote)}` : ""}</span>
               </li>
             ))}

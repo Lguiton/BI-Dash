@@ -361,27 +361,33 @@ def due(now_dt: datetime | None = None) -> list[dict]:
     return out
 
 
+def _tell_aida(error: Exception, task: str) -> None:
+    """A scheduled task failed: report it to Project AIDA (only when that link is switched on). Never raises."""
+    from app.services import aida
+    aida.report_error(error, "TASK", f"scheduler:{task}")
+
+
 def tick() -> int:
     """One scheduler pass: automatic backup, then every source that is due. Returns how many sources ran."""
     try:
         backups.maybe_auto()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as error:  # noqa: BLE001
+        _tell_aida(error, "backup")
     try:
         from app.services import jobs
         jobs.tick()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as error:  # noqa: BLE001
+        _tell_aida(error, "jobs")
     try:
         from app.services import bi_tools
         bi_tools.run_due()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as error:  # noqa: BLE001
+        _tell_aida(error, "bi-tools")
     try:
         from app.services import de_tools
         de_tools.contract_check_due()
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as error:  # noqa: BLE001
+        _tell_aida(error, "contract-checks")
     n = 0
     for s in due():
         try:
@@ -405,8 +411,8 @@ class Scheduler:
         while not self._stop.wait(self.every):
             try:
                 tick()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as error:  # noqa: BLE001
+                _tell_aida(error, "tick")
 
     def stop(self):
         self._stop.set()

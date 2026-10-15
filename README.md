@@ -45,7 +45,7 @@ See **LEARNING.md** for how this project maps to BI topics (SQL, Python, Tableau
   * **SQL Lab** (`/lab`): read-only SQL console, 16 graded exercises, and saved queries (kept in your browser).
   * **Python** (`/python`): Jupyter launch card and 14 notebooks in `python_practice/notebooks/` (basics 00-07; analyst, statistics, clustering, ML and MLflow 10-15) with self-checking exercises.
   * **ML Lab** (`/ml`): train regression/classification models (scikit-learn) with a time-based split, baselines, cross-validation, permutation importance and plain-English warnings.
-  * **AI Lab** (`/ai`): an agent that answers questions by writing read-only SQL. Put any of `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` in `backend/.env` (see `.env.example`). Questions are routed by difficulty: simple to Gemini first (free tier), medium (comparisons, trends, summaries, drafts) to OpenAI first, complex or code questions to Claude first, each falling back to the others if a key is missing, a cap is reached or a provider errors. The discipline agents use the same rules. Daily caps and automatic fallback spread the load; you can also force one model.
+  * **AI Lab** (`/ai`): an agent that answers questions by writing read-only SQL. Put any of `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` in `backend/.env` (see `.env.example`). Questions are routed by difficulty: simple to Gemini first (free tier), medium (comparisons, trends, summaries, drafts) to OpenAI first, complex questions (ML, deep learning, NLP, data science, statistics, math, code) to Claude first, each falling back to the others if a key is missing, a cap is reached or a provider errors. The discipline agents use the same rules. Daily caps and automatic fallback spread the load; you can also force one model.
   * **Glossary** (`/glossary`): 18 metrics and concepts with formula, runnable SQL and common pitfalls.
   * **Pipeline monitor** (`/pipeline`): run the medallion pipeline (clean or messy data) and watch freshness, quarantine and health checks.
   * **Apache** (`/apache`): Spark, Airflow and Superset examples in a dropdown (`apache_practice/`).
@@ -223,3 +223,11 @@ Not tested: Docker Compose and the Superset Docker commands (Docker Hub was unre
 | PM calendar and automations | PM track | Rules run when you press Preview or Run; Preview changes nothing. |
 
 Not built on purpose: cloud platforms (Snowflake, Databricks, AWS, Azure, GCP, Kubernetes, Terraform), R and SAS, paid tools, logins, and offensive security tools.
+
+## Project AIDA (optional)
+The dashboard can report to Project AIDA, the operations dashboard on this same computer: that it is running (once a minute), requests that failed with an unexpected error, failed scheduled tasks (automatic backup, jobs, checks), and a few counts (lessons completed, data sources and failed loads, failed pipeline runs and data-quality checks in the last 24 hours, hours since the last Real-data backup, today's AI questions and tokens, and cost only if you set `BI_PRICE_*`). It is off until you add both lines to `backend/.env`:
+```
+AIDA_INTAKE_URL=http://127.0.0.1:8006/intake/errors
+AIDA_INTAKE_SECRET=<the secret AIDA shows when you add the product "bi-dashboard">
+```
+None of your data leaves: no table names, values, SQL, AI questions, file names or paths, and no error messages (database errors can quote your data); errors are sent as the error type, the route and file/line/function only. Only a 127.0.0.1/localhost address is accepted, every report is signed, and if AIDA is closed nothing changes here. When the dashboard is closed AIDA shows it as Down after a few minutes, which is expected. Code: `backend/app/services/aida.py`.

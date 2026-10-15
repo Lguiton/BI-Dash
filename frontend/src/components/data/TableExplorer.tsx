@@ -1,4 +1,5 @@
 "use client";
+import { PrepDraft } from "@/components/PrepDraft";
 import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 import { Trash2 } from "lucide-react";
@@ -150,6 +151,8 @@ export function TableExplorer({ table, onChanged }: { table: UserTable; onChange
         {nums.length === 0 && ["histogram", "box", "scatter"].includes(kind) && <p className="text-sm text-muted">This table has no numeric columns for that chart.</p>}
         <div className="min-h-[18rem]">{draw()}</div>
       </div>
+
+      <PrepDraft draftKey={`table:${table.table_name}`} path="/api/auto/prep/table" body={{ table: table.table_name }} label="AI first look at this table" />
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">

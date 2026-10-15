@@ -15,7 +15,7 @@ It **cannot** change anything by itself. A draft appears as a card with an Add b
 Agents follow the workspace's AI privacy mode (Settings): **off** = the agent refuses (Real starts off); **summaries only** = it sees counts and scores but no titles or names; **full** = titles are included. This is a guardrail, not a vault: whatever the agent reads is sent to the AI provider whose key you configured. Each chat is logged in the Activity log.
 
 ## Which model answers
-Agents use the same routing as the AI Lab, decided from what you typed: simple questions go to Gemini, medium ones (comparisons, trends, summaries, drafts) to OpenAI, complex ones (code, statistics, forecasting, multi-part or 'why' questions) to Claude. If that provider has no key, has hit its daily cap or errors, the next one is tried. Each agent reply shows the tier and provider it used.
+Agents use the same routing as the AI Lab, decided from what you typed: simple questions go to Gemini, medium ones (comparisons, trends, summaries, drafts) to OpenAI, complex ones (ML, deep learning, NLP, data science, statistics, math, code, forecasting, multi-part or 'why' questions) to Claude. If that provider has no key, has hit its daily cap or errors, the next one is tried. Each agent reply shows the tier and provider it used.
 
 ## Setup
 Put at least one key in `backend/.env` (see `.env.example`), restart the backend, and check the status chip on the agent view. Without a key the manual and tools still work; the agent says so plainly. Limits: 10 AI questions per minute (shared with the AI Lab) and the per-provider daily caps.

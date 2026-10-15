@@ -1,0 +1,46 @@
+# Master build list
+
+> **Scope (decided Oct 14):** this is Lamarcus's personal dashboard for running his own freelance services. It is not sold or given to clients; clients only receive deliverables (invoices, summaries, reports, handoff packs). The product he sells is **Eivanta Analytics**, a separate project. So: no client logins, no multi-tenant work and no public hosting here. If he hires people later, the next steps are logins, per-person timers and permissions.
+
+
+What is done, what is next, and what is waiting on a go-ahead. Update this file when something changes.
+
+## Next (agreed)
+- [ ] Use the dashboard for real work for a few weeks and write down what annoys you (this decides what to build next).
+- [ ] Clean-up: tighten the header so the Settings button does not wrap.
+- [ ] Extend the fix log to other fields (data, ML, full stack) if you want a record there too.
+
+## Done recently
+
+- [x] **My projects** in Settings: quick links to Eivanta Analytics and Project AIDA (open, copy folder path, running check).
+
+- [x] **Learned for Eivanta**: a one-line note on each job page (typed, client names removed), with a markdown download of everything learned.
+
+- [x] **Assistant desk**: approval queue for AI drafts (edit, accept, discard), job descriptions per assistant, activity log with a used rate, your own saved examples (rank first, client names removed), and a closing note drafted for each job that only reaches the client once you accept it.
+
+- [x] **Today panel** on Home: late invoices with a reminder already written (copy it, nothing is sent), follow-ups, late jobs, overdue work, a timer left running over 2 hours, jobs ready to close, and a backup reminder.
+- [x] **Recurring jobs** (per client on the Clients page): weekly or monthly, created with their steps once per period when the app runs.
+- [x] **AI prep drafts with a daily cap**: OpenAI only, off by default, cap 1 to 50 (default 10), counted per day and kept across restarts. A button on each work item and an AI first look at each table. Optional automatic drafts for new work items. No client names sent.
+- [x] **Close-job nudge**: the job page and Today say when every work item is done.
+
+- [x] **One page per job** (`/job?id=`): hours, unbilled amount, work items, fixes for that client, invoices; **Close job** creates the invoice (hours, quoted price, or none) and a client-ready summary page.
+- [x] **Work timer**: start/stop on a work item; hours go to the linked job as billable time and onto the invoice. Items not linked to a job keep the time but it is not billed. A timer over 12 hours is capped.
+- [x] **Worked examples for the agents**: 24 hand-written approaches (2 per agent) in `backend/app/content/worked_examples.json`, shown as reference when the question shares at least two keywords. Not training; the agent still does not learn.
+- [x] Work and Learn modes, one dashboard per field, Settings tabs, the price list and rates.
+- [x] Fix log for IT repair, Cybersecurity and Network, with ticket links and secret blanking.
+- [x] Work log on the home screen ("What I'm working on").
+- [x] Test data script for the Practice workspace.
+- [x] Agents read your own past fixes (IT, Cybersecurity, Network) when AI mode is "full".
+- [x] "Send to agent" in the Web panel (text from a page goes to the agent as a labelled outside source; save the answer to the fix log).
+- [x] Generate code tab (Full Stack field and track): describe it, get checked, risk-scanned code to copy. Never run.
+- [x] Agent checks: past-work lookup (free) and field-work questions with a rubric (live).
+- [x] AI routing: simple to Gemini, medium to OpenAI, complex (ML, NLP, statistics, math, code) to Claude.
+
+## Waiting for your go-ahead
+- [ ] Launcher `.bat` for the test data (after the dashboard is fully built and tested).
+- [ ] Gmail (IMAP) and Google Calendar sign-in. Last; wait until you say ready.
+- [ ] Live network capture (needs Npcap or libpcap and admin rights; your own network only; opt-in).
+- [ ] OCR for scanned files (needs Tesseract installed).
+- [ ] Security review against your transcripts.
+- [ ] Optional: NLP and deep-learning "by hand" tabs.
+- [ ] Hosting online (login on, HTTPS, strong owner password).

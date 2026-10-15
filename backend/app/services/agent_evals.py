@@ -1,6 +1,10 @@
 """Agent evals: a fixed set of questions per discipline you can re-run after changing a model, a prompt or a routing rule.
 
-Two modes:
+Four modes:
+  knowledge  free. Checks the "past work" lookup: that a fix you saved is found for a similar question and put in front of the agent,
+             that an unrelated question gets nothing, that secrets and client names are not passed on, and that nothing is passed when
+             the AI mode is "summaries only". Uses built-in sample fixes, so it never touches your records.
+  field      live (real API calls). Field-work questions with a keyword rubric: does the reply mention the things a competent answer must.
   route  free and instant. Checks WHICH tier each question is routed to (simple/medium/complex). Catches routing drift.
   live   asks the real agent. Costs a few API calls (counted against your daily caps) and checks STRUCTURE only:
          it answered, it used a tool when it should, it produced a draft or a button when asked.
@@ -80,6 +84,39 @@ CASES: dict[str, list[dict]] = {
         {"id": "nav-tickets", "ask": "Take me to the helpdesk tab", "tier": "simple", "nav": True},
     ],
 }
+# Field-work questions with a rubric. "must" is a list of groups; each group passes when the reply mentions ANY word in it, and every group has to pass.
+# This is a floor, not a grade: an answer can mention the right words and still be poor, so read the replies.
+FIELD_CASES: dict[str, list[dict]] = {
+    "itsupport": [
+        {"id": "black-screen", "ask": "A laptop shows a black screen with a cursor after a Windows update. What do I do?", "must": [["safe mode"], ["driver"]]},
+        {"id": "slow-disk", "ask": "A desktop is slow and the disk sits at 100 percent. What should I check?", "must": [["backup", "back up"], ["smart", "ssd", "drive health", "failing"]]},
+        {"id": "printer-offline", "ask": "A network printer keeps showing offline. Where do I start?", "must": [["ip", "dhcp", "address"], ["ping", "test page", "reinstall", "re-add", "reserve"]]},
+    ],
+    "security": [
+        {"id": "phish-click", "ask": "An employee clicked a link in a phishing email. What are the first steps?", "must": [["password"], ["mfa", "multi-factor", "two-factor", "2fa"], ["report", "isolate", "disconnect", "inform"]]},
+        {"id": "key-leak", "ask": "I pushed an API key to a public repository. What now?", "must": [["rotate", "revoke", "regenerate", "replace"], ["history", "remove", "delete"]]},
+        {"id": "router-admin", "ask": "My router's admin page is reachable from the internet. How do I fix it?", "must": [["remote", "wan"], ["password"], ["firmware", "update"]]},
+    ],
+    "network": [
+        {"id": "dns", "ask": "I can ping 8.8.8.8 but websites by name do not load. What do I check?", "must": [["dns"], ["nslookup", "resolver", "dig", "server"]]},
+        {"id": "ip-conflict", "ask": "Two PCs keep losing the network and I suspect a duplicate IP address. How do I confirm and fix it?", "must": [["arp", "conflict", "duplicate"], ["dhcp", "static", "reserv", "pool"]]},
+        {"id": "wifi-drops", "ask": "Wi-Fi drops in the back office but works near the router. What are the likely causes?", "must": [["signal", "coverage", "distance", "wall"], ["channel", "interference", "access point", "mesh", "node"]]},
+    ],
+}
+KNOW_PROBES = [  # (track, area, the fix saved earlier, a similar question, an unrelated question)
+    ("itsupport", "it", {"id": -1, "area": "it", "title": "Laptop black screen after Windows update", "device": "Dell Latitude", "symptoms": "Black screen with cursor after login",
+                         "cause": "Corrupt display driver", "steps": ["Boot to safe mode", "Uninstall the display adapter", "Reinstall the driver"], "result": "fixed", "result_label": "Fixed",
+                         "prevention": "", "client": "Test Client Co", "ticket_id": 77, "score": 24.0},
+     "laptop shows a black screen after windows update", "what is the capital of france"),
+    ("security", "security", {"id": -2, "area": "security", "title": "Phishing link clicked by staff", "device": "", "symptoms": "Employee entered a password on a fake page",
+                              "cause": "Credential-harvest link", "steps": ["Reset the password", "Enable MFA", "Review sign-in logs"], "result": "fixed", "result_label": "Fixed",
+                              "prevention": "", "client": "Test Client Co", "ticket_id": None, "score": 20.0},
+     "someone clicked a phishing link and typed their password", "convert 5 miles to kilometres"),
+    ("network", "network", {"id": -3, "area": "network", "title": "Guest Wi-Fi reached the office printer", "device": "", "symptoms": "Visitors could see internal devices",
+                            "cause": "No VLAN separation", "steps": ["Create a guest VLAN", "Block guest to office traffic"], "result": "workaround", "result_label": "Workaround only",
+                            "prevention": "", "client": "Test Client Co", "ticket_id": None, "score": 18.0},
+     "guest wifi can reach internal printer", "how many hosts fit in a slash 27"),
+]
 MAX_LIVE_CASES = 6
 KEEP_RUNS = 20
 
@@ -101,7 +138,7 @@ def history() -> list[dict]:
 
 def overview() -> dict:
     return {"tracks": [{"track": t, "name": agents.AGENTS[t]["name"], "cases": c} for t, c in CASES.items()], "runs": history(),
-            "max_live_cases": MAX_LIVE_CASES,
+            "max_live_cases": MAX_LIVE_CASES, "field_tracks": {t: [{"id": c["id"], "ask": c["ask"]} for c in v] for t, v in FIELD_CASES.items()}, "knowledge_tracks": [p[0] for p in KNOW_PROBES],
             "note": "Route checks are free. Live checks use real API calls and test structure only: they cannot tell you whether an answer is good, so read the replies."}
 
 
@@ -127,26 +164,88 @@ def _live_checks(case: dict, r) -> list[dict]:
     return out
 
 
+def _rubric(case: dict, r) -> list[dict]:
+    low = (r.reply or "").lower()
+    return [{"name": "mentions " + " / ".join(g[:3]), "ok": any(w in low for w in g), "detail": ""} for g in case.get("must", [])]
+
+
+def _knowledge(track: str) -> dict:
+    """Free check of the past-work lookup, using built-in sample fixes (your own records are never read or changed)."""
+    from app.services import experience
+    probe = next((p for p in KNOW_PROBES if p[0] == track), None)
+    if probe is None:
+        raise EvalError("The past-work lookup applies to the IT Specialist, Cybersecurity and Network agents.", 404)
+    _, area, fix, similar, unrelated = probe
+    pool = [{**fix, "score": fixlog_score(fix, similar)}, {**fix, "id": -9, "title": "Something else entirely", "symptoms": "", "cause": "", "steps": [], "score": 0.0}]
+    text, used = experience.build(track, [p for p in pool if p["score"]])
+    none_text, none_used = experience.build(track, [{**fix, "score": fixlog_score(fix, unrelated)}] if fixlog_score(fix, unrelated) else [])
+    leak = "Test Client Co" in text or "ticket" in text.lower()
+    checks = [
+        {"name": "finds the saved fix for a similar question", "ok": bool(used) and used[0]["title"] == fix["title"], "detail": used[0]["title"] if used else "nothing found"},
+        {"name": "puts its steps in front of the agent", "ok": fix["steps"][0] in text, "detail": ""},
+        {"name": "labels it as the user's own notes, not instructions", "ok": "not instructions" in text, "detail": ""},
+        {"name": "says when a fix was only a workaround", "ok": fix["result"] != "workaround" or "Workaround only" in text, "detail": ""},
+        {"name": "passes nothing for an unrelated question", "ok": none_text == "" and not none_used, "detail": ""},
+        {"name": "does not pass client names or ticket numbers", "ok": not leak, "detail": ""},
+    ]
+    from app.services import ai_policy
+    keep = ai_policy.describe
+    try:
+        ai_policy.describe = lambda: {"mode": "aggregate", "allowed": True}      # simulate "summaries only"
+        agg_text, _ = experience.lookup(track, similar)
+    finally:
+        ai_policy.describe = keep
+    checks.append({"name": "passes nothing in 'summaries only' mode", "ok": agg_text == "", "detail": ""})
+    passed = sum(1 for c in checks if c["ok"])
+    entry = {"at": state.now(), "track": track, "mode": "knowledge", "models": [], "passed": passed, "total": len(checks), "pct": round(100 * passed / len(checks)),
+             "results": [{"id": "past-work", "ask": similar, "expected_tier": "", "reply": text[:600], "provider": "", "model": "", "seconds": None, "checks": checks, "ok": passed == len(checks)}]}
+    state.kv_set(_key(), json.dumps(([entry] + history())[:KEEP_RUNS]))
+    state.audit("agent_eval", f"{track} knowledge: {passed}/{len(checks)}")
+    return entry
+
+
+def fixlog_score(fix: dict, q: str) -> float:
+    """Score one sample fix against a question with the same word matching the fix log search uses."""
+    from app.services import fixlog
+    toks = set(fixlog._tokens(q))
+    from app.services.repair_search import RELATED
+    exp = set(toks)
+    for w in toks:
+        exp.update(RELATED.get(w, []))
+    parts = {"title": fix["title"], "symptoms": fix["symptoms"], "device": fix["device"], "cause": fix["cause"], "steps": " ".join(fix["steps"])}
+    weights = {"title": 5, "symptoms": 4, "device": 2, "cause": 2, "steps": 1}
+    s = 0.0
+    for w in exp:
+        for part, wt in weights.items():
+            if w in set(fixlog._tokens(parts[part])):
+                s += wt * (1 if w in toks else 0.5)
+    return round(s * (1.2 if fix["result"] == "fixed" else 1), 1)
+
+
 def run(track: str, mode: str = "route", provider: str = "auto", confirm: bool = False, adapters: dict | None = None) -> dict:
     if track not in CASES:
         raise EvalError("No eval set for that discipline.", 404)
-    if mode not in ("route", "live"):
-        raise EvalError("Mode must be 'route' or 'live'.")
-    cases = CASES[track]
+    if mode not in ("route", "live", "knowledge", "field"):
+        raise EvalError("Mode must be 'route', 'knowledge', 'live' or 'field'.")
+    if mode == "knowledge":
+        return _knowledge(track)
+    if mode == "field" and track not in FIELD_CASES:
+        raise EvalError("Field-work questions exist for the IT Specialist, Cybersecurity and Network agents.", 404)
+    cases = FIELD_CASES[track] if mode == "field" else CASES[track]
     results, models = [], set()
-    if mode == "live":
+    if mode in ("live", "field"):
         if not confirm:
             raise EvalError(f"A live run asks the real model up to {min(len(cases), MAX_LIVE_CASES)} questions and counts against your daily caps. Confirm to go ahead.")
         if not agents.ai_policy.describe()["allowed"]:
             raise EvalError("AI is switched off for this workspace, so a live run can't happen. Turn it on in Settings, or use the free route check.", 403)
-    for c in cases[:MAX_LIVE_CASES] if mode == "live" else cases:
-        checks = [_route_check(c)]
-        row = {"id": c["id"], "ask": c["ask"], "expected_tier": c["tier"], "reply": "", "provider": "", "model": "", "seconds": None}
-        if mode == "live":
+    for c in cases[:MAX_LIVE_CASES] if mode in ("live", "field") else cases:
+        checks = [] if mode == "field" else [_route_check(c)]
+        row = {"id": c["id"], "ask": c["ask"], "expected_tier": c.get("tier", ""), "reply": "", "provider": "", "model": "", "seconds": None}
+        if mode in ("live", "field"):
             t0 = time.perf_counter()
             try:
                 r = agents.chat(track, c["ask"], [], None, provider, adapters, "auto")
-                checks += _live_checks(c, r)
+                checks += _live_checks(c, r) + _rubric(c, r)
                 row.update(reply=r.reply[:600], provider=r.provider, model=r.model, seconds=round(time.perf_counter() - t0, 2))
                 models.add(f"{r.provider}:{r.model}")
             except agents.AgentError as e:

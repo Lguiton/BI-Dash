@@ -40,3 +40,10 @@ Open *Software engineering* in the Full Stack tab. Seven sub-tabs:
 - **Reference**: documents, tools, stacks, languages, environments and corrections to common course errors.
 
 Limits: CI/CD, containers, load balancers and cloud hosting are explained but cannot run here. Availability figures are illustrative and assume independent failures. The method and architecture scores explain trade-offs; they do not decide for you. Qual templates added: SRS, design document, test plan and SOP.
+
+## Generate code (copy and paste)
+Full Stack field dashboard and the Full Stack track tools both have a **Generate code** tab. Pick a language (Python, JavaScript, TypeScript, SQL, Bash, PowerShell), say what you want in a sentence or two, and optionally paste your own code or table columns. The assistant writes the code and a short note (what it does, how to run it, how to check it worked, cautions).
+* Complex questions route to Claude first. Passwords and keys you type are blanked before sending; the request and context are capped (1,500 and 4,000 characters).
+* Before you see it: Python, JavaScript and SQL get the same offline review as the Code Workbench. Bash is syntax-checked with `bash -n` (parse only). TypeScript and PowerShell are not syntax-checked. Every language gets a risk scan: recursive deletes, DROP/TRUNCATE, DELETE or UPDATE without WHERE, curl-pipe-to-shell, Invoke-Expression, eval, shell=True, turned-off certificate checks, world-writable permissions, and secrets written into the code.
+* **Nothing is ever run.** Copy it, read it, and try it on sample data. A clean check means no common mistakes were found, not that it does what you meant. Generated code can be wrong.
+* Files: `services/codegen.py`, `routers/code.py` (`/api/code/generate`), `panels/GenerateCode.tsx`, `tests/test_codegen.py`.

@@ -21,6 +21,8 @@ class ChatIn(BaseModel):
     persona: Literal["default", "cfo", "math", "engmath"] = "default"
     provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
     effort: Literal["auto", "simple", "medium", "complex"] = "auto"
+    source_text: str | None = Field(default=None, max_length=4000)      # text copied from a web page, labelled as an outside source
+    source_url: str | None = Field(default=None, max_length=300)
 
 
 @router.get("/api/manuals/{track}")
@@ -54,16 +56,16 @@ def chat(track: str, body: ChatIn):
     if pol_ok:
         ai_router._check_rate()
     try:
-        r = agents.chat(track, body.message, [m.model_dump() for m in body.history], body.step_id, body.provider, None, body.effort)
+        r = agents.chat(track, body.message, [m.model_dump() for m in body.history], body.step_id, body.provider, None, body.effort, body.persona, body.source_text, body.source_url)
     except agents.AgentError as e:
         raise HTTPException(e.status, e.message) from None
     return {"reply": r.reply, "provider": r.provider, "model": r.model, "route": r.route, "proposals": r.proposals, "actions": r.actions,
-            "tools_used": r.tools_used, "stopped_early": r.stopped_early, "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}
+            "tools_used": r.tools_used, "past_work": r.past_work, "examples": r.examples, "stopped_early": r.stopped_early, "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}
 
 
 class EvalIn(BaseModel):
     track: str
-    mode: Literal["route", "live"] = "route"
+    mode: Literal["route", "knowledge", "live", "field"] = "route"
     provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
     confirm: bool = False
 
