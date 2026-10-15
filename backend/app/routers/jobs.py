@@ -3,6 +3,8 @@ from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import HTMLResponse, Response
 
 from app.services import clients as cl
+from app.services import jobfield
+from app.services.worklog import WorkError
 from app.services import jobpage as jobs
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
@@ -11,8 +13,23 @@ router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 def _g(fn, *a, **k):
     try:
         return fn(*a, **k)
-    except cl.ClientError as e:
+    except (cl.ClientError, WorkError) as e:
         raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/fields/list")
+def fields_list():
+    return {"fields": [jobfield.info(k) for k in jobfield.keys()]}
+
+
+@router.get("/fields/guess")
+def fields_guess(title: str = ""):
+    return {"field": jobfield.info(jobfield.guess(title))}
+
+
+@router.post("/quick-start")
+def quick_start(body: dict = Body(...)):
+    return _g(jobs.quick_start, str(body.get("title") or ""), str(body.get("client") or ""), body.get("client_id"), body.get("field") or None)
 
 
 @router.get("/{jid}")

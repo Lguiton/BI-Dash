@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import html
 
-from app.services import clients, fixlog, worklog
+from app.services import clients, fixlog, jobfield, worklog
 
 SYSTEM_LOG = ("Added", "Marked ", "Timer ", "Left off:", "Linked to job", "Unlinked from")
 
@@ -19,6 +19,7 @@ def overview(jid: int) -> dict:
         fixes = [f for f in fixlog.listing()["fixes"] if (f.get("client") or "").strip().lower() == cname.strip().lower()]
     items = worklog.for_job(jid)
     ready = bool(items) and all(i["status"] == "done" for i in items) and t["job"]["status"] != "done"
+    t["job"] = {**t["job"], "field_info": jobfield.of_job(t["job"])}
     return {**t, "work_items": items, "ready_to_close": ready,
             "fixes": [{"id": f["id"], "title": f["title"], "area": f["area_label"], "result": f["result_label"], "created_at": f["created_at"]} for f in fixes[:20]],
             "fixes_note": f"Fixes logged with the client name '{cname}'." if cname else ""}
@@ -108,3 +109,23 @@ h1{{font-size:1.5rem}}h2{{font-size:1.1rem;margin-top:1.6rem;border-bottom:1px s
 <h1>Job summary: {e(j['title'])}</h1><p class=m>For {e(c.get('name', ''))} · started {e(j['created'])} · status: {e(j['status'])} · {o['hours']:g} hours recorded</p>
 <h2>What was done</h2><ul>{lis}</ul>{note}{('<h2>Fixes and write-ups</h2>' + fixes_html) if fixes_html else ''}{('<h2>Invoices</h2><ul>' + inv + '</ul>') if inv else ''}
 <p class=m>Please keep this summary for your records. Questions? Contact me and mention the job title above.</p></body></html>"""
+
+
+def quick_start(title: str, client: str = "", client_id: int | None = None, field: str | None = None) -> dict:
+    """Start a job from one line: finds the client by name (or makes one), makes an active job and one work item with a timer ready.
+    The field is the one you pick, else a guess from the title. Nothing is sent anywhere."""
+    title = (title or "").strip()
+    if not title:
+        raise clients.ClientError("Type what the job is.")
+    d = clients._load()
+    cid = int(client_id or 0)
+    if not cid:
+        name = (client or "").strip()
+        if not name:
+            raise clients.ClientError("Pick a client or type a new client name.")
+        hit = next((c for c in d["clients"] if not c["archived"] and c["name"].strip().lower() == name.lower()), None)
+        cid = hit["id"] if hit else clients.add_client({"name": name})["id"]
+    f = field or jobfield.guess(title)
+    job = clients.add_job({"client_id": cid, "title": title, "status": "active", "field": f})
+    item = worklog.add({"title": title, "status": "doing", "job_id": job["id"]})
+    return {"job": job, "work_item": item, "field": jobfield.of_job(job)}

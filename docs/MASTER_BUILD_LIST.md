@@ -12,6 +12,11 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 
 ## Done recently
 
+- [x] **One-place job flow**: type the job in the top box and click Go (it suggests dashboards) or **Start as job** (picks a client and a field from your words, creates the job and a first step, opens that field's dashboard). A **pinned job bar** under the top box on every page holds the timer, steps, a quick note, a Field switcher, Switch job and Close job. Home's open jobs have **Work on it**. Fields: IT repair, Networking, Cybersecurity, Data analyst, Data scientist, Machine learning, AI engineering, Engineering, Data engineering, Full stack, Project management, Systems analysis. The field guess uses a "Field:" title prefix, then keywords; you can change it.
+- [x] Dropdown lists readable in dark mode.
+
+- [x] Marketing package (Docs) and pitch deck (Slides) for the freelance business: names, slogan, mission, positioning, SWOT, draft prices, channels, 30-day plan. Names not checked for availability; platform fees not verified.
+
 - [x] **My projects** in Settings: quick links to Eivanta Analytics and Project AIDA (open, copy folder path, running check).
 
 - [x] **Learned for Eivanta**: a one-line note on each job page (typed, client names removed), with a markdown download of everything learned.
@@ -37,6 +42,7 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [x] AI routing: simple to Gemini, medium to OpenAI, complex (ML, NLP, statistics, math, code) to Claude.
 
 ## Waiting for your go-ahead
+- [ ] **Portfolio page** (sample work for prospects): a simple public-facing page, separate from the dashboard, which stays private. Starts after you finish a few practice jobs. Rules: every item labeled "sample" or "practice", no fake reviews or testimonials, no client names or data, made-up data for any sample dashboard. Use before/after, the written quote, and the job summary or checklist PDF as the pieces.
 - [ ] Launcher `.bat` for the test data (after the dashboard is fully built and tested).
 - [ ] Gmail (IMAP) and Google Calendar sign-in. Last; wait until you say ready.
 - [ ] Live network capture (needs Npcap or libpcap and admin rights; your own network only; opt-in).

@@ -130,3 +130,9 @@ body {
   a { text-decoration: none; }
   * { box-shadow: none !important; }
 }
+
+/* Dropdown lists (native select popups): dark panel with readable text in dark mode, never white-on-white. */
+select option, select optgroup {
+  background-color: var(--panel);
+  color: var(--fg);
+}

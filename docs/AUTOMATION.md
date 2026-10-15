@@ -57,3 +57,10 @@ Every page also has a "Save page as PDF" button in the header. It opens the brow
 - **Fix library:** the existing Fix log now has a "Checklist (PDF)" button that turns a saved fix into a printable checklist.
 - **Business data backup** (Settings, Data and backups): zips the state file (clients, jobs, invoices, leads, books, fix log, notes), about once a day while the app runs, each with a restore test (checksum, health and record counts on a scratch copy). Restore takes a safety bundle first. The older Backups copy only the DuckDB file, which did not include these records.
 - **Also worth doing** on Home: leads waiting, unbilled work, drafts, quotes waiting for a yes, thank-yous and the business backup warning.
+
+## One place for a job (pinned job bar)
+
+- Type the job in the top box. **Go** suggests dashboards; **Start as job** asks for a client and a field (guessed from your words, changeable), creates an active job with a first step, pins it and opens that field's dashboard.
+- The pinned bar (work mode, every page) shows the job, its total time, a Start/Stop timer per step, Done, add a step, a note on the current step, Field, Switch job, and Close job (choose what to invoice; a draft invoice only, nothing is sent). Collapse it with the arrow; Unpin removes it. It is remembered in this browser only.
+- Only one timer runs at a time. If one runs on another job, the bar says so and has Stop it.
+- Home > Open jobs: **Work on it** pins that job and opens its field dashboard.

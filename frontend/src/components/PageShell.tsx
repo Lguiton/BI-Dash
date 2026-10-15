@@ -6,6 +6,7 @@ import { LearnGate } from "./LearnGate";
 import { ModeToggle } from "./ModeToggle";
 import { CommandPalette, SearchButton } from "./CommandPalette";
 import { AskBar } from "./AskBar";
+import { JobBar } from "./JobBar";
 import { NavBar } from "./NavBar";
 import { WebDock } from "./WebDock";
 import { RealBanner, SettingsButton } from "./WorkspaceSwitcher";
@@ -26,6 +27,7 @@ export function PageShell({ title, subtitle, children }: { title: string; subtit
           <button className="btn" onClick={() => window.print()} title="Opens the print window. Choose Save as PDF as the printer."><FileDown className="h-4 w-4" aria-hidden /> Save page as PDF</button></div>
       </header>
       <div className="print:hidden"><AskBar /></div>
+      {mode === "work" && <JobBar />}
       <CommandPalette />
       <div className="print:hidden"><RealBanner /></div>
       {blocked ? <LearnGate /> : children}

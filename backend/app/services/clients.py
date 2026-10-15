@@ -12,7 +12,7 @@ import re
 import zipfile
 from datetime import date, datetime, timedelta
 
-from app.services import state, workspaces
+from app.services import jobfield, state, workspaces
 
 JOB_STATUS = ("lead", "quoted", "active", "done", "lost")
 INV_STATUS = ("draft", "sent", "paid", "void")
@@ -146,6 +146,13 @@ def delete_client(cid: int) -> dict:
 # ------------------------------------------------------------------ jobs, time, follow-ups
 
 
+def _field(v) -> str:
+    from app.services import jobfield
+    if v not in jobfield.keys():
+        raise ClientError("field must be one of: " + ", ".join(jobfield.keys()) + ".")
+    return v
+
+
 def add_job(b: dict) -> dict:
     d = _load()
     _find(d, "clients", int(b.get("client_id") or 0))
@@ -154,6 +161,8 @@ def add_job(b: dict) -> dict:
         raise ClientError("status must be one of: " + ", ".join(JOB_STATUS) + ".")
     j = {"id": _nid(d, "job"), "client_id": int(b["client_id"]), "title": _txt(b.get("title"), "title", 120, True), "status": st, "quote": _num(b.get("quote"), "quote"), "rate": _num(b.get("rate"), "rate", 0, 10000, 0) or None,
          "due": _date(b.get("due"), "due"), "notes": _txt(b.get("notes"), "notes", 1000), "created": date.today().isoformat()}
+    if b.get("field"):
+        j["field"] = _field(b["field"])
     d["jobs"].append(j)
     _save(d)
     return j
@@ -176,6 +185,8 @@ def update_job(jid: int, b: dict) -> dict:
         j["due"] = _date(b["due"], "due")
     if "notes" in b:
         j["notes"] = _txt(b["notes"], "notes", 1000)
+    if "field" in b:
+        j["field"] = _field(b["field"]) if b["field"] else None
     _save(d)
     return j
 
@@ -360,7 +371,7 @@ def open_jobs(today: date | None = None) -> list[dict]:
         if j["status"] not in ("lead", "quoted", "active") or j["client_id"] not in cname:
             continue
         hrs = round(sum(t["hours"] for t in d["time"] if t["job_id"] == j["id"]), 2)
-        out.append({"id": j["id"], "title": j["title"], "status": j["status"], "client_id": j["client_id"], "client": cname[j["client_id"]],
+        out.append({"id": j["id"], "title": j["title"], "status": j["status"], "client_id": j["client_id"], "client": cname[j["client_id"]], "field": jobfield.of_job(j),
                     "quote": j["quote"], "hours": hrs, "due": j["due"], "late": bool(j["due"] and j["due"] < ti and j["status"] == "active")})
     out.sort(key=lambda x: (x["due"] is None, x["due"] or "", x["id"]))
     return out

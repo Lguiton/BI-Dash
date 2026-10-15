@@ -8,7 +8,9 @@ import { MoreToday } from "@/components/MoreToday";
 import { AssistantDesk } from "@/components/AssistantDesk";
 import { PwaSetup } from "@/components/PwaSetup";
 import { PageShell } from "@/components/PageShell";
+import { useRouter } from "next/navigation";
 import { ApiError, getJson } from "@/lib/api";
+import { useActiveJob } from "@/lib/activeJob";
 import { useMode } from "@/lib/mode";
 
 type Pack = { id: string; industry: string; dept: string; title: string; rows: number | null };
@@ -16,7 +18,7 @@ type Briefing = { subject: string; items: number; sections: { title: string; ite
 type Health = { score: number; grade: string; needs_attention: { name: string; detail: string }[] };
 type Fu = { id: number; due: string; note: string; client?: string };
 type Over = { sample: boolean; clients: number; jobs_active: number; pipeline: number; outstanding: number; overdue: { id: number; number: string; client: string; total: number; days_late: number }[]; paid_this_month: number; unbilled_hours: number; unbilled_amount: number; followups_due: Fu[] };
-type OpenJob = { id: number; title: string; status: string; client: string; client_id: number; quote: number; hours: number; due: string | null; late: boolean };
+type OpenJob = { id: number; title: string; status: string; client: string; client_id: number; quote: number; hours: number; due: string | null; late: boolean; field: { key: string; label: string; href: string } | null };
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 const QUICK = [
@@ -68,6 +70,8 @@ function WorkHome() {
   const [ov, setOv] = useState<Over | null>(null);
   const [jobs, setJobs] = useState<OpenJob[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const router = useRouter();
+  const [activeId, setActive] = useActiveJob();
 
   useEffect(() => {
     const m = (e: unknown) => (e instanceof ApiError ? e.message : "Couldn't load part of the home screen.");
@@ -98,9 +102,12 @@ function WorkHome() {
           {jobs?.length === 0 && <p className="text-sm">No open jobs. <Link href="/clients" className="underline">Add a client and a job</Link>, or <Link href="/settings?tab=quotes" className="underline">quote one</Link>.</p>}
           <ul className="space-y-1 text-sm">
             {jobs?.slice(0, 8).map((j) => (
-              <li key={j.id} className="flex flex-wrap items-baseline justify-between gap-2">
-                <span><Link href={`/job?id=${j.id}`} className="underline"><strong>{j.title}</strong></Link> <span className="text-muted">for {j.client}</span></span>
-                <span className="text-xs text-muted">{j.status}{j.due ? ` · due ${j.due}` : ""}{j.late ? " · late" : ""}{j.quote ? ` · ${usd(j.quote)}` : ""}</span>
+              <li key={j.id} className="flex flex-wrap items-center justify-between gap-2">
+                <span><Link href={`/job?id=${j.id}`} className="underline"><strong>{j.title}</strong></Link> <span className="text-muted">for {j.client}</span>{j.field && <span className="ml-2 rounded-full bg-panel2 px-2 py-0.5 text-xs text-muted">{j.field.label}</span>}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-xs text-muted">{j.status}{j.due ? ` · due ${j.due}` : ""}{j.late ? " · late" : ""}{j.quote ? ` · ${usd(j.quote)}` : ""}</span>
+                  {activeId === j.id ? <span className="text-xs font-medium text-emerald-600">pinned</span> : <button className="btn" aria-label={`Work on ${j.title}`} onClick={() => { setActive(j.id); router.push(j.field ? j.field.href : `/job?id=${j.id}`); }}>Work on it</button>}
+                </span>
               </li>
             ))}
           </ul>
