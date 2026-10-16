@@ -84,8 +84,10 @@ def parse_csv(text: str) -> tuple[list[dict], dict[str, dict], list[str]]:
     header = [_norm_header(h) for h in raw_header]
     missing = [c for c in REQUIRED if c not in header]
     if missing:
-        return [], {}, [f"Missing required column(s): {', '.join(missing)}. "
-                        f"Found: {', '.join(h for h in header if h) or '(none)'}."]
+        msg = f"Missing required column(s): {', '.join(missing)}. Found: {', '.join(h for h in header if h) or '(none)'}."
+        if "event_id" in header or "eventid" in header:
+            msg += " This looks like a Windows event log. Open the IT dashboard, Events tab, or use Upload a file at the top of any page; this box is for business data."
+        return [], {}, [msg]
     dupes = {h for h in header if h and header.count(h) > 1}
     if dupes:
         return [], {}, [f"Duplicate column(s) after normalizing names: {', '.join(sorted(dupes))}."]

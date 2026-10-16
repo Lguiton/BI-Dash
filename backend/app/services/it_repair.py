@@ -164,8 +164,8 @@ DHCP = {"id": "dhcp", "objective": "5.5", "area": "Networking", "title": "DHCP e
         "tools": ["Command prompt", "Router or DHCP server admin page", "A second device to compare"], "safety": "Write down current settings before changing the router, and do not change a production DHCP scope in business hours.",
         "escalate": "No address on any device and the DHCP server is healthy: check the switch, VLAN and any DHCP relay settings with whoever manages the network."}
 GUIDES.append(DHCP)
-from app.services import it_repair_electronics, it_repair_phones, it_repair_software, it_repair_vehicle_network, it_repair_more, it_repair_models  # noqa: E402
-for _m in (it_repair_phones, it_repair_software, it_repair_electronics, it_repair_vehicle_network, it_repair_more, it_repair_models):
+from app.services import it_repair_electronics, it_repair_phones, it_repair_software, it_repair_vehicle_network, it_repair_more, it_repair_models, it_repair_home  # noqa: E402
+for _m in (it_repair_phones, it_repair_software, it_repair_electronics, it_repair_vehicle_network, it_repair_more, it_repair_models, it_repair_home):
     GUIDES.extend(_m.GUIDES)
 
 

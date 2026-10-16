@@ -83,3 +83,20 @@ def test_agent_reads_the_pinned_job_with_practice_files_but_not_the_answer(clien
 def test_chat_endpoint_accepts_job_id(client):
     r = client.post("/api/agents/network/chat", json={"message": "hello there", "job_id": 5})
     assert r.status_code != 422
+
+
+def test_network_agent_scope_includes_wifi():
+    from app.services import agents
+    assert "Wi-Fi" in agents.AGENTS["network"]["focus"] and "access points" in agents.AGENTS["network"]["focus"]
+    assert "Anything listed in your focus is inside your discipline" in agents.SYSTEM
+
+
+def test_repair_guide_tool_for_cpe_and_it():
+    from app.services import agent_tools, agents
+    for t in ("cpe", "itsupport"):
+        assert "repair_guide" in agent_tools.BY_TRACK[t]
+    text, err = agent_tools.run_tool("cpe", {"tool": "repair_guide", "args": {"q": "no power"}})
+    assert not err and "steps" in text and "Computer will not turn on" in text
+    text, err = agent_tools.run_tool("itsupport", {"tool": "repair_guide", "args": {"q": ""}})
+    assert err
+    assert "technician" in agents.AGENTS["cpe"]["focus"] and "repair_guide" in agents.AGENTS["cpe"]["focus"]

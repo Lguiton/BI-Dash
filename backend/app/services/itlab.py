@@ -286,7 +286,7 @@ def _event_rows(text: str) -> list[dict]:
     first = lines[0]
     delim = "\t" if first.count("\t") >= 2 else ";" if first.count(";") > first.count(",") else ","
     head = [h.strip().lower() for h in next(csv.reader([first], delimiter=delim))]
-    id_col = next((i for i, h in enumerate(head) if h in ("id", "eventid", "event id")), None)
+    id_col = next((i for i, h in enumerate(head) if h.replace("_", " ").replace("-", " ") in ("id", "eventid", "event id")), None)
     if id_col is not None:
         acct = next((i for i, h in enumerate(head) if h in ("account", "user", "username", "account name")), None)
         for row in csv.reader(lines[1:], delimiter=delim):

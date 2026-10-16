@@ -38,6 +38,7 @@ export function JobBar() {
   const [confirm, setConfirm] = useState(false);
   const [closed, setClosed] = useState<string | null>(null);
   const [helpBusy, setHelpBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
   const [helpText, setHelpText] = useState<{ step: string; text: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [loadedAt, setLoadedAt] = useState(() => Date.now());
@@ -107,6 +108,32 @@ export function JobBar() {
     if (!j) return;
     setClosed(null); setConfirm(false); setId(j.id);
     if (j.field) router.push(j.field.href);
+  };
+  const target = current ?? items[items.length - 1];
+  const copyText = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); setMsg("Copied to the clipboard."); }
+    catch {
+      const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand("copy"); } catch { ok = false; }
+      document.body.removeChild(ta);
+      setMsg(ok ? "Copied to the clipboard." : "Couldn't copy. Select the text and press Ctrl+C.");
+    }
+    setTimeout(() => setMsg(null), 3000);
+  };
+  const saveAsNotes = async (text: string) => {
+    if (!target) { setMsg("Add a step first, then save the draft as a note on it."); return; }
+    const parts: string[] = []; let cur = "";
+    for (const line of text.split("\n")) {
+      if ((cur + "\n" + line).length > 480 && cur) { parts.push(cur.trim()); cur = line; } else cur = cur ? cur + "\n" + line : line;
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    const use = parts.filter(Boolean).slice(0, 8);
+    try {
+      for (const p of use) await postJson(`/api/worklog/${target.id}/log`, { text: p.slice(0, 500) });
+      setTick((t) => t + 1);
+      setMsg(`Saved as ${use.length} note${use.length === 1 ? "" : "s"} on "${target.title.slice(0, 40)}".${parts.length > use.length ? " The rest was too long, use Copy for it." : ""}`);
+    } catch (e) { setMsg(errMsg(e, "That didn't save.")); }
+    setTimeout(() => setMsg(null), 5000);
   };
   const nextStep = async () => {
     if (!current || helpBusy) return;
@@ -191,14 +218,15 @@ export function JobBar() {
                 <div className="space-y-1 rounded border border-line p-2 text-sm" role="status">
                   <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted">AI draft for &quot;{helpText.step.slice(0, 50)}&quot; (can be wrong, check it)</span><button className="text-xs underline" onClick={() => setHelpText(null)}>Hide</button></div>
                   <pre className="whitespace-pre-wrap font-sans text-sm">{helpText.text}</pre>
-                  <button className="btn" onClick={() => { void navigator.clipboard?.writeText(helpText.text).catch(() => {}); }}>Copy</button>
-                  <button className="btn" onClick={() => { setNote(helpText.text.slice(0, 500)); setTimeout(() => noteRef.current?.focus(), 0); }}>Use as note</button>
+                  <button className="btn" onClick={() => void copyText(helpText.text)}>Copy</button>
+                  <button className="btn" onClick={() => void saveAsNotes(helpText.text)}>Save as note</button>
+                  {msg && <p role="status" className="text-xs">{msg}</p>}
                 </div>
               )}
-              {current && (
+              {target && (
                 <div className="flex flex-wrap gap-2">
-                  <input ref={noteRef} className="input min-w-56 flex-1" aria-label="Note on the current step" placeholder={`Note on "${current.title.slice(0, 40)}": what you did or found (no passwords)`} value={note} onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && note.trim()) run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); }); }} />
-                  <button className="btn" disabled={!note.trim()} onClick={() => run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); })}>Add note</button>
+                  <input ref={noteRef} className="input min-w-56 flex-1" aria-label="Note on the step" placeholder={`Note on "${target.title.slice(0, 40)}": what you did or found (no passwords)`} value={note} onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && note.trim()) run(async () => { await postJson(`/api/worklog/${target.id}/log`, { text: note }); setNote(""); }); }} />
+                  <button className="btn" disabled={!note.trim()} onClick={() => run(async () => { await postJson(`/api/worklog/${target.id}/log`, { text: note }); setNote(""); })}>Add note</button>
                 </div>
               )}
               <WorkTeam key={id} jobId={id} advice={["itsupport", "network", "security"].includes(field?.key ?? "")} />

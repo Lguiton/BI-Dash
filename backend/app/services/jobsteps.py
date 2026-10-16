@@ -28,7 +28,11 @@ STEPS: dict[str, list[tuple[str, list[str]]]] = {
     "scientist": [("", ["State the question and the groups", "Run the analysis and check the assumptions", "Report the size of the effect and how sure you are", "State what it does not prove"])],
     "ml": [("", ["Check the target and the class balance", "Train a simple baseline and a better model on a time-based split", "Report the honest score on held-out data", "Write what it is and is not good for"])],
     "ai": [("", ["Define what it must and must not answer", "Build and test it on real questions", "Check cost and what gets logged", "Write the handover notes"])],
-    "cpe": [("", ["List inputs, units and assumptions", "Calculate and sanity-check by rough estimate", "Test or measure to confirm", "Write assumptions and who must sign off"])],
+    "cpe": [
+        ("appliance hvac furnace thermostat washer dryer refrigerator fridge dishwasher microwave oven heater ac", ["Get the model, the symptom and what changed; check safety first (power off, no gas smell)", "Search the repair guide and do the owner-level checks", "Decide: owner fix, part swap, or licensed professional, and write what to tell them", "Test, confirm with the client and note what fixed it"]),
+        ("electrical outlet breaker wiring voltage circuit wire", ["Define the load, the wire run and the voltage", "Calculate wire size, voltage drop and circuit load", "Write the plan and mark what needs a licensed electrician", "Quote or hand off, and record the assumptions"]),
+        ("", ["List inputs, units and assumptions", "Calculate and sanity-check by rough estimate", "Test or measure to confirm", "Write assumptions and who must sign off"]),
+    ],
     "engineering": [("", ["Map the sources and the target", "Build and test the pipeline", "Add checks and a backup", "Document how to run and fix it"])],
     "fullstack": [("", ["Reproduce the problem and read the error", "Find the cause and fix it", "Add a test that fails before and passes after", "Check other inputs and deploy notes"])],
     "pm": [("", ["Write the goal, scope and what is out of scope", "List tasks, owners and dates", "Name the top risks and what to do about each", "Share the plan and agree the next check-in"])],

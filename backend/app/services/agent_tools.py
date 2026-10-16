@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 
-from app.services import (ai_eng_lab, bi_calc, clients, cpe_sim, dax_lab, data_calc, data_dbt, data_flow, experience, inference_lab, itlab, jobfield, ml_build,
+from app.services import (ai_eng_lab, bi_calc, clients, cpe_sim, cs_lab, elec_calc, dax_lab, data_calc, data_dbt, data_flow, experience, inference_lab, itlab, jobfield, ml_build,
                           ml_concepts, netlab, nn_lab, practice_kits, seclogs, sysanalysis, veh_decode, workspaces)
 
 MAX_OUT = 3500
@@ -31,11 +31,31 @@ NETWORK = {
     "config_audit": ("text = pasted router or switch config", lambda a: netlab.audit_config(str(a["text"]))),
     "capture_read": ("text = pasted packet-capture text", lambda a: netlab.read_capture(str(a["text"]))),
 }
+
+def _repair_guide(a):
+    """Search the built-in repair guides (the How to repair tab) and return the best match with steps, tools, safety and when to escalate."""
+    from app.services import it_repair, repair_search
+    q = str(a.get("q") or a.get("symptom") or "").strip()
+    if len(q) < 2:
+        raise ValueError("Give a symptom to search, like 'no power' or 'beeps no display'.")
+    hits = repair_search.search(q[:200], 3)["results"]
+    if not hits:
+        return {"matches": [], "note": "No guide matched. Use the six-step repair method: identify, theory, test, plan, fix and verify, then document."}
+    by = {g["id"]: g for g in it_repair.sheet()["guides"]}
+    top = by.get(hits[0]["id"])
+    out = {"matches": [{"id": h["id"], "title": h["title"], "area": h["area"]} for h in hits]}
+    if top:
+        out["best"] = {k: top.get(k) for k in ("title", "symptoms", "causes", "steps", "tools", "safety", "escalate")}
+    out["note"] = "Built-in guide. Walk the user through one step at a time, state the safety note before risky steps, and have them verify before calling it fixed."
+    return out
+
+
 IT = {
     "capacity": ("used_gb, total_gb, growth_gb_per_month, warn_pct?", lambda a: itlab.capacity(float(a["used_gb"]), float(a["total_gb"]), float(a["growth_gb_per_month"]), float(a.get("warn_pct", 80)))),
     "availability": ("pct (e.g. 99.9)", lambda a: itlab.availability(float(a["pct"]))),
     "raid": ("level, disks, size_tb", lambda a: itlab.raid(str(a["level"]), int(a["disks"]), float(a["size_tb"]))),
     "read_events": ("text = pasted Windows/system event log text", lambda a: itlab.read_events(str(a["text"]))),
+    "repair_guide": ("q = symptom, e.g. no power, beeps no display, overheating", _repair_guide),
 }
 SECURITY = {
     "analyze_logs": ("text = pasted log lines, year?", lambda a: seclogs.analyze(str(a["text"]), a.get("year"))),
@@ -93,6 +113,16 @@ CPE = {
     "j1939": ("can_id_hex, data_hex?", lambda a: veh_decode.j1939(str(a["can_id_hex"]), str(a.get("data_hex", "")))),
     "dtc": ("code e.g. P0301", lambda a: veh_decode.dtc(str(a["code"]))),
     "obd_pid": ("pid, data_hex", lambda a: veh_decode.obd_pid(str(a["pid"]), str(a["data_hex"]))),
+    "repair_guide": ("q = symptom, e.g. no power, no display, battery not charging, drive clicking", _repair_guide),
+    "voltage_drop": ("amps, length_ft (one way), awg?, volts?", lambda a: elec_calc.voltage_drop(a["amps"], a["length_ft"], a.get("awg", 12), a.get("volts", 120))),
+    "circuit_load": ("volts?, breaker_amps, loads = lines 'name, watts', continuous?", lambda a: elec_calc.circuit_load(a.get("volts", 120), a["breaker_amps"], a["loads"], bool(a.get("continuous")))),
+    "energy_cost": ("watts, hours_per_day, rate_per_kwh?, days?", lambda a: elec_calc.energy_cost(a["watts"], a["hours_per_day"], a.get("rate_per_kwh", 0.13), a.get("days", 30))),
+    "hvac_size": ("sqft, ceiling_ft?, sun?, insulation?, people?, kitchen?", lambda a: elec_calc.hvac_size(a["sqft"], a.get("ceiling_ft", 8), a.get("sun", "average"), a.get("insulation", "average"), a.get("people", 2), bool(a.get("kitchen")))),
+    "ohm": ("give exactly two of volts, amps, ohms, watts", lambda a: elec_calc.ohm(a.get("volts"), a.get("amps"), a.get("ohms"), a.get("watts"))),
+    "delta_t": ("supply_f, return_f (AC air temperature split)", lambda a: elec_calc.delta_t(a["supply_f"], a["return_f"])),
+    "big_o": ("code = pasted Python (or other) code; estimates Big-O without running it", lambda a: cs_lab.complexity(str(a["code"]))),
+    "sort_steps": ("algorithm = bubble|insertion|selection|merge|quick, data = numbers", lambda a: cs_lab.sort_steps(str(a["algorithm"]), a["data"])),
+    "search_steps": ("algorithm = linear|binary, data = numbers, target", lambda a: cs_lab.search_steps(str(a["algorithm"]), a["data"], a["target"])),
 }
 
 

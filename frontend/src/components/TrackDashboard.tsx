@@ -35,9 +35,12 @@ const BiToolkit = dynamic(() => import("@/components/panels/BiToolkit").then((m)
 const InferencePanel = dynamic(() => import("@/components/panels/InferencePanel").then((m) => m.InferencePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const LearnToolkit = dynamic(() => import("@/components/panels/LearnToolkit").then((m) => m.LearnToolkit), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const AiFundamentalsPanel = dynamic(() => import("@/components/panels/AiFundamentalsPanel").then((m) => m.AiFundamentalsPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const PromptLibrary = dynamic(() => import("@/components/panels/PromptLibrary").then((m) => m.PromptLibrary), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const AiWorkbenchPanel = dynamic(() => import("@/components/panels/AiWorkbenchPanel").then((m) => m.AiWorkbenchPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const GovPanel = dynamic(() => import("@/components/panels/GovPanel").then((m) => m.GovPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const PyLibPanel = dynamic(() => import("@/components/panels/PyLibPanel").then((m) => m.PyLibPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const ElecHvacLab = dynamic(() => import("@/components/panels/ElecHvacLab").then((m) => m.ElecHvacLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const CsLab = dynamic(() => import("@/components/panels/CsLab").then((m) => m.CsLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const CpePanel = dynamic(() => import("@/components/panels/CpePanel").then((m) => m.CpePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const SurveyPanel = dynamic(() => import("@/components/panels/SurveyPanel").then((m) => m.SurveyPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const CoursePanel = dynamic(() => import("@/components/panels/CoursePanel").then((m) => m.CoursePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
@@ -358,8 +361,8 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "security" && (<><SecPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="exploited" />}</>)}
               {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
               {dash && id === "itsupport" && (<><ItPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="support" />}</>)}
-              {dash && id === "cpe" && <CpePanel tab={tab} onTab={setTab} />}
-              {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
+              {dash && id === "cpe" && (<><CpePanel tab={tab} onTab={setTab} /><ElecHvacLab /><CsLab /></>)}
+              {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<PromptLibrary /><AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
               {dash && !work && (
                 <section className="card p-4">
                   <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>

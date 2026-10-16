@@ -20,7 +20,7 @@ FIELDS: dict[str, tuple[str, str, tuple[str, ...], str]] = {
                   "statistics hypothesis test experiment ab segment cluster regression significance"),
     "ml": ("Machine learning", "/tracks/ml", ("machine learning", "ml"), "predict forecast model train churn classification cancel"),
     "ai": ("AI engineering", "/tracks/ai", ("ai engineering", "ai"), "ai chatbot llm prompt faq assistant tokens rag"),
-    "cpe": ("Engineering", "/tracks/cpe", ("engineering", "computer engineering"), "circuit power supply sensor microcontroller bracket load hardware embedded"),
+    "cpe": ("Engineering", "/tracks/cpe", ("engineering", "computer engineering"), "circuit power supply sensor microcontroller bracket load hardware embedded appliance hvac ac air conditioner conditioning furnace thermostat washer dryer refrigerator fridge dishwasher microwave oven electrical outlet breaker wiring"),
     "engineering": ("Data engineering", "/tracks/engineering", ("data engineering",), "pipeline etl warehouse database backup ingest"),
     "fullstack": ("Full stack", "/tracks/fullstack", ("full stack", "web", "website"), "website web app api form frontend backend deploy"),
     "pm": ("Project management", "/tracks/pm", ("project management", "pm"), "project plan schedule scope move timeline milestone"),
