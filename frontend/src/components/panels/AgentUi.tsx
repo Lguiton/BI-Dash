@@ -59,8 +59,8 @@ export function useAgentChat(track: string) {
     setMessages((m) => [...m, { role: "user", content: `Debate: ${t}` }]);
     setBusy(true);
     try {
-      const r = await postJson<{ report: string; judge: string; answers: { label: string; text: string; tools: string[] }[]; failed: string[]; tokens: number }>(`/api/agents/${track}/debate`, { message: t, history, job_id: jobId });
-      setMessages((m) => [...m, { role: "agent", content: r.report, debate: r.answers, meta: `debate · ${r.answers.length} AI${r.answers.length > 1 ? "s" : ""} · ${r.judge ? `judged by ${r.judge}` : "not judged"}${r.failed.length ? ` · no answer: ${r.failed.join(", ")}` : ""} · ${r.tokens.toLocaleString()} tokens` }]);
+      const r = await postJson<{ report: string; judge: string; answers: { label: string; text: string; tools: string[]; tokens: number }[]; failed: string[]; tokens: number; judge_tokens: number }>(`/api/agents/${track}/debate`, { message: t, history, job_id: jobId });
+      setMessages((m) => [...m, { role: "agent", content: r.report, debate: r.answers, meta: `debate · ${r.answers.length} AI${r.answers.length > 1 ? "s" : ""} · ${r.judge ? `judged by ${r.judge}` : "not judged"}${r.failed.length ? ` · no answer: ${r.failed.join(", ")}` : ""} · ${r.tokens.toLocaleString()} tokens (${r.answers.map((a) => `${a.label} ${a.tokens.toLocaleString()}`).join(", ")}${r.judge ? `, judge ${r.judge_tokens.toLocaleString()}` : ""})` }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "agent", content: e instanceof ApiError ? e.message : "The debate didn't finish.", error: true }]);
     } finally { setBusy(false); }
@@ -69,18 +69,18 @@ export function useAgentChat(track: string) {
 }
 
 /** The always-visible search bar: ask a question or tell the agent what to do. */
-export function CommandBar({ name, busy, onSend, onDebate, persona, onPersona, track }: { name: string; busy: boolean; onSend: (text: string) => void; onDebate?: (text: string) => void; persona?: string; onPersona?: (v: Persona) => void; track?: string }) {
-  const [q, setQ] = useState("");
+export function CommandBar({ name, busy, onSend, onDebate, persona, onPersona, track, initial = "" }: { initial?: string; name: string; busy: boolean; onSend: (text: string) => void; onDebate?: (text: string) => void; persona?: string; onPersona?: (v: Persona) => void; track?: string }) {
+  const [q, setQ] = useState(initial);
   const go = () => { if (q.trim().length >= 2 && !busy) { onSend(q); setQ(""); } };
   const argue = () => { if (q.trim().length >= 2 && !busy && onDebate) { onDebate(q); setQ(""); } };
   return (
     <form role="search" aria-label={`Ask or instruct the ${name}`} className="card flex items-center gap-2 p-2" onSubmit={(e) => { e.preventDefault(); go(); }}>
       <Search className="ml-2 h-4 w-4 shrink-0 text-muted" aria-hidden />
-      <input className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none" value={q} maxLength={1200} onChange={(e) => setQ(e.target.value)}
+      <input className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none" autoFocus={!!initial} value={q} maxLength={1200} onChange={(e) => setQ(e.target.value)}
              placeholder={`Ask the ${name} a question, or tell it what to do…`} aria-label={`Message the ${name}`} />
       {onPersona && <select className="input shrink-0 text-xs" value={persona} onChange={(e) => onPersona(e.target.value as Persona)} aria-label="Ask as">
         <option value="default">Ask as {name}</option>{track === "cpe" ? <option value="engmath">Ask as Engineering Mathematician</option> : <><option value="cfo">Ask as CFO</option><option value="math">Ask as Mathematician</option></>}</select>}
-      {onDebate && <button className="btn" type="button" title="Ask all three AIs, each using the tools, then a judge writes one report" disabled={busy || q.trim().length < 2} onClick={argue}>Debate</button>}
+      {onDebate && <button className="btn" type="button" title="Gemini and OpenAI each answer using the tools, then Claude judges and writes one report" disabled={busy || q.trim().length < 2} onClick={argue}>Debate</button>}
       <button className="btn btn-primary" type="submit" disabled={busy || q.trim().length < 2}><Send className="h-4 w-4" aria-hidden /> {busy ? "Thinking…" : "Send"}</button>
     </form>
   );
@@ -158,7 +158,7 @@ function DebateSwitch() {
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted" aria-label="Debate settings">
       {st.enabled
         ? <><Badge tone="ok">debate on</Badge><span>{st.remaining} of {st.daily_cap} left today. Type a question, then press Debate.</span><button className="underline" onClick={() => set({ enabled: false })}>Turn off</button></>
-        : <><Badge>debate off</Badge><span>Ask all three AIs, then a judge writes one report. Up to four AI calls each.</span><label className="flex items-center gap-1">per day <input className="input w-14" inputMode="numeric" value={cap} onChange={(e) => setCap(e.target.value)} /></label><button className="btn" onClick={() => set({ enabled: true, daily_cap: Number(cap) || 3 })}>Turn on</button></>}
+        : <><Badge>debate off</Badge><span>Gemini and OpenAI answer, Claude judges. Uses two agent runs plus a judge each time.</span><label className="flex items-center gap-1">per day <input className="input w-14" inputMode="numeric" value={cap} onChange={(e) => setCap(e.target.value)} /></label><button className="btn" onClick={() => set({ enabled: true, daily_cap: Number(cap) || 3 })}>Turn on</button></>}
       {err && <span role="alert" className="text-red-600">{err}</span>}
     </div>
   );

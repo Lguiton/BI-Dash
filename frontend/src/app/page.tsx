@@ -1,4 +1,7 @@
 "use client";
+import { ClientMessages } from "@/components/ClientMessages";
+import { PasteIntake } from "@/components/PasteIntake";
+import { TodayStrip } from "@/components/TodayStrip";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -86,6 +89,9 @@ function WorkHome() {
   return (
     <>
       {err && <ErrorBanner message={err} />}
+      <TodayStrip />
+      <PasteIntake />
+      <ClientMessages />
       <section aria-label="Quick starts" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {QUICK.map((p) => <Link key={p.href} href={p.href} className="card p-4 hover:bg-panel2"><div className="font-semibold">{p.label}</div><div className="text-xs text-muted">{p.note}</div></Link>)}
       </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DatasetStrip } from "@/components/DatasetCard";
@@ -9,39 +10,41 @@ import { isLearnPath, useMode } from "@/lib/mode";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Bar, BarChart } from "recharts";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { PageShell } from "@/components/PageShell";
-import { KnownIssues } from "@/components/KnownIssues";
-import { PipelinePanel } from "@/components/PipelinePanel";
-import { PmPanel } from "@/components/panels/PmPanel";
-import { FullStackPanel } from "@/components/panels/FullStackPanel";
-import { SaPanel } from "@/components/panels/SaPanel";
-import { DbaPanel, GovernancePanel } from "@/components/panels/DbaGovPanels";
-import { DataLab } from "@/components/panels/DataLab";
-import { MlBuildPanel } from "@/components/panels/MlBuildPanel";
-import { DesignPanel } from "@/components/panels/DesignPanel";
 import { Tabs } from "@/components/panels/kit";
 import { useWide } from "@/lib/useWide";
 import { AgentPanel, CommandBar, useAgentChat } from "@/components/panels/AgentUi";
-import { SecPanel } from "@/components/panels/SecPanel";
-import { NetPanel } from "@/components/panels/NetPanel";
-import { ItPanel } from "@/components/panels/ItPanel";
-import { BiToolkit } from "@/components/panels/BiToolkit";
-import { InferencePanel } from "@/components/panels/InferencePanel";
-import { LearnToolkit } from "@/components/panels/LearnToolkit";
-import { AiFundamentalsPanel } from "@/components/panels/AiFundamentalsPanel";
-import { AiWorkbenchPanel } from "@/components/panels/AiWorkbenchPanel";
-import { GovPanel } from "@/components/panels/GovPanel";
-import { PyLibPanel } from "@/components/panels/PyLibPanel";
-import { CpePanel } from "@/components/panels/CpePanel";
-import { SurveyPanel } from "@/components/panels/SurveyPanel";
-import { CoursePanel } from "@/components/panels/CoursePanel";
-import { LeadPanel } from "@/components/panels/LeadPanel";
-import { ImplPanel } from "@/components/panels/ImplPanel";
-import { MlopsPanel } from "@/components/panels/MlopsPanel";
-import { ManualPanel } from "@/components/panels/ManualPanel";
 import { ApiError, getJson, putJson } from "@/lib/api";
 import { money, pct } from "@/lib/format";
 import { useChartColors } from "@/lib/useChartColors";
 import type { AgentAction, ManualStep, AiDash, AnalystDash, EngineeringDash, MlDash, Progress, ScientistDash, Track, TrackStep } from "@/lib/types";
+
+const KnownIssues = dynamic(() => import("@/components/KnownIssues").then((m) => m.KnownIssues), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const PipelinePanel = dynamic(() => import("@/components/PipelinePanel").then((m) => m.PipelinePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const PmPanel = dynamic(() => import("@/components/panels/PmPanel").then((m) => m.PmPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const FullStackPanel = dynamic(() => import("@/components/panels/FullStackPanel").then((m) => m.FullStackPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const SaPanel = dynamic(() => import("@/components/panels/SaPanel").then((m) => m.SaPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const DbaPanel = dynamic(() => import("@/components/panels/DbaGovPanels").then((m) => m.DbaPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const GovernancePanel = dynamic(() => import("@/components/panels/DbaGovPanels").then((m) => m.GovernancePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const DataLab = dynamic(() => import("@/components/panels/DataLab").then((m) => m.DataLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const MlBuildPanel = dynamic(() => import("@/components/panels/MlBuildPanel").then((m) => m.MlBuildPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const DesignPanel = dynamic(() => import("@/components/panels/DesignPanel").then((m) => m.DesignPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const SecPanel = dynamic(() => import("@/components/panels/SecPanel").then((m) => m.SecPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const NetPanel = dynamic(() => import("@/components/panels/NetPanel").then((m) => m.NetPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const ItPanel = dynamic(() => import("@/components/panels/ItPanel").then((m) => m.ItPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const BiToolkit = dynamic(() => import("@/components/panels/BiToolkit").then((m) => m.BiToolkit), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const InferencePanel = dynamic(() => import("@/components/panels/InferencePanel").then((m) => m.InferencePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const LearnToolkit = dynamic(() => import("@/components/panels/LearnToolkit").then((m) => m.LearnToolkit), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const AiFundamentalsPanel = dynamic(() => import("@/components/panels/AiFundamentalsPanel").then((m) => m.AiFundamentalsPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const AiWorkbenchPanel = dynamic(() => import("@/components/panels/AiWorkbenchPanel").then((m) => m.AiWorkbenchPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const GovPanel = dynamic(() => import("@/components/panels/GovPanel").then((m) => m.GovPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const PyLibPanel = dynamic(() => import("@/components/panels/PyLibPanel").then((m) => m.PyLibPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const CpePanel = dynamic(() => import("@/components/panels/CpePanel").then((m) => m.CpePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const SurveyPanel = dynamic(() => import("@/components/panels/SurveyPanel").then((m) => m.SurveyPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const CoursePanel = dynamic(() => import("@/components/panels/CoursePanel").then((m) => m.CoursePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const LeadPanel = dynamic(() => import("@/components/panels/LeadPanel").then((m) => m.LeadPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const ImplPanel = dynamic(() => import("@/components/panels/ImplPanel").then((m) => m.ImplPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const MlopsPanel = dynamic(() => import("@/components/panels/MlopsPanel").then((m) => m.MlopsPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const ManualPanel = dynamic(() => import("@/components/panels/ManualPanel").then((m) => m.ManualPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 
 type Dash = { ideas: string[] } & Record<string, unknown>;
 const DEFAULT_TAB: Record<string, string> = { pm: "board", sysanalyst: "req", fullstack: "api", security: "audit", network: "subnet", itsupport: "tickets", engineering: "pipeline", cpe: "numbers" };
@@ -329,7 +332,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
         {!work && tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
 
-      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} onDebate={debateFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
+      <CommandBar key={sp.get("ask") ?? ""} initial={sp.get("ask") ?? ""} name={agentName} busy={chat.busy} onSend={sendFromBar} onDebate={debateFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
 
       {!sideAgent && <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
         {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).filter(([k]) => !work || k !== "manual").map(([k, l]) => (

@@ -83,3 +83,20 @@ On the IT repair and Cybersecurity dashboards (work mode), under the tools: **Is
 ## Agents and tools together
 
 In work mode on a wide screen the field's AI agent sits to the right of the Tools, so you can ask while you work. The agent can run the same calculators as the tools (Networking: subnet, VLSM, summarize, overlaps, contains, split, transfer time, bandwidth-delay, config audit, capture reader. IT: capacity, availability, RAID, event logs. Security: log analysis and search. Data analyst and Data scientist: forecast, variance, profit what-if, distribution fit, DAX) and quotes the result. These are local calculations on numbers or text it is given: no DNS, port or website checks, nothing saved, nothing sent to a client. If a job is pinned in the job bar, the agent can read it (title, steps, your notes; practice jobs also show the practice files, never the answer key) and its "How it answered" panel lists every tool it used. It still cannot change anything: drafts come with an Add button. Other fields' agents keep their existing tools.
+
+## Debate (agents)
+
+Type a question in a dashboard's ask box and press **Debate**. Gemini and OpenAI each answer as the field agent (using the dashboard tools and your pinned job); Claude only judges and writes one report: Answer, Agreed, Disagreed (which side the tool results back), Verify. Off by default with its own daily cap (Agent panel). The result shows the token count for each AI and the judge. If one debater fails, the other is shown as a single unjudged answer; if Claude fails, another AI judges. Typing a job in the top box and clicking a suggested dashboard now puts your text in that dashboard's ask box (press Send or Debate; nothing is sent automatically).
+
+## Faster job flow
+- **Standard steps by field**: starting a job (quick start, paste intake, or the top box) creates that field's usual steps in order; the first is ready to time.
+- **Paste a client message** (Home, Work mode): paste an email or text, press Read it. Rules (no AI, no tokens) suggest client, job, dashboard, due date and a draft quote from your price list. You edit anything, then Start this job. Nothing is created until you confirm and nothing is sent to the client.
+- **Do the next step** (job bar): the field's agent drafts help for the current step using the pinned job, its tools and your past fixes. It is a draft you can copy into a note; nothing changes on its own. Needs an AI key.
+- **Keys** (job bar, when not typing in a box): T timer, D done and start next step, N note, A add step, C close job, ? help.
+- **Today strip** (top of Home): next or late job, late invoices, follow-ups, steps due, jobs ready to close, running timer; one click each.
+- **Lazy loading**: dashboard panels load when opened. The IT dashboard's JavaScript dropped from about 1770 KB to about 1100 KB.
+
+## Client messages and outreach
+- **Write a client message** (Home, Work mode): pick a type (reply, quote follow-up, job finished, review request, late payment nudge, set up a time, extra work, thank you, check in, intro), optionally paste their message, press Make the draft. A free template always appears. Tick "Also write an AI version" for an AI draft (names, emails, phone numbers and secrets are removed first; it never promises a price or date). Copy button on each. Nothing is sent.
+- **Who to contact this week** (top of Leads): built from your own records, no AI: leads due, contacted/quoted leads with no next step after 3 days, quotes older than 3 days, and past clients you have not worked with for 45 days. Each row has a Free draft and an AI draft button.
+

@@ -10,6 +10,9 @@ type Dest = { href: string; title: string; what: string; kind: string; score: nu
 type Fld = { key: string; label: string; href: string };
 type Routed = { results: Dest[]; primary: Dest | null; tip: string | null };
 
+/** A dashboard opens with what you typed already in its own ask box, so nothing has to be copied across. */
+const withAsk = (href: string, text: string) => (href.startsWith("/tracks/") && text.trim() ? `${href}${href.includes("?") ? "&" : "?"}ask=${encodeURIComponent(text.trim())}` : href);
+
 /** "Type what you need": sends a plain sentence to the best dashboard, lab or agent. Opens it straight away when the match is clear, otherwise lists the choices. */
 export function AskBar({ autofocus = false }: { autofocus?: boolean }) {
   const router = useRouter();
@@ -95,7 +98,7 @@ export function AskBar({ autofocus = false }: { autofocus?: boolean }) {
         <ul className="card divide-y divide-line" aria-label="Where to go">
           {choices.map((d) => (
             <li key={d.href}>
-              <Link href={d.href} onClick={() => { setChoices(null); setQ(""); }} className="flex items-baseline justify-between gap-3 px-3 py-2 text-sm hover:bg-panel2">
+              <Link href={withAsk(d.href, q)} onClick={() => { setChoices(null); setQ(""); }} className="flex items-baseline justify-between gap-3 px-3 py-2 text-sm hover:bg-panel2">
                 <span className="min-w-0"><span className="block font-medium">{d.title}</span><span className="block text-xs text-muted">{d.what} · {d.why}</span></span>
                 <span className="shrink-0 rounded-full bg-panel2 px-2 py-0.5 text-xs text-muted">{d.kind}</span>
               </Link>

@@ -1,13 +1,15 @@
-"""Debate: the field's agent is asked the same question three times, once on each AI (Gemini, OpenAI, Claude), each using the dashboard tools and
-reading the pinned job. A judge (Claude, then another if Claude fails) writes one final report: what they agree on, where they differ and which side the tool
-results back, and what to verify. Report only: it never changes anything. Off by default, with its own daily cap, because one debate is up to four AI calls."""
+"""Debate: the field's agent is asked the same question twice, once on Gemini and once on OpenAI, each using the dashboard tools and
+reading the pinned job. Claude only judges (another AI steps in if Claude fails) and writes one final report: what they agree on, where they differ and which side the tool
+results back, and what to verify. Report only: it never changes anything. Off by default, with its own daily cap, because one debate is two agent runs plus a judge."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
 from app.services import agents, ai_policy, assistants, prep, providers, state, workspaces
 from app.services.agents import AgentError
-from app.services.workteam import DRAFTERS, JUDGES, LABELS, _once
+from app.services.workteam import JUDGES, LABELS, _once
+
+DEBATERS = ("google", "openai")          # Gemini and OpenAI debate; Claude only judges (it is the strongest, so it is kept for the ruling)
 
 DEFAULTS = {"enabled": False, "daily_cap": 3}
 HARD_MAX = 20
@@ -40,7 +42,7 @@ def used_today() -> int:
 def status() -> dict:
     c = config()
     return {**c, "used_today": used_today(), "remaining": max(0, c["daily_cap"] - used_today()), "hard_max": HARD_MAX, "ai_mode": ai_policy.describe()["mode"],
-            "providers_ready": {p: bool(providers.api_key(p)) for p in DRAFTERS},
+            "providers_ready": {p: bool(providers.api_key(p)) for p in (*DEBATERS, "anthropic")}, "debaters": [LABELS[p] for p in DEBATERS], "judge": LABELS["anthropic"],
             "note": "A debate asks the field's agent on all three AIs, each using the tools, then a judge writes one report. Up to four AI calls plus their tool use, so it is off until you turn it on."}
 
 
@@ -61,7 +63,7 @@ def update_config(body: dict) -> dict:
     return status()
 
 
-JUDGE = ("You are the judge of a debate. Three AI assistants answered the same question from one dashboard, each able to use the dashboard's calculators and read the "
+JUDGE = ("You are the judge of a debate. Two AI assistants answered the same question from one dashboard, each able to use the dashboard's calculators and read the "
          "open job. Write ONE final report for the owner, plain text, under 250 words, in these parts: Answer (the best supported answer, first); Agreed (what all or most said); "
          "Disagreed (where they differ, and which side is better supported, saying why: a claim backed by a tool result beats a claim without one); Verify (the specific things "
          "the owner must check before relying on it). Use only what the answers and tool lists show. Never add facts, numbers or steps of your own. If only one answered, say it was not a debate.")
@@ -82,7 +84,7 @@ def run(track: str, message: str, history: list[dict] | None = None, job_id: int
         raise DebateError("Type a question first.")
     state.kv_set(_ukey(), str(used_today() + 1))
     answers, failed = [], []
-    for p in DRAFTERS:
+    for p in DEBATERS:
         if not (adapters and p in adapters) and not providers.api_key(p):
             failed.append(f"{LABELS[p]} (no key)")
             continue
@@ -97,8 +99,8 @@ def run(track: str, message: str, history: list[dict] | None = None, job_id: int
         answers.append({"provider": p, "label": LABELS[p], "model": r.model, "text": r.reply[:MAX_ANSWER], "tools": [t["what"] or t["tool"] for t in r.tools_used if not t["error"]],
                         "tool_errors": [t["what"] or t["tool"] for t in r.tools_used if t["error"]], "tokens": r.input_tokens + r.output_tokens})
     if not answers:
-        raise DebateError("None of the three AIs could answer. Check the keys (python scripts/check_ai_keys.py), the privacy mode in Settings and try again.", 502)
-    judge, report = "", answers[0]["text"]
+        raise DebateError("Neither Gemini nor OpenAI could answer. Check the keys (python scripts/check_ai_keys.py), the privacy mode in Settings and try again.", 502)
+    judge, report, jtok = "", answers[0]["text"], 0
     if len(answers) > 1:
         prompt = f"QUESTION: {message}\n\n" + "\n\n".join(
             f"ANSWER {chr(65 + i)} ({a['label']}). Tools it ran: {', '.join(a['tools']) or 'none'}" + (f". Tool calls that failed: {', '.join(a['tool_errors'])}" if a["tool_errors"] else "") + f"\n{a['text']}"
@@ -107,12 +109,13 @@ def run(track: str, message: str, history: list[dict] | None = None, job_id: int
             r = _once(p, JUDGE, prompt, adapters)
             if r:
                 judge, report = LABELS[p], r["text"].strip()[:MAX_REPORT]
+                jtok = int(r.get("input_tokens") or 0) + int(r.get("output_tokens") or 0)
                 break
         if not judge:
             report = "The judge could not answer, so the first answer is shown unjudged. Compare the answers below.\n\n" + answers[0]["text"]
     else:
         report = f"Only {answers[0]['label']} answered, so this was not a debate.\n\n" + answers[0]["text"]
-    out = {"report": report, "judge": judge, "answers": answers, "failed": failed, "tokens": sum(a["tokens"] for a in answers), "track": track}
+    out = {"report": report, "judge": judge, "answers": answers, "failed": failed, "agent_tokens": sum(a["tokens"] for a in answers), "judge_tokens": jtok, "tokens": sum(a["tokens"] for a in answers) + jtok, "track": track}
     d = prep._drafts()
     key = f"debate:{track}:{job_id or 0}"
     d[key] = {"text": report, "kind": "team", "title": f"Debate report: {message[:70]}", "status": "pending", "edited": False, "at": state.now(), "model": judge or answers[0]["label"]}

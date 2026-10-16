@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Pin } from "lucide-react";
 import { Badge, errMsg } from "@/components/panels/kit";
 import { deleteJson, getJson, postJson, putJson } from "@/lib/api";
@@ -37,6 +37,8 @@ export function JobBar() {
   const [bill, setBill] = useState<Bill>("time");
   const [confirm, setConfirm] = useState(false);
   const [closed, setClosed] = useState<string | null>(null);
+  const [helpBusy, setHelpBusy] = useState(false);
+  const [helpText, setHelpText] = useState<{ step: string; text: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [loadedAt, setLoadedAt] = useState(() => Date.now());
 
@@ -44,7 +46,7 @@ export function JobBar() {
     if (!id) return;
     let live = true;
     Promise.all([getJson<Over>(`/api/jobs/${id}`), getJson<{ items: Item[]; done_recent: Item[] }>("/api/worklog?include_done=true")])
-      .then(([ov, wl]) => { if (!live) return; setO(ov); setGone(false); setItems(wl.items.filter((i) => i.job_id === id)); setOther(wl.items.find((i) => i.running && i.job_id !== id) ?? null); setLoadedAt(Date.now()); })
+      .then(([ov, wl]) => { if (!live) return; setO(ov); setGone(false); setItems(wl.items.filter((i) => i.job_id === id).sort((a, b) => (a.status === "done" ? 1 : 0) - (b.status === "done" ? 1 : 0) || a.id - b.id)); setOther(wl.items.find((i) => i.running && i.job_id !== id) ?? null); setLoadedAt(Date.now()); })
       .catch(() => { if (live) { setGone(true); setO(null); } });
     return () => { live = false; };
   }, [id, tick]);
@@ -55,6 +57,36 @@ export function JobBar() {
     getJson<{ fields: Fld[] }>("/api/jobs/fields/list").then((r) => { if (live) setFields(r.fields); }).catch(() => {});
     return () => { live = false; };
   }, [tick]);
+
+  const stepRef = useRef<HTMLInputElement>(null);
+  const noteRef = useRef<HTMLInputElement>(null);
+  const [help, setHelp] = useState(false);
+  const jobDone = o?.job.status === "done";
+
+  // One-key shortcuts, only while you are NOT typing in a box: T timer, D done and next, N note, A add step, C close, ? list.
+  useEffect(() => {
+    if (!id || jobDone || !o) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) { if (e.key === "Escape") t.blur(); return; }
+      const cur = items.find((i) => i.running) ?? items.find((i) => i.status !== "done");
+      const act = async (fn: () => Promise<unknown>) => { try { await fn(); setTick((n) => n + 1); } catch (er) { setErr(errMsg(er, "That didn't save.")); } };
+      const k = e.key.toLowerCase();
+      if (k === "t" && cur) { e.preventDefault(); void act(() => postJson(`/api/worklog/${cur.id}/timer/${cur.running ? "stop" : "start"}`, {})); }
+      else if (k === "d" && cur) {
+        e.preventDefault();
+        const next = items.find((i) => i.id !== cur.id && i.status !== "done");
+        void act(async () => { if (cur.running) await postJson(`/api/worklog/${cur.id}/timer/stop`, {}); await putJson(`/api/worklog/${cur.id}`, { status: "done" }); if (next) await postJson(`/api/worklog/${next.id}/timer/start`, {}); });
+      }
+      else if (k === "n") { e.preventDefault(); setOpen(true); setTimeout(() => noteRef.current?.focus(), 0); }
+      else if (k === "a") { e.preventDefault(); setOpen(true); setTimeout(() => stepRef.current?.focus(), 0); }
+      else if (k === "c") { e.preventDefault(); setOpen(true); setConfirm(true); }
+      else if (k === "?") { e.preventDefault(); setHelp((h) => !h); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [id, jobDone, o, items, setOpen]);
 
   const running = items.some((i) => i.running);
   useEffect(() => {
@@ -75,6 +107,15 @@ export function JobBar() {
     if (!j) return;
     setClosed(null); setConfirm(false); setId(j.id);
     if (j.field) router.push(j.field.href);
+  };
+  const nextStep = async () => {
+    if (!current || helpBusy) return;
+    setErr(null); setHelpBusy(true); setHelpText(null);
+    try {
+      const track = field?.key ?? "itsupport";
+      const r = await postJson<{ reply: string }>(`/api/agents/${track}/chat`, { message: `Help me with the current step of this job: "${current.title}". Use the job details, my tools and my past fixes. Give concrete next actions and what to check. Draft only.`, history: [], job_id: id });
+      setHelpText({ step: current.title, text: r.reply });
+    } catch (e) { setErr(errMsg(e, "The agent couldn't help with that step.")); } finally { setHelpBusy(false); }
   };
   const close = () => run(async () => {
     const r = await postJson<{ invoice: { number: string } | null; note: string }>(`/api/jobs/${id}/close`, { bill });
@@ -137,17 +178,34 @@ export function JobBar() {
                 {items.length === 0 && <li className="text-xs text-muted">No steps yet. Add the first one below.</li>}
               </ul>
               <div className="flex flex-wrap gap-2">
-                <input className="input min-w-56 flex-1" aria-label="Add a step" placeholder="Add a step" value={step} onChange={(e) => setStep(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && step.trim()) run(async () => { await postJson("/api/worklog", { title: step, status: "todo", job_id: id }); setStep(""); }); }} />
+                <input ref={stepRef} className="input min-w-56 flex-1" aria-label="Add a step" placeholder="Add a step" value={step} onChange={(e) => setStep(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && step.trim()) run(async () => { await postJson("/api/worklog", { title: step, status: "todo", job_id: id }); setStep(""); }); }} />
                 <button className="btn" disabled={!step.trim()} onClick={() => run(async () => { await postJson("/api/worklog", { title: step, status: "todo", job_id: id }); setStep(""); })}>Add step</button>
               </div>
               {current && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button className="btn" disabled={helpBusy} onClick={nextStep}>{helpBusy ? "Working…" : "Do the next step"}</button>
+                  <span className="text-xs text-muted">Drafts help for &quot;{current.title.slice(0, 40)}&quot;. Nothing changes on its own.</span>
+                </div>
+              )}
+              {helpText && (
+                <div className="space-y-1 rounded border border-line p-2 text-sm" role="status">
+                  <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted">AI draft for &quot;{helpText.step.slice(0, 50)}&quot; (can be wrong, check it)</span><button className="text-xs underline" onClick={() => setHelpText(null)}>Hide</button></div>
+                  <pre className="whitespace-pre-wrap font-sans text-sm">{helpText.text}</pre>
+                  <button className="btn" onClick={() => { void navigator.clipboard?.writeText(helpText.text).catch(() => {}); }}>Copy</button>
+                  <button className="btn" onClick={() => { setNote(helpText.text.slice(0, 500)); setTimeout(() => noteRef.current?.focus(), 0); }}>Use as note</button>
+                </div>
+              )}
+              {current && (
                 <div className="flex flex-wrap gap-2">
-                  <input className="input min-w-56 flex-1" aria-label="Note on the current step" placeholder={`Note on "${current.title.slice(0, 40)}": what you did or found (no passwords)`} value={note} onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && note.trim()) run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); }); }} />
+                  <input ref={noteRef} className="input min-w-56 flex-1" aria-label="Note on the current step" placeholder={`Note on "${current.title.slice(0, 40)}": what you did or found (no passwords)`} value={note} onChange={(e) => setNote(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && note.trim()) run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); }); }} />
                   <button className="btn" disabled={!note.trim()} onClick={() => run(async () => { await postJson(`/api/worklog/${current.id}/log`, { text: note }); setNote(""); })}>Add note</button>
                 </div>
               )}
               <WorkTeam key={id} jobId={id} advice={["itsupport", "network", "security"].includes(field?.key ?? "")} />
               {o.ready_to_close && <p role="status" className="text-xs">Every step is done. You can close the job.</p>}
+              <p className="text-xs text-muted">{help
+                ? <>Keys (when not typing in a box): <kbd>T</kbd> timer · <kbd>D</kbd> done and next step · <kbd>N</kbd> note · <kbd>A</kbd> add step · <kbd>C</kbd> close job · <kbd>Esc</kbd> leave a box · <kbd>?</kbd> hide this</>
+                : <>Press <kbd>?</kbd> for one-key shortcuts.</>}</p>
               <div className="space-y-2 border-t border-line pt-2">
                 <fieldset className="flex flex-wrap items-center gap-3">
                   <legend className="sr-only">What to invoice</legend>

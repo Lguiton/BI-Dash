@@ -68,7 +68,7 @@ export function WorkLog({ jobId }: { jobId?: number } = {}) {
   const all = [...(data?.items ?? []), ...(showDone ? data?.done_recent ?? [] : [])];
   const items = jobId ? all.filter((i) => i.job_id === jobId) : all;
   return (
-    <section className="card space-y-3 p-4" aria-label="Work log">
+    <section id="work-log" className="card space-y-3 p-4" aria-label="Work log">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">{jobId ? "Work on this job" : "What I'm working on"}</h2>
         <div className="flex flex-wrap items-center gap-2 text-xs">

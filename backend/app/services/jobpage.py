@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import html
 
-from app.services import clients, fixlog, jobfield, worklog
+from app.services import clients, fixlog, jobsteps, jobfield, worklog
 
 SYSTEM_LOG = ("Added", "Marked ", "Timer ", "Left off:", "Linked to job", "Unlinked from")
 
@@ -111,9 +111,9 @@ h1{{font-size:1.5rem}}h2{{font-size:1.1rem;margin-top:1.6rem;border-bottom:1px s
 <p class=m>Please keep this summary for your records. Questions? Contact me and mention the job title above.</p></body></html>"""
 
 
-def quick_start(title: str, client: str = "", client_id: int | None = None, field: str | None = None) -> dict:
-    """Start a job from one line: finds the client by name (or makes one), makes an active job and one work item with a timer ready.
-    The field is the one you pick, else a guess from the title. Nothing is sent anywhere."""
+def quick_start(title: str, client: str = "", client_id: int | None = None, field: str | None = None, steps: bool = True, due: str | None = None, quote: float | None = None) -> dict:
+    """Start a job from one line: finds the client by name (or makes one), makes an active job and the field's usual steps (the first ready to time).
+    The field is the one you pick, else a guess from the title. With no template for the field, or steps=False, it makes one step named after the job. Nothing is sent anywhere."""
     title = (title or "").strip()
     if not title:
         raise clients.ClientError("Type what the job is.")
@@ -126,6 +126,14 @@ def quick_start(title: str, client: str = "", client_id: int | None = None, fiel
         hit = next((c for c in d["clients"] if not c["archived"] and c["name"].strip().lower() == name.lower()), None)
         cid = hit["id"] if hit else clients.add_client({"name": name})["id"]
     f = field or jobfield.guess(title)
-    job = clients.add_job({"client_id": cid, "title": title, "status": "active", "field": f})
-    item = worklog.add({"title": title, "status": "doing", "job_id": job["id"]})
-    return {"job": job, "work_item": item, "field": jobfield.of_job(job)}
+    body = {"client_id": cid, "title": title, "status": "active", "field": f}
+    if due:
+        body["due"] = due
+    if quote:
+        body["quote"] = quote
+    job = clients.add_job(body)
+    names = jobsteps.for_job(title, f) if steps else []
+    items = [worklog.add({"title": n, "status": "doing" if i == 0 else "todo", "job_id": job["id"]}) for i, n in enumerate(names)]
+    if not items:
+        items = [worklog.add({"title": title, "status": "doing", "job_id": job["id"]})]
+    return {"job": job, "work_item": items[0], "work_items": items, "field": jobfield.of_job(job)}

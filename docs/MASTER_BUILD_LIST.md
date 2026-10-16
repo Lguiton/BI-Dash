@@ -48,6 +48,10 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [x] Agents use the dashboard tools: Networking (subnet, VLSM, summarize, overlaps, contains, split, transfer time, bandwidth-delay, config audit, capture reader), IT (capacity, availability, RAID, event logs), Security (log analysis and search), Data analyst and Data scientist (forecast, variance, profit what-if, distribution fit, DAX). Local calculations only; nothing that reaches another computer. Agents can also read the job pinned in the job bar (read-only; practice files included for practice jobs, never the answer key).
 - [x] Work mode: on a wide screen the agent sits beside the tools, so you don't switch tabs. On a narrow screen the Tools / AI agent tabs remain.
 
+- [x] Faster job flow: standard steps by field, paste-in client message (rules, draft quote), "Do the next step" agent help, job keyboard shortcuts, Today strip on Home, lazy-loaded dashboard panels (about 38% less JS on a dashboard).
+
+- [x] Client messages (10 types, free templates plus optional AI) and a weekly "who to contact" list on Leads. Decided against a full customer service or marketing dashboard (the Marketing Dashboard is a separate tool).
+
 ## Waiting for your go-ahead
 - [ ] **Portfolio page** (sample work for prospects): a simple public-facing page, separate from the dashboard, which stays private. Starts after you finish a few practice jobs. Rules: every item labeled "sample" or "practice", no fake reviews or testimonials, no client names or data, made-up data for any sample dashboard. Use before/after, the written quote, and the job summary or checklist PDF as the pieces.
 - [ ] Launcher `.bat` for the test data (after the dashboard is fully built and tested).

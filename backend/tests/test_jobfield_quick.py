@@ -36,3 +36,18 @@ def test_quick_start_validation_and_field_change(client):
     assert client.get(f"/api/jobs/{j['id']}").json()["job"]["field_info"]["key"] == "network"
     assert client.put(f"/api/clients/jobs/{j['id']}", json={"field": "bogus"}).status_code == 400
     assert any(f["key"] == "pm" for f in client.get("/api/jobs/fields/list").json()["fields"])
+
+
+def test_quick_start_adds_the_fields_usual_steps(client):
+    from app.services import jobpage, jobsteps, worklog
+    r = jobpage.quick_start("Networking: Fix office Wi-Fi dropping", "Acme Dental")
+    titles = [i["title"] for i in worklog.for_job(r["job"]["id"])]
+    assert titles == jobsteps.for_job("Networking: Fix office Wi-Fi dropping", "network") and len(titles) == 4 and "channel" in titles[1].lower()
+    assert [i["status"] for i in worklog.for_job(r["job"]["id"])] == ["doing", "todo", "todo", "todo"] and len(r["work_items"]) == 4
+    r2 = jobpage.quick_start("Printer offline for the whole office", "Acme Dental", field="itsupport")
+    assert "printer" in worklog.for_job(r2["job"]["id"])[0]["title"].lower() or "printer" in worklog.for_job(r2["job"]["id"])[1]["title"].lower()
+    r3 = jobpage.quick_start("Odd one", "Acme Dental", field="itsupport", steps=False)
+    assert [i["title"] for i in worklog.for_job(r3["job"]["id"])] == ["Odd one"]
+    assert jobsteps.for_job("anything", "nonexistent") == []
+    r4 = jobpage.quick_start("Mystery job", "Acme Dental", field="")
+    assert worklog.for_job(r4["job"]["id"])                                            # no field: still one step
