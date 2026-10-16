@@ -141,3 +141,33 @@ def test_one_shared_word_or_unrelated_question_gets_no_example():
     from app.services import experience
     assert experience.examples_for("network", "hello there") == ("", [])
     assert experience.examples_for("network", "wifi")[1] == []
+
+
+def test_short_followup_keeps_the_topic_model_and_does_not_repeat(client, monkeypatch):
+    from app.services import llm_router, providers
+    from app.services.providers import Turn
+    _full(monkeypatch)
+    for k in ("ANTHROPIC_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY"):
+        monkeypatch.setenv(k, "x")
+    monkeypatch.setattr(providers, "sdk_installed", lambda p: True)
+    seen = {}
+
+    class A:
+        def __init__(self, n): self.provider = self.model = n
+        def start(self, system, tools, q): seen["system"], seen["q"], seen["who"] = system, q, self.provider
+        def next_turn(self): return Turn("ok")
+        def add_results(self, *a): pass
+    ad = {p: A(p) for p in ("anthropic", "google", "openai")}
+    big = "Observations: the circuit works in the simulator but not on the board. A button input reads random HIGH and LOW. The sensor is 5 V into a 3.3 V pin? The LED is dim, and the board resets when the motor starts. Also no common ground."
+    hist = [{"role": "user", "content": big}, {"role": "assistant", "content": "Six faults... Want the motor reset guide next?"}, {"role": "user", "content": "x"}, {"role": "assistant", "content": "y"}, {"role": "user", "content": "z"}, {"role": "assistant", "content": "w"}]
+    assert agents.is_followup("yes", hist) and agents.is_followup("go ahead", hist) and not agents.is_followup("yes", []) and not agents.is_followup("how do I write -5 in 8-bit two's complement?", hist)
+    assert agents.topic_of("yes", hist[:2]) == big[:600] and agents.topic_of("a new question here", hist) == "a new question here"
+    first = agents.chat("cpe", big, [], None, "auto", ad)
+    who_first = seen["who"]
+    r = agents.chat("cpe", "yes", hist[:2], None, "auto", ad)
+    assert seen["who"] == who_first and r.route["kind"] == llm_router.classify(big)[0]
+    assert "only a go-ahead" in seen["q"] and "Six faults" in seen["q"]
+    agents.chat("cpe", "yes", hist, None, "auto", ad)
+    assert "Conversation so far" in seen["q"] and "Observations" not in seen["q"]          # only the last exchange is sent
+    assert "tell them which step they are on" not in seen["system"] and "do not mention the manual or their step otherwise" in seen["system"]
+    assert first.reply == "ok"

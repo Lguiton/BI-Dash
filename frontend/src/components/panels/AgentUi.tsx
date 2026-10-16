@@ -1,4 +1,5 @@
 "use client";
+import { useActiveJob } from "@/lib/activeJob";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bot, Search, Send } from "lucide-react";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -29,6 +30,7 @@ const DIRECT_EXAMPLES: Record<string, string[]> = {
 export type Persona = "default" | "cfo" | "math" | "engmath";
 
 export function useAgentChat(track: string) {
+  const [jobId] = useActiveJob();
   const [messages, setMessages] = useState<AgentMsg[]>([]);
   const [busy, setBusy] = useState(false);
   const [persona, setPersona] = useState<Persona>("default");
@@ -42,21 +44,35 @@ export function useAgentChat(track: string) {
     setMessages((m) => [...m, { role: "user", content: t }]);
     setBusy(true);
     try {
-      const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null, persona: canCfo ? persona : "default" });
+      const r = await postJson<ChatResp>(`/api/agents/${track}/chat`, { message: t, history, step_id: stepId ?? null, persona: canCfo ? persona : "default", job_id: jobId });
       const used = (r.tools_used.length ? ` · used ${r.tools_used.map((x) => x.tool).join(", ")}` : "") + (r.past_work?.length ? ` · started from your past fix${r.past_work.length > 1 ? "es" : ""}: ${r.past_work.map((x) => x.title).join("; ")}` : "") + (r.examples?.length ? ` · used ${r.examples.length} worked example${r.examples.length > 1 ? "s" : ""}` : "");
       setMessages((m) => [...m, { role: "agent", content: r.reply, proposals: r.proposals, actions: r.actions, meta: `${r.route?.kind ? `${r.route.kind} → ` : ""}${r.provider}${used}`,
         trace: { route: r.route, model: r.model, provider: r.provider, tools: r.tools_used, tokens_in: r.usage?.input_tokens ?? 0, tokens_out: r.usage?.output_tokens ?? 0 } }]);
     } catch (e) {
       setMessages((m) => [...m, { role: "agent", content: e instanceof ApiError ? e.message : "The agent couldn't answer.", error: true }]);
     } finally { setBusy(false); }
-  }, [track, persona, canCfo]);
-  return { messages, busy, send, clear: () => setMessages([]), persona, setPersona, canCfo };
+  }, [track, persona, canCfo, jobId]);
+  const debate = useCallback(async (text: string) => {
+    const t = text.trim();
+    if (t.length < 2) return;
+    const history = ref.current.filter((m) => !m.error).map((m) => ({ role: m.role, content: m.content }));
+    setMessages((m) => [...m, { role: "user", content: `Debate: ${t}` }]);
+    setBusy(true);
+    try {
+      const r = await postJson<{ report: string; judge: string; answers: { label: string; text: string; tools: string[] }[]; failed: string[]; tokens: number }>(`/api/agents/${track}/debate`, { message: t, history, job_id: jobId });
+      setMessages((m) => [...m, { role: "agent", content: r.report, debate: r.answers, meta: `debate · ${r.answers.length} AI${r.answers.length > 1 ? "s" : ""} · ${r.judge ? `judged by ${r.judge}` : "not judged"}${r.failed.length ? ` · no answer: ${r.failed.join(", ")}` : ""} · ${r.tokens.toLocaleString()} tokens` }]);
+    } catch (e) {
+      setMessages((m) => [...m, { role: "agent", content: e instanceof ApiError ? e.message : "The debate didn't finish.", error: true }]);
+    } finally { setBusy(false); }
+  }, [track, jobId]);
+  return { messages, busy, send, debate, clear: () => setMessages([]), persona, setPersona, canCfo };
 }
 
 /** The always-visible search bar: ask a question or tell the agent what to do. */
-export function CommandBar({ name, busy, onSend, persona, onPersona, track }: { name: string; busy: boolean; onSend: (text: string) => void; persona?: string; onPersona?: (v: Persona) => void; track?: string }) {
+export function CommandBar({ name, busy, onSend, onDebate, persona, onPersona, track }: { name: string; busy: boolean; onSend: (text: string) => void; onDebate?: (text: string) => void; persona?: string; onPersona?: (v: Persona) => void; track?: string }) {
   const [q, setQ] = useState("");
   const go = () => { if (q.trim().length >= 2 && !busy) { onSend(q); setQ(""); } };
+  const argue = () => { if (q.trim().length >= 2 && !busy && onDebate) { onDebate(q); setQ(""); } };
   return (
     <form role="search" aria-label={`Ask or instruct the ${name}`} className="card flex items-center gap-2 p-2" onSubmit={(e) => { e.preventDefault(); go(); }}>
       <Search className="ml-2 h-4 w-4 shrink-0 text-muted" aria-hidden />
@@ -64,6 +80,7 @@ export function CommandBar({ name, busy, onSend, persona, onPersona, track }: { 
              placeholder={`Ask the ${name} a question, or tell it what to do…`} aria-label={`Message the ${name}`} />
       {onPersona && <select className="input shrink-0 text-xs" value={persona} onChange={(e) => onPersona(e.target.value as Persona)} aria-label="Ask as">
         <option value="default">Ask as {name}</option>{track === "cpe" ? <option value="engmath">Ask as Engineering Mathematician</option> : <><option value="cfo">Ask as CFO</option><option value="math">Ask as Mathematician</option></>}</select>}
+      {onDebate && <button className="btn" type="button" title="Ask all three AIs, each using the tools, then a judge writes one report" disabled={busy || q.trim().length < 2} onClick={argue}>Debate</button>}
       <button className="btn btn-primary" type="submit" disabled={busy || q.trim().length < 2}><Send className="h-4 w-4" aria-hidden /> {busy ? "Thinking…" : "Send"}</button>
     </form>
   );
@@ -123,7 +140,31 @@ function Proposal({ p }: { p: AgentProposal }) {
   );
 }
 
-export function AgentPanel({ track, chat, onAction }: { track: string; chat: ReturnType<typeof useAgentChat>; onAction: (a: AgentAction) => void }) {
+type DebSt = { enabled: boolean; daily_cap: number; remaining: number };
+/** Turn the debate on or off and set how many a day. Off by default: one debate is up to four AI calls plus tool use. */
+function DebateSwitch() {
+  const [st, setSt] = useState<DebSt | null>(null);
+  const [tick, setTick] = useState(0);
+  const [cap, setCap] = useState("3");
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    getJson<DebSt>("/api/debate/status").then((r) => { if (live) { setSt(r); setCap(String(r.daily_cap)); } }).catch(() => {});
+    return () => { live = false; };
+  }, [tick]);
+  if (!st) return null;
+  const set = async (body: unknown) => { setErr(null); try { await putJson("/api/debate/config", body); setTick((t) => t + 1); } catch (e) { setErr(errMsg(e, "Couldn't save that.")); } };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs text-muted" aria-label="Debate settings">
+      {st.enabled
+        ? <><Badge tone="ok">debate on</Badge><span>{st.remaining} of {st.daily_cap} left today. Type a question, then press Debate.</span><button className="underline" onClick={() => set({ enabled: false })}>Turn off</button></>
+        : <><Badge>debate off</Badge><span>Ask all three AIs, then a judge writes one report. Up to four AI calls each.</span><label className="flex items-center gap-1">per day <input className="input w-14" inputMode="numeric" value={cap} onChange={(e) => setCap(e.target.value)} /></label><button className="btn" onClick={() => set({ enabled: true, daily_cap: Number(cap) || 3 })}>Turn on</button></>}
+      {err && <span role="alert" className="text-red-600">{err}</span>}
+    </div>
+  );
+}
+
+export function AgentPanel({ track, chat, onAction, compact = false }: { track: string; chat: ReturnType<typeof useAgentChat>; onAction: (a: AgentAction) => void; compact?: boolean }) {
   const [info, setInfo] = useState<AgentInfo | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -139,7 +180,12 @@ export function AgentPanel({ track, chat, onAction }: { track: string; chat: Ret
   const examples = [...(DIRECT_EXAMPLES[track] ?? []), ...info.suggestions.slice(0, 2)];
   return (
     <div className="space-y-4">
-      <section className="card space-y-2 p-5">
+      {compact ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <h2 className="flex items-center gap-2 text-sm font-semibold"><Bot className="h-4 w-4" aria-hidden /> {info.name}</h2>
+          <div className="flex gap-2"><Badge tone={allowed ? "ok" : "bad"}>privacy: {info.status.policy.mode}</Badge><Badge tone={ready ? "ok" : "warn"}>{ready ? "ready" : "no AI key yet"}</Badge></div>
+        </div>
+      ) : <section className="card space-y-2 p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-base font-semibold"><Bot className="h-5 w-5" aria-hidden /> {info.name}</h2>
           <div className="flex gap-2 text-xs"><Badge tone={allowed ? "ok" : "bad"}>privacy: {info.status.policy.mode}</Badge><Badge tone={ready ? "ok" : "warn"}>{ready ? `provider: ${info.status.ready.join(", ")}` : "no AI key yet"}</Badge></div>
@@ -147,12 +193,13 @@ export function AgentPanel({ track, chat, onAction }: { track: string; chat: Ret
         <p className="text-sm text-muted">Focus: {info.focus}.</p>
         <ul className="list-disc space-y-0.5 pl-5 text-sm">{info.can.map((c) => <li key={c}>{c}</li>)}</ul>
         <p className="text-xs text-muted">It can&apos;t change anything by itself: drafts come with an Add button and links open only when you click. Whatever it reads (per your privacy mode) is sent to the AI provider. {!allowed && "AI is off for this workspace: switch it on in Settings."} {allowed && !ready && "Add a key in backend/.env and restart to enable it: the manual works without one."}</p>
-      </section>
-      {(track === "analyst" || track === "scientist") && <AiWorkPanel role={track} title={track === "analyst" ? "Data Analyst" : "Data Scientist"} />}
-      <section className="card p-4" aria-label="Examples">
+      </section>}
+      <DebateSwitch />
+      {!compact && (track === "analyst" || track === "scientist") && <AiWorkPanel role={track} title={track === "analyst" ? "Data Analyst" : "Data Scientist"} />}
+      {!compact && <section className="card p-4" aria-label="Examples">
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Try asking or directing</h3>
         <div className="flex flex-wrap gap-2">{examples.map((x) => <button key={x} className="btn text-xs" disabled={chat.busy} onClick={() => chat.send(x)}>{x}</button>)}</div>
-      </section>
+      </section>}
       <section className="card min-w-0 space-y-3 p-4" aria-label="Conversation" aria-live="polite">
         {chat.messages.length === 0 && <p className="text-sm text-muted">No messages yet. Use the search bar above, or press an example.</p>}
         {chat.messages.map((m, i) => (
@@ -163,6 +210,11 @@ export function AgentPanel({ track, chat, onAction }: { track: string; chat: Ret
               : <div className="whitespace-pre-wrap break-words">{m.content}</div>}
             {m.actions?.map((a, j) => <button key={j} className="btn mt-2 mr-2 text-xs" onClick={() => onAction(a)}>{a.label}</button>)}
             {m.proposals?.map((p, j) => <Proposal key={j} p={p} />)}
+            {m.debate && (
+              <details className="mt-2 text-xs"><summary className="cursor-pointer text-muted">Show the {m.debate.length} answers the judge read</summary>
+                {m.debate.map((d) => <div key={d.label} className="mt-2"><p className="font-semibold">{d.label}{d.tools.length ? <span className="font-normal text-muted"> · tools: {d.tools.join(", ")}</span> : null}</p><div className="whitespace-pre-wrap break-words rounded bg-panel2 p-2">{d.text}</div></div>)}
+              </details>
+            )}
             {m.trace && <Trace t={m.trace} />}
           </div>
         ))}

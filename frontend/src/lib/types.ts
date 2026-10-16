@@ -457,7 +457,7 @@ export interface AgentInfo {
 }
 export interface AgentProposal { type: string; data: Record<string, unknown>; reason: string }
 export interface AgentAction { tab?: string; href?: string; label: string }
-export interface AgentMsg { role: "user" | "agent"; content: string; proposals?: AgentProposal[]; actions?: AgentAction[]; meta?: string; error?: boolean; trace?: AgentTrace }
+export interface AgentMsg { role: "user" | "agent"; content: string; proposals?: AgentProposal[]; actions?: AgentAction[]; meta?: string; error?: boolean; trace?: AgentTrace; debate?: { label: string; text: string; tools: string[] }[] }
 
 // ---- Update 12: usage, evals, company extras, alerts, drill, time, compare, quizzes, search ----
 export interface AiUsage {

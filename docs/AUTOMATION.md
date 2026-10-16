@@ -79,3 +79,7 @@ On the IT repair and Cybersecurity dashboards (work mode), under the tools: **Is
 - IT repair, Networking, Cybersecurity: advice and checklists only, never "it is fixed".
 - The result (final, judge notes, the three drafts) is a draft in the Assistant desk. Nothing is sent to a client and nothing is run. Check it against the real data or equipment, then accept or discard.
 - If one AI has no key or fails, the others continue; with one answer there is no judge and it says so. Not yet tested against the live providers.
+
+## Agents and tools together
+
+In work mode on a wide screen the field's AI agent sits to the right of the Tools, so you can ask while you work. The agent can run the same calculators as the tools (Networking: subnet, VLSM, summarize, overlaps, contains, split, transfer time, bandwidth-delay, config audit, capture reader. IT: capacity, availability, RAID, event logs. Security: log analysis and search. Data analyst and Data scientist: forecast, variance, profit what-if, distribution fit, DAX) and quotes the result. These are local calculations on numbers or text it is given: no DNS, port or website checks, nothing saved, nothing sent to a client. If a job is pinned in the job bar, the agent can read it (title, steps, your notes; practice jobs also show the practice files, never the answer key) and its "How it answered" panel lists every tool it used. It still cannot change anything: drafts come with an Add button. Other fields' agents keep their existing tools.

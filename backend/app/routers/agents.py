@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, Field
 
 from app.routers import ai as ai_router
-from app.services import agent_evals, agents, manuals, quizzes
+from app.services import agent_debate, agent_evals, agents, manuals, quizzes
 
 router = APIRouter(tags=["agents"])
 
@@ -23,6 +23,7 @@ class ChatIn(BaseModel):
     effort: Literal["auto", "simple", "medium", "complex"] = "auto"
     source_text: str | None = Field(default=None, max_length=4000)      # text copied from a web page, labelled as an outside source
     source_url: str | None = Field(default=None, max_length=300)
+    job_id: int | None = None                                           # the job pinned in the job bar, read-only for the agent
 
 
 @router.get("/api/manuals/{track}")
@@ -56,11 +57,43 @@ def chat(track: str, body: ChatIn):
     if pol_ok:
         ai_router._check_rate()
     try:
-        r = agents.chat(track, body.message, [m.model_dump() for m in body.history], body.step_id, body.provider, None, body.effort, body.persona, body.source_text, body.source_url)
+        r = agents.chat(track, body.message, [m.model_dump() for m in body.history], body.step_id, body.provider, None, body.effort, body.persona, body.source_text, body.source_url, body.job_id)
     except agents.AgentError as e:
         raise HTTPException(e.status, e.message) from None
     return {"reply": r.reply, "provider": r.provider, "model": r.model, "route": r.route, "proposals": r.proposals, "actions": r.actions,
             "tools_used": r.tools_used, "past_work": r.past_work, "examples": r.examples, "stopped_early": r.stopped_early, "usage": {"input_tokens": r.input_tokens, "output_tokens": r.output_tokens}}
+
+
+class DebateIn(BaseModel):
+    message: str = Field(min_length=2, max_length=1200)
+    history: list[Msg] = Field(default_factory=list, max_length=20)
+    job_id: int | None = None
+
+
+def _dg(fn, *a, **k):
+    try:
+        return fn(*a, **k)
+    except agent_debate.DebateError as e:
+        raise HTTPException(e.status, e.message) from None
+
+
+@router.get("/api/debate/status")
+def debate_status():
+    return agent_debate.status()
+
+
+@router.put("/api/debate/config")
+def debate_config(body: dict = Body(...)):
+    return _dg(agent_debate.update_config, body)
+
+
+@router.post("/api/agents/{track}/debate")
+def debate(track: str, body: DebateIn):
+    if track not in agents.AGENTS:
+        raise HTTPException(404, "No agent for that discipline.")
+    if agents.ai_policy.describe()["allowed"]:
+        ai_router._check_rate()
+    return _dg(agent_debate.run, track, body.message, [m.model_dump() for m in body.history], body.job_id)
 
 
 class EvalIn(BaseModel):

@@ -19,6 +19,7 @@ import { DataLab } from "@/components/panels/DataLab";
 import { MlBuildPanel } from "@/components/panels/MlBuildPanel";
 import { DesignPanel } from "@/components/panels/DesignPanel";
 import { Tabs } from "@/components/panels/kit";
+import { useWide } from "@/lib/useWide";
 import { AgentPanel, CommandBar, useAgentChat } from "@/components/panels/AgentUi";
 import { SecPanel } from "@/components/panels/SecPanel";
 import { NetPanel } from "@/components/panels/NetPanel";
@@ -264,7 +265,9 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
   const work = mode === "work";
   const [viewRaw, setView] = useState<"manual" | "tools" | "agent">(() => parseView(sp.get("view")) ?? "manual");
   // Work mode has no how-to manual or learning path: it opens on the tools.
-  const view = work && viewRaw === "manual" ? "tools" : viewRaw;
+  const wide = useWide();
+  const sideAgent = work && wide;                 // work mode on a wide screen: the agent sits beside the tools
+  const view = work && viewRaw === "manual" ? "tools" : sideAgent && viewRaw === "agent" ? "tools" : viewRaw;
   const [tab, setTab] = useState(() => sp.get("tab") ?? DEFAULT_TAB[id] ?? "");
   const [focusStep, setFocusStep] = useState<string | undefined>(() => sp.get("step") ?? undefined);
   const [agentName, setAgentName] = useState("agent");
@@ -286,7 +289,8 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
   };
   const goAction = (a: AgentAction) => { if (a.href) router.push(a.href); else if (a.tab) { setTab(a.tab); setView("tools"); } };
   const askAbout = (s: ManualStep) => { setStepId(s.id); setView("agent"); void chat.send(s.ask || `Help me with step: ${s.title}`, s.id); };
-  const sendFromBar = (text: string) => { setView("agent"); void chat.send(text, stepId); };
+  const sendFromBar = (text: string) => { if (!sideAgent) setView("agent"); void chat.send(text, stepId); };
+  const debateFromBar = (text: string) => { if (!sideAgent) setView("agent"); void chat.debate(text); };
 
   const loadProgress = useCallback((signal?: AbortSignal) => getJson<Progress>("/api/progress", signal).then(setProg).catch(() => {}), []);
   useEffect(() => {
@@ -325,15 +329,15 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
         {!work && tp && <span className="rounded-full bg-panel2 px-3 py-1 text-xs text-muted">{tp.done}/{tp.total} steps done ({tp.pct}%)</span>}
       </div>
 
-      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
+      <CommandBar name={agentName} busy={chat.busy} onSend={sendFromBar} onDebate={debateFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
 
-      <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
+      {!sideAgent && <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
         {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).filter(([k]) => !work || k !== "manual").map(([k, l]) => (
           <button key={k} role="tab" aria-selected={view === k} className={`btn ${view === k ? "btn-primary" : ""}`} onClick={() => setView(k)}>{l}</button>
         ))}
-      </div>
+      </div>}
 
-      <div className={`grid gap-6 ${work ? "" : "xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"}`}>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-4">
           {view === "manual" && <ManualPanel track={id} focus={focusStep} onGo={goTool} onAsk={askAbout} />}
           {view === "agent" && <AgentPanel track={id} chat={chat} onAction={goAction} />}
@@ -363,6 +367,9 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
           )}
         </div>
 
+        {sideAgent && <aside className="h-fit min-w-0 space-y-3 xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto" aria-label="AI agent beside the tools">
+          <AgentPanel track={id} chat={chat} onAction={goAction} compact />
+        </aside>}
         {!work && <aside className="card h-fit min-w-0 space-y-3 p-5">
           <h2 className="text-sm font-semibold">Learning path</h2>
           <ol className="space-y-3">
