@@ -66,10 +66,12 @@ function CaptureCard() {
   const [headers, setHeaders] = useState(true);
   const [busy, setBusy] = useState(false);
   const [out, setOut] = useState<R | null>(null);
+  const [saved, setSaved] = useState("");
   useEffect(() => { getJson<R>("/api/capture/status").then((s) => { setSt(s); setIface(s.interfaces?.[0]?.name ?? ""); }).catch((e) => setErr(errMsg(e, "Couldn't check live capture."))); }, []);
   async function go() {
     setErr(null);
     setOut(null);
+    setSaved("");
     setBusy(true);
     try { setOut(await postJson<R>("/api/capture/run", { iface, seconds: Number(secs), count: Number(count), filter: flt, confirm: sure, headers_only: headers })); } catch (e) { setErr(errMsg(e, "The capture failed.")); }
     setBusy(false);
@@ -78,11 +80,15 @@ function CaptureCard() {
     if (!out) return;
     const bin = atob(out.pcap_base64);
     const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([bytes], { type: "application/vnd.tcpdump.pcap" }));
-    a.download = "capture.pcap";
+    a.href = url;
+    a.download = `capture-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.pcap`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    setSaved(a.download);
   }
   const sm = out?.summary as R | undefined;
   return (
@@ -107,7 +113,8 @@ function CaptureCard() {
           )}
           {out && (
             <div className="space-y-2" role="status">
-              <p className="text-xs">Captured {out.captured} packets in up to {out.seconds} s on {out.interface}. Filter: {out.filter}. <button className="underline" onClick={save}>Save as .pcap</button></p>
+              <p className="text-xs">Captured {out.captured} packets in up to {out.seconds} s on {out.interface}. Filter: {out.filter}.</p>
+              <div className="flex flex-wrap items-center gap-2"><button className="btn btn-primary" onClick={save}>Download capture (.pcap)</button>{saved && <span className="text-xs text-muted">Sent to your browser&apos;s download folder as {saved}. If nothing appears, check that the browser did not block the download.</span>}</div>
               {sm && (
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
                   {Object.entries(sm).filter(([, v]) => typeof v === "string" || typeof v === "number").map(([k, v]) => <div key={k} className="contents"><dt className="text-muted">{k.replace(/_/g, " ")}</dt><dd>{String(v)}</dd></div>)}

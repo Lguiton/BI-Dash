@@ -96,13 +96,24 @@ def status() -> dict:
             "message": " ".join(msgs) or "Ready. Only capture a network you own or have written permission to test."}
 
 
-def _to_pcap(sc, pkts) -> bytes:
+def _to_pcap(sc, pkts, snap: int | None = None) -> bytes:
+    """Write a classic pcap. With snap set, each record keeps only the first snap bytes but remembers the real packet length
+    (what tcpdump -s does), so Wireshark and the summary still see true sizes and sequence numbers."""
+    import struct
+    all_eth = snap is not None and all(isinstance(p, sc.Ether) for p in pkts)
+    if all_eth:
+        out = [struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, snap, 1)]
+        for p in pkts:
+            raw = bytes(p)
+            t = float(getattr(p, "time", 0) or 0)
+            sec = int(t)
+            out.append(struct.pack("<IIII", sec, int((t - sec) * 1_000_000), min(len(raw), snap), len(raw)) + raw[:snap])
+        return b"".join(out)
     buf = io.BytesIO()
     w = sc.PcapWriter(buf, sync=True)
     for p in pkts:
         w.write(p)
-    data = buf.getvalue()
-    return data
+    return buf.getvalue()
 
 
 def run(iface: str, seconds: int, count: int, bpf: str, confirm: bool, headers_only: bool = True) -> dict:
@@ -137,13 +148,7 @@ def run(iface: str, seconds: int, count: int, bpf: str, confirm: bool, headers_o
         raise CaptureError("The capture could not start: " + msg[:160]) from None
     if len(pkts) == 0:
         raise CaptureError("No packets were seen. Check the network card, the filter, and that something was talking during the capture.")
-    if headers_only:
-        for p in pkts:
-            raw = bytes(p)
-            if len(raw) > HEADER_SNAP:
-                p.wirelen = len(raw)
-        pkts = [sc.Ether(bytes(p)[:HEADER_SNAP]) if len(bytes(p)) > HEADER_SNAP else p for p in pkts]
-    data = _to_pcap(sc, pkts)
+    data = _to_pcap(sc, pkts, HEADER_SNAP if headers_only else None)
     summary = net_pcap.read(base64.b64encode(data).decode())
     return {"captured": len(pkts), "seconds": seconds, "interface": iface, "filter": bpf or "(none)", "headers_only": headers_only, "summary": summary,
             "pcap_base64": base64.b64encode(data).decode(),

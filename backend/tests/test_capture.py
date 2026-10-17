@@ -54,8 +54,19 @@ def test_capture_runs_and_is_summarised(fake_sniff):
     assert j["summary"]["packets"] == 13
     raw = base64.b64decode(j["pcap_base64"])
     assert raw[:4] in (b"\xd4\xc3\xb2\xa1", b"\xa1\xb2\xc3\xd4")
-    # headers only: no packet holds more than the snap length
-    assert len(raw) < 24 + 13 * (16 + 140)
+    # headers only: each record keeps 128 bytes but remembers the real length, and the IP length field is untouched
+    import struct
+    pos, seen_big = 24, 0
+    while pos < len(raw):
+        sec, usec, incl, orig = struct.unpack("<IIII", raw[pos:pos + 16])
+        rec = raw[pos + 16:pos + 16 + incl]
+        assert incl <= 128
+        if orig > 128:
+            seen_big += 1
+            assert struct.unpack(">H", rec[16:18])[0] == orig - 14      # IPv4 total length is the real one
+        pos += 16 + incl
+    assert seen_big == 12 and pos == len(raw)
+    assert j["summary"].get("retransmissions", 0) == 0
 
 
 def test_full_packets_when_asked(fake_sniff):
