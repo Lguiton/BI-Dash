@@ -11,6 +11,7 @@ type Finding = { severity: string; title: string; detail: string; advice: string
 type Ev = { events: number; distinct_ids: number; findings: Finding[]; table: { id: number; count: number; meaning: string }[]; caveat: string };
 type Kind = "event" | "business" | "text";
 const TEXT_EXT = /\.(csv|txt|log|json|tsv|md)$/i;
+const DOC_EXT = /\.(xlsx|xlsm|pdf|docx)$/i;
 const norm = (h: string) => h.trim().toLowerCase().replace(/[\s-]+/g, "_");
 
 function decode(buf: ArrayBuffer): string {
@@ -40,17 +41,22 @@ export function UploadAnything() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [note, setNote] = useState("");
   const track = /^\/tracks\/([a-z]+)/.exec(path)?.[1] ?? "itsupport";
 
   async function pick(f: File) {
     setErr(null); setEv(null); setOut(null); setKind(null); setText(""); setName(f.name); setBusy(true);
     try {
       if (/\.evtx$/i.test(f.name)) { setErr("An .evtx file is binary. In Event Viewer choose Action, Save All Events As, and pick CSV, then upload that."); return; }
-      if (!TEXT_EXT.test(f.name)) { setErr("This button reads csv, tsv, txt, log, json and md files. For Excel or PDF files use Data, or the Intake page."); return; }
+      if (!TEXT_EXT.test(f.name) && !DOC_EXT.test(f.name)) { setErr("This button reads Excel, PDF, Word, csv, tsv, txt, log, json and md files."); return; }
       if (f.size > 25 * 1024 * 1024) { setErr("That file is over 25 MB. Export a smaller slice."); return; }
-      const t = decode(await f.arrayBuffer());
+      let t: string;
+      if (DOC_EXT.test(f.name)) {
+        const r = await postFile<{ text: string; note: string }>("/api/files/text", f);
+        t = r.text; setNote(r.note);
+      } else { t = decode(await f.arrayBuffer()); setNote(""); }
       const k = sniff(t);
-      setKind(k); setText(t.slice(0, 4000));
+      setKind(k); setText(t.slice(0, 12000));
       if (k === "event") setEv(await postFile<Ev>("/api/it/events/upload", f));
     } catch (e) { setErr(errMsg(e, "Couldn't read that file.")); } finally { setBusy(false); }
   }
@@ -58,23 +64,24 @@ export function UploadAnything() {
     setErr(null); setBusy(true); setOut(null);
     try {
       const evNote = ev ? `Event log read: ${ev.events} events. Findings: ${ev.findings.map((x) => x.title).join("; ") || "none"}. Top IDs: ${ev.table.slice(0, 6).map((t) => `${t.id} x${t.count} (${t.meaning})`).join("; ")}.\n` : "";
-      const r = await postJson<{ reply: string }>(`/api/agents/${track}/chat`, { message: ask.slice(0, 1200), history: [], source_text: (evNote + text).slice(0, 4000), job_id: jobId });
+      const r = await postJson<{ reply: string }>(`/api/agents/${track}/chat`, { message: ask.slice(0, 1200), history: [], source_text: (evNote + text).slice(0, 12000), job_id: jobId });
       setOut(r.reply);
     } catch (e) { setErr(errMsg(e, "The agent couldn't answer.")); } finally { setBusy(false); }
   }
 
   return (
     <div className="print:hidden">
-      <input ref={ref} type="file" accept=".csv,.tsv,.txt,.log,.json,.md,.evtx" className="hidden" aria-label="Upload a file" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setOpen(true); void pick(f); } }} />
+      <input ref={ref} type="file" accept=".csv,.tsv,.txt,.log,.json,.md,.evtx,.xlsx,.xlsm,.pdf,.docx" className="hidden" aria-label="Upload a file" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setOpen(true); void pick(f); } }} />
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn" onClick={() => ref.current?.click()}><Upload className="h-4 w-4" aria-hidden /> Upload a file</button>
         {open && <button className="text-xs underline" onClick={() => setOpen(false)}>Hide</button>}
-        {!open && <span className="text-xs text-muted">Event logs, CSVs, logs and notes. It picks the right reader.</span>}
+        {!open && <span className="text-xs text-muted">Excel, PDF, Word, event logs, CSVs and notes. It picks the right reader.</span>}
       </div>
       {open && (
         <div className="card mt-2 space-y-2 p-3 text-sm" aria-label="Uploaded file">
           {name && <p><strong>{name}</strong> {kind === "event" && <Badge tone="ok">Windows event log</Badge>} {kind === "business" && <Badge tone="warn">business data</Badge>} {kind === "text" && <Badge tone="muted">text file</Badge>}</p>}
           {busy && <p className="text-muted">Reading…</p>}
+          {note && <p className="text-xs text-muted">{note}</p>}
           {err && <p role="alert" className="text-xs text-red-600">{err}</p>}
           {kind === "business" && <p>This is business data (dates, entities, revenue). Import it from the Import box on <Link href="/" className="underline">Home</Link>, where you can see the checks first.</p>}
           {ev && (
@@ -87,7 +94,7 @@ export function UploadAnything() {
           )}
           {kind && kind !== "business" && (
             <div className="space-y-2 border-t border-line pt-2">
-              <label className="block text-xs">Ask the {track} agent about this file (a draft you check; the first 4,000 characters are sent, with secrets removed)
+              <label className="block text-xs">Ask the {track} agent about this file (a draft you check; the first 12,000 characters are sent, with secrets removed)
                 <textarea className="input mt-1 w-full" rows={2} value={ask} onChange={(e) => setAsk(e.target.value)} />
               </label>
               <button className="btn" disabled={busy || ask.trim().length < 2} onClick={askAgent}>{busy ? "Working…" : "Get agent output"}</button>

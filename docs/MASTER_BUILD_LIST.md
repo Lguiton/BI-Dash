@@ -63,3 +63,11 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [ ] Hosting online (login on, HTTPS, strong owner password).
 - Compliance library in Settings (Legal and compliance tab) with agent `compliance` tool (security, itsupport).
 - Cloud and as-a-service lab with IaC reviewer, templates, real-work checklist, quiz (IT support, Network); agent tools iac_review, cloud_pick.
+
+## Advanced batches (zip 51)
+- **IT Support**: `it_admin.py`, `/api/itadmin`, `ItAdminLab` (email authentication check, Microsoft 365 and Intune reference, onboarding and offboarding runbooks, script review, priority matrix, SLA math, stop codes, patch policy), 11 admin repair guides (`it_repair_admin.py`), agent tools `email_auth`, `script_review`, `stop_code`.
+- **Security**: `sec_pro.py`, `/api/secpro`, `SecProLab` (CVSS 3.1 calculator, annualized loss and control payback, risk matrix and register, pen-test scope template, OWASP Top 10, attack stages, forensic timeline, Suricata and Snort rule explainer, HIPAA, SOC 2, PCI and continuity checklists), agent tools `cvss`, `risk_ale`, `rule_explain`.
+- **Network**: `net_pro.py`, `/api/netpro`, `NetProLab` (OSPF cost, spanning tree root, IPv6 plan, EUI-64, PoE budget, fiber budget, wireless link budget, TCP speed limit, firewall rule review, VPN, QoS, SNMP and monitoring reference), agent tools `fiber_budget`, `poe_budget`, `ipv6_plan`, `firewall_review`, `tcp_limit`.
+- **Upload button** reads Excel, PDF and Word (`/api/files/text`); the text sent to the agent grew from 4,000 to 12,000 characters.
+- Still to build, in order: Analyst, Computer Engineer depth, Full-stack, PM, Systems Analyst, then AI, ML, Data Engineer and Data Scientist (see `AUDIT_GAPS.md`).
+- **"Agents do the job" card** (`JobAgentCard.tsx`) on every real work dashboard (all 12 tracks in Work mode) and on the field pages: pick an open job, then the field's agent and the three-AI team draft the work, with a file upload for the job. Drafts only; nothing is sent, closed or marked done. The job page and the pinned job bar already had the same buttons.

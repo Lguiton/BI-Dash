@@ -1,4 +1,5 @@
 "use client";
+import { JobAgentCard } from "@/components/JobAgentCard";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -81,6 +82,7 @@ function Inner() {
         {group && <Badge>{group.label}</Badge>}
         <span className="text-muted">{field.blurb}</span>
       </div>
+      <JobAgentCard track={id} />
       <FieldFix key={id} field={id} />
       <Sell groups={field.services} />
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Tools</h2>

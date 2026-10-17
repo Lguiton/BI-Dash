@@ -20,6 +20,11 @@ def _t(**props) -> dict:
 
 # name -> (one-line help shown to the model, handler(args) -> dict). Help lists the argument names so the model needs no other schema.
 NETWORK = {
+    "fiber_budget": ("length_km, wavelength?, connectors?, splices?, tx_dbm?, rx_sensitivity_dbm?", lambda a: __import__("app.services.net_pro", fromlist=["x"]).calc("fiber", dict(a))),
+    "poe_budget": ("switch_watts, devices = lines of: name, watts or class (af/at/bt3/bt4), qty", lambda a: __import__("app.services.net_pro", fromlist=["x"]).calc("poe", dict(a))),
+    "ipv6_plan": ("prefix, subnet_prefix?, count?", lambda a: __import__("app.services.net_pro", fromlist=["x"]).calc("ipv6", dict(a))),
+    "firewall_review": ("text = pasted firewall or access list rules", lambda a: __import__("app.services.net_pro", fromlist=["x"]).firewall_review(str(a["text"]))),
+    "tcp_limit": ("rtt_ms, loss_pct, mss_bytes?", lambda a: __import__("app.services.net_pro", fromlist=["x"]).calc("tcp", dict(a))),
     "subnet": ("cidr", lambda a: netlab.subnet(str(a["cidr"]))),
     "vlsm": ("base, needs=[{name, hosts}]", lambda a: netlab.vlsm(str(a["base"]), a["needs"])),
     "summarize": ("cidrs=[...]", lambda a: netlab.summarize(list(a["cidrs"]))),
@@ -100,7 +105,12 @@ def _repair_guide(a):
     return out
 
 
+
+
 IT = {
+    "email_auth": ("spf, dmarc, dkim = the TXT records pasted (any may be blank)", lambda a: __import__("app.services.it_admin", fromlist=["x"]).email_auth(str(a.get("domain", "")), str(a.get("spf", "")), str(a.get("dmarc", "")), str(a.get("dkim", "")))),
+    "script_review": ("text = a PowerShell or shell script to check for risky commands", lambda a: __import__("app.services.it_admin", fromlist=["x"]).review_script(str(a["text"]))),
+    "stop_code": ("code = a Windows stop code or part of it, e.g. IRQL_NOT_LESS_OR_EQUAL", lambda a: __import__("app.services.it_admin", fromlist=["x"]).stop_code(str(a["code"]))),
     "capacity": ("used_gb, total_gb, growth_gb_per_month, warn_pct?", lambda a: itlab.capacity(float(a["used_gb"]), float(a["total_gb"]), float(a["growth_gb_per_month"]), float(a.get("warn_pct", 80)))),
     "availability": ("pct (e.g. 99.9)", lambda a: itlab.availability(float(a["pct"]))),
     "raid": ("level, disks, size_tb", lambda a: itlab.raid(str(a["level"]), int(a["disks"]), float(a["size_tb"]))),
@@ -114,6 +124,9 @@ IT = {
     "cloud_pick": ("need = what the client needs, e.g. email for 8 people, database for a booking app", _cloud_pick),
 }
 SECURITY = {
+    "cvss": ("vector = CVSS 3.1 base vector like AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", lambda a: __import__("app.services.sec_pro", fromlist=["x"]).cvss(str(a.get("vector", "")))),
+    "risk_ale": ("asset_value, exposure_pct, incidents_per_year, control_cost_per_year?, risk_reduction_pct?", lambda a: __import__("app.services.sec_pro", fromlist=["x"]).ale(a["asset_value"], a["exposure_pct"], a["incidents_per_year"], a.get("control_cost_per_year", 0), a.get("risk_reduction_pct", 0))),
+    "rule_explain": ("rule = a Suricata or Snort rule to explain", lambda a: __import__("app.services.sec_pro", fromlist=["x"]).explain_rule(str(a["rule"]))),
     "analyze_logs": ("text = pasted log lines, year?", lambda a: seclogs.analyze(str(a["text"]), a.get("year"))),
     "search_logs": ("text, query?, level?, ip?", lambda a: seclogs.search(str(a["text"]), str(a.get("query", "")), str(a.get("level", "")), str(a.get("ip", "")), 40, a.get("year"))),
     "compliance": ("q = law or topic, e.g. HIPAA, breach notice, CFAA scope", _compliance),

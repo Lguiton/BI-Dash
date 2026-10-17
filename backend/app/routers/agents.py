@@ -21,7 +21,7 @@ class ChatIn(BaseModel):
     persona: Literal["default", "cfo", "math", "engmath"] = "default"
     provider: Literal["auto", "google", "openai", "anthropic", "ollama"] = "auto"
     effort: Literal["auto", "simple", "medium", "complex"] = "auto"
-    source_text: str | None = Field(default=None, max_length=4000)      # text copied from a web page, labelled as an outside source
+    source_text: str | None = Field(default=None, max_length=12000)      # text copied from a web page, labelled as an outside source
     source_url: str | None = Field(default=None, max_length=300)
     job_id: int | None = None                                           # the job pinned in the job bar, read-only for the agent
 

@@ -506,7 +506,7 @@ def _outside_source(text: str | None, url: str | None) -> str:
         return ""
     from urllib.parse import urlparse
     from app.services.fixlog import hide_secrets
-    t = hide_secrets(re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", t)[:4000])[0]
+    t = hide_secrets(re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", t)[:12000])[0]
     try:
         host = urlparse(url or "").hostname or ""
     except ValueError:
