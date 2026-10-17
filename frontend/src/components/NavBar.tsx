@@ -29,6 +29,7 @@ const MORE: Group[] = [
     { href: "/pipelines", label: "Pipelines", Icon: LibraryBig },
     { href: "/workflow", label: "Workflow builder", Icon: GitBranch },
     { href: "/hub", label: "Dataset hub", Icon: Layers },
+    { href: "/samples", label: "Sample work page", Icon: Briefcase },
     { href: "/knowledge", label: "Knowledge search", Icon: FileSearch },
   ] },
   { label: "Watch and learn", items: [

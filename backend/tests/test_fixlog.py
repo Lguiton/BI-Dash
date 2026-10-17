@@ -81,3 +81,11 @@ def test_concierge_points_at_the_fix_logs():
     assert "/tracks/itsupport?view=tools&tab=fixlog" in hrefs
     hrefs = [r["href"] for r in concierge.route("security incident history")["results"]]
     assert "/tracks/security?view=tools&tab=fixlog" in hrefs
+
+
+def test_fix_log_covers_data_ml_and_fullstack(client):
+    for area in ("data", "ml", "fullstack"):
+        r = client.post("/api/fixlog", json=_fix(area=area, title=f"{area} problem solved"))
+        assert r.status_code == 200 or r.status_code == 201, r.text
+        assert client.get(f"/api/fixlog?area={area}").json()["fixes"][0]["area"] == area
+    assert client.get("/api/fixlog/search", params={"q": "problem solved", "area": "ml"}).status_code == 200

@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import { Download, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { API_BASE, ApiError, postFile } from "@/lib/api";
@@ -46,8 +47,8 @@ export function UploadPanel({ onLoaded }: { onLoaded: () => void }) {
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-xs text-muted">
             CSV file
-            <input ref={input} type="file" accept=".csv,text/csv" className="field"
-                   onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); setError(null); }} />
+            <input ref={input} type="file" accept={acceptFor("csv")} className="field"
+                   onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "csv") : null; if (bad) e.target.value = ""; setFile(bad ? null : f); setResult(null); setError(bad ? { message: bad + " For Excel or other formats, use Data and Import a file instead.", details: [] } : null); }} />
           </label>
           <label className="flex flex-col gap-1 text-xs text-muted">
             Mode

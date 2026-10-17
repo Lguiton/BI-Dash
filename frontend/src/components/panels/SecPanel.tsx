@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile, readableFile } from "@/lib/fileCheck";
 import { useCallback, useEffect, useState } from "react";
 import { useWorkTabs } from "@/lib/mode";
 import { FixLog } from "./FixLog";
@@ -116,8 +117,11 @@ export function LogsTab() {
   };
   const upload = async (f: File | undefined) => {
     if (!f) return;
-    setBusy(true); setErr(null); setHits(null);
-    try { setRes(await postFile<LogResult>("/api/security/logs/analyze-file", f)); setText(""); } catch (e) { setErr(errMsg(e, "Couldn't read that file.")); } finally { setBusy(false); }
+    setErr(null);
+    const bad = checkFile(f, "text");
+    if (bad) { setErr(bad); return; }
+    setBusy(true); setHits(null);
+    try { setRes(await postFile<LogResult>("/api/security/logs/analyze-file", await readableFile(f))); setText(""); } catch (e) { setErr(errMsg(e, "Couldn't read that file.")); } finally { setBusy(false); }
   };
   const search = async () => {
     setErr(null);
@@ -131,7 +135,7 @@ export function LogsTab() {
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <button className="btn btn-primary" disabled={busy || !text.trim()} onClick={analyze}>{busy ? "Analysing…" : "Analyse"}</button>
           <button className="btn" onClick={sample}>Load a practice log</button>
-          <label className="btn cursor-pointer">Upload a file<input type="file" className="sr-only" onChange={(e) => upload(e.target.files?.[0])} /></label>
+          <label className="btn cursor-pointer">Upload a file<input type="file" accept={acceptFor("text")} className="sr-only" onChange={(e) => upload(e.target.files?.[0])} /></label>
         </div>
       </Section>
       {res && (

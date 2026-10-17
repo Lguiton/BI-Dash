@@ -1,6 +1,6 @@
 """Fix log: every fix you make is written down so the next time the same problem shows up you can find what was tried and what worked.
 
-Used for IT repair, cybersecurity and network work. It is a searchable record plus write-ups you can hand to a client. The search matches the
+Used for IT repair, cybersecurity, network, data and BI, machine learning and full-stack work. It is a searchable record plus write-ups you can hand to a client. The search matches the
 words you use (and close spellings and related words); it does not understand meaning, so a record is only as findable as it is well written.
 Passwords, keys and tokens are blanked before anything is stored.
 """
@@ -12,7 +12,7 @@ import re
 
 from app.services import state, workspaces
 
-AREAS = {"it": "IT repair", "security": "Cybersecurity", "network": "Network"}
+AREAS = {"it": "IT repair", "security": "Cybersecurity", "network": "Network", "data": "Data and BI", "ml": "Machine learning", "fullstack": "Full-stack"}
 RESULTS = {"fixed": "Fixed", "workaround": "Workaround only", "not_fixed": "Not fixed yet"}
 
 

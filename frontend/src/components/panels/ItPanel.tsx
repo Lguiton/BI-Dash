@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile, readableFile } from "@/lib/fileCheck";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkTabs } from "@/lib/mode";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -207,7 +208,7 @@ function EventsTab() {
         <button className="btn" onClick={() => act(async () => setText((await getJson<{ text: string }>("/api/it/events/sample")).text), "Couldn't load the sample.")}>Load sample</button>
         <button className="btn btn-primary" disabled={!text.trim()} onClick={() => act(async () => { setFname(null); setR(await postJson<Ev>("/api/it/events/read", { text })); }, "Couldn't read that.")}>Read it</button>
         <button className="btn" onClick={() => fileRef.current?.click()}>Open file…</button>
-        <input ref={fileRef} type="file" accept=".csv,.txt,.log" className="hidden" aria-label="Open an event log export" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void act(async () => { setFname(f.name); setR(await postFile<Ev>("/api/it/events/upload", f)); }, "Couldn't read that file."); }} />
+        <input ref={fileRef} type="file" accept={acceptFor("text")} className="hidden" aria-label="Open an event log export" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void act(async () => { const bad = checkFile(f, "text"); if (bad) throw new Error(bad); setFname(f.name); setR(await postFile<Ev>("/api/it/events/upload", await readableFile(f))); }, "Couldn't read that file."); }} />
       </div>
       {r && (
         <div className="mt-3 space-y-3">

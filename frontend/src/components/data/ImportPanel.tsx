@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import { FileSpreadsheet, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { ApiError, getJson, postForm } from "@/lib/api";
@@ -92,8 +93,8 @@ export function ImportPanel({ onLoaded }: { onLoaded: () => void }) {
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-xs text-muted">
           File
-          <input ref={input} type="file" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.json,.jsonl,.ndjson,.xml,.pdf,.parquet,.html,.htm" className="field"
-                 onChange={(e) => { const f = e.target.files?.[0] ?? null; setFile(f); setPv(null); if (f) inspect(f); }} />
+          <input ref={input} type="file" accept={acceptFor("data")} className="field"
+                 onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "data") : null; if (bad) { e.target.value = ""; setFile(null); setPv(null); setErr({ message: bad, details: [] }); return; } setErr(null); setFile(f); setPv(null); if (f) inspect(f); }} />
         </label>
         {pv?.sheets && pv.sheets.length > 1 && (
           <label className="flex flex-col gap-1 text-xs text-muted">Sheet

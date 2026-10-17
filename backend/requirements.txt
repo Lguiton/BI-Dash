@@ -20,3 +20,6 @@ pdfplumber>=0.11     # My data: read tables and text from PDF files
 lxml>=5.0            # My data: read tables from HTML files (pandas.read_html)
 pytz>=2024.1         # DuckDB time-zone timestamps turned into pandas tables
 # optional: mlflow>=2.10   # MLOps lab can copy runs to a local MLflow store when this is installed
+pillow>=10.1       # scanned files: prepare pictures for OCR
+pypdfium2>=4        # scanned PDFs: render pages for OCR
+scapy>=2.5          # live capture (also needs Npcap on Windows, or root on Linux)

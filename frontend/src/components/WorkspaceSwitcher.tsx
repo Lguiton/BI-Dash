@@ -86,7 +86,7 @@ export function SettingsButton() {
     return () => ctl.abort();
   }, []);
   return (
-    <Link href="/settings" className="btn" aria-label={`Settings${active ? `, ${active} workspace open` : ""}`}>
+    <Link href="/settings" title="Settings" className="btn whitespace-nowrap" aria-label={`Settings${active ? `, ${active} workspace open` : ""}`}>
       <Settings2 className="h-4 w-4" aria-hidden /> Settings
       {active && <span className="rounded-full px-2 py-0.5 text-xs" style={{ background: active === "real" ? "var(--good-bg)" : "var(--info-bg)" }}>{active === "real" ? "Real" : "Practice"}</span>}
     </Link>

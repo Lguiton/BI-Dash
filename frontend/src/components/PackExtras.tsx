@@ -1,11 +1,12 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { API_BASE, ApiError, apiFetch, getJson, postForm, postJson } from "@/lib/api";
 import { downloadFile } from "@/lib/download";
 
 const msg = (e: unknown) => (e instanceof ApiError || e instanceof Error ? e.message : "Something went wrong.");
-export const ACCEPT = ".csv,.tsv,.txt,.log,.dat,.xlsx,.xlsm,.json,.jsonl,.ndjson,.xml,.pdf,.parquet,.html,.htm";
+export const ACCEPT = acceptFor("data");
 const label = (s: string) => s.replace(/_/g, " ");
 
 type Field = { name: string; type: "date" | "text" | "number"; options?: string[]; default?: string; required: boolean };
@@ -85,7 +86,7 @@ export function FileImport({ pid, onDone }: { pid: string; onDone: (m: string) =
     <div className="space-y-2">
       {err && <ErrorBanner message={err} />}
       <div className="flex flex-wrap items-center gap-3 text-sm">
-        <input type="file" accept={ACCEPT} aria-label="Data file" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setPrev(null); }} />
+        <input type="file" accept={ACCEPT} aria-label="Data file" onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "data") : null; setErr(bad); if (bad) e.target.value = ""; setFile(bad ? null : f); setPrev(null); }} />
         <label className="flex items-center gap-1"><input type="checkbox" checked={replace} onChange={(e) => { setReplace(e.target.checked); setPrev(null); }} />Replace existing rows</label>
         <button className="btn" disabled={busy || !file} onClick={test}>{busy ? "Working…" : "Test first (sandbox)"}</button>
         <button className="btn btn-primary" disabled={busy || !file} onClick={go}>Import file</button>
@@ -157,7 +158,7 @@ export function CustomBuilder({ onDone }: { onDone: (id: string) => void }) {
     <div className="space-y-2">
       {err && <ErrorBanner message={err} />}
       <div className="flex flex-wrap items-end gap-2 text-xs">
-        <input type="file" accept={ACCEPT} aria-label="File for the new dashboard" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input type="file" accept={ACCEPT} aria-label="File for the new dashboard" onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "data") : null; setErr(bad); if (bad) e.target.value = ""; setFile(bad ? null : f); }} />
         <label className="flex flex-col gap-1">Dashboard name<input className="field" maxLength={50} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Shop sales" /></label>
         <label className="flex flex-col gap-1">Date column (optional)<input className="field" value={dateCol} onChange={(e) => setDateCol(e.target.value)} placeholder="found automatically" /></label>
         <label className="flex flex-col gap-1">Lower is better (optional)<input className="field" value={lower} onChange={(e) => setLower(e.target.value)} placeholder="e.g. cost, returns" /></label>

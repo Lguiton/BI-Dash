@@ -42,7 +42,12 @@ const PyLibPanel = dynamic(() => import("@/components/panels/PyLibPanel").then((
 const ElecHvacLab = dynamic(() => import("@/components/panels/ElecHvacLab").then((m) => m.ElecHvacLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const ItAdminLab = dynamic(() => import("@/components/panels/ItAdminLab").then((m) => m.ItAdminLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 import { JobAgentCard } from "@/components/JobAgentCard";
+import { WorkingFile } from "@/components/WorkingFile";
+import { FixLog, type FixArea } from "@/components/panels/FixLog";
+const AnalystProLab = dynamic(() => import("@/components/panels/AnalystProLab").then((m) => m.AnalystProLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const FIX_AREA: Record<string, FixArea> = { analyst: "data", scientist: "data", engineering: "data", ml: "ml", fullstack: "fullstack" };
 const SecProLab = dynamic(() => import("@/components/panels/SecProLab").then((m) => m.SecProLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const ProLab = dynamic(() => import("@/components/panels/ProLab").then((m) => m.ProLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const NetProLab = dynamic(() => import("@/components/panels/NetProLab").then((m) => m.NetProLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const CloudLab = dynamic(() => import("@/components/panels/CloudLab").then((m) => m.CloudLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const PcBuildLab = dynamic(() => import("@/components/panels/PcBuildLab").then((m) => m.PcBuildLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
@@ -344,6 +349,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
 
       <CommandBar key={sp.get("ask") ?? ""} initial={sp.get("ask") ?? ""} name={agentName} busy={chat.busy} onSend={sendFromBar} onDebate={debateFromBar} track={id} persona={chat.persona} onPersona={chat.canCfo ? chat.setPersona : undefined} />
 
+      {sp.get("run") && <WorkingFile key={sp.get("run") ?? ""} runId={sp.get("run") as string} track={id} />}
       {!sideAgent && <div role="tablist" aria-label="Workspace view" className="flex flex-wrap gap-1">
         {([["manual", "How-to manual"], ["tools", "Tools"], ["agent", "AI agent"]] as const).filter(([k]) => !work || k !== "manual").map(([k, l]) => (
           <button key={k} role="tab" aria-selected={view === k} className={`btn ${view === k ? "btn-primary" : ""}`} onClick={() => setView(k)}>{l}</button>
@@ -359,7 +365,7 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {work && <JobAgentCard track={id} />}
               <DatasetStrip careerId={id} />
               {!dash && !error && <p className="text-sm text-muted">Loading…</p>}
-              {dash && id === "analyst" && (<><AnalystPanels d={dash as unknown as AnalystDash} /><BiToolkit /><SurveyPanel /></>)}
+              {dash && id === "analyst" && (<><AnalystPanels d={dash as unknown as AnalystDash} /><AnalystProLab /><BiToolkit /><SurveyPanel /></>)}
               {dash && id === "scientist" && (<><ScientistPanels d={dash as unknown as ScientistDash} /><BiToolkit /><SurveyPanel />{!work && <CoursePanel />}</>)}
               {dash && id === "ml" && (<><MlPanels d={dash as unknown as MlDash} />{!work && <><LearnToolkit track="ml" /><CoursePanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}</>)}
               {dash && id === "engineering" && <EngineeringTabs d={dash as unknown as EngineeringDash} tab={tab} onTab={setTab} />}
@@ -371,6 +377,8 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "itsupport" && (<><ItPanel tab={tab} onTab={setTab} /><ItAdminLab /><CloudLab />{work && <KnownIssues first="support" />}</>)}
               {dash && id === "cpe" && (<><CpePanel tab={tab} onTab={setTab} /><PcBuildLab /><RoboticsLab /><ElecHvacLab /><CsLab /></>)}
               {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<PromptLibrary /><AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
+              {dash && <ProLab track={id} />}
+              {work && FIX_AREA[id] && <details className="card p-4"><summary className="cursor-pointer text-sm font-semibold">Fix log: what went wrong and what fixed it</summary><div className="mt-3"><FixLog area={FIX_AREA[id]} /></div></details>}
               {dash && !work && (
                 <section className="card p-4">
                   <h3 className="mb-2 text-sm font-semibold">Build on it: practice ideas</h3>

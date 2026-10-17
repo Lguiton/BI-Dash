@@ -48,3 +48,7 @@ Missing: Bayesian methods, causal inference and experiment design (power, A/B), 
 
 ## Suggested build order
 Batch 1: IT Support. Batch 2: Security. Batch 3: Network. Batch 4: Analyst. Then Computer Engineer depth, Full-stack, PM and Systems Analyst, then the data and AI tracks. Each batch adds labs and calculators, guides, quizzes, agent tools and tests, and is tested before the next one.
+
+
+## Status (zip 53)
+All batches in this list are built: IT Support, Security, Network, Analyst, Computer Engineer, Full-stack, PM, Systems Analyst, AI, ML, Data Engineer and Data Scientist. Items that still need a human or other software: quizzes for the new labs, and anything that depends on live data from a client's systems.

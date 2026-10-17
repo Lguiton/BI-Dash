@@ -364,8 +364,8 @@ async def post_themes_upload(file: UploadFile = File(...), top: int = 15):
     raw = await file.read(10 * 1024 * 1024 + 1)
     if len(raw) > 10 * 1024 * 1024:
         raise HTTPException(413, "File is larger than 10 MB.")
-    if not name.endswith((".txt", ".md", ".log", ".csv", ".pdf")):
-        raise HTTPException(400, "Use a .txt, .md, .log, .csv or .pdf file.")
+    if not name.endswith((".txt", ".md", ".log", ".csv", ".tsv", ".json", ".pdf")):
+        raise HTTPException(400, "Use a .txt, .md, .log, .csv, .tsv, .json or .pdf file.")
     top = max(5, min(40, top))
     def go():
         from app.services import datasets

@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { ApiError, getJson, postForm, postJson, putJson } from "@/lib/api";
@@ -128,7 +129,7 @@ export function LaptopSettings() {
       </div>
       <div className="space-y-1 text-sm">
         <h3 className="font-medium">Move data from another computer</h3>
-        <div className="flex flex-wrap items-center gap-2"><input type="file" accept=".duckdb" aria-label="Backup file to bring in" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /><button className="btn" disabled={!file} onClick={upload}>Add this backup</button></div>
+        <div className="flex flex-wrap items-center gap-2"><input type="file" accept={acceptFor("backup")} aria-label="Backup file to bring in" onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "backup") : null; setErr(bad); if (bad) e.target.value = ""; setFile(bad ? null : f); }} /><button className="btn" disabled={!file} onClick={upload}>Add this backup</button></div>
         <p className="text-xs text-muted">On the old computer, download a backup from the Backups list below, then add it here and restore it. Your settings and sign-in stay on each computer.</p>
       </div>
     </section>

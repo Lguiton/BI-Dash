@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
@@ -10,6 +11,7 @@ type Run = { id: string; file: string; name: string; created: string; mode: stri
 type Hist = { id: string; file: string; name: string; created: string; status: string; mode: string; stages_done: number; stages: number };
 type AgentMap = { stages: { key: string; agent: string; does: string; uses: string }[]; not_included: { agent: string; why: string }[] };
 type Link_ = { label: string; href: string };
+type Sug = { track: string; name: string; does: string; why: string[]; href: string };
 
 const BADGE: Record<string, string> = { ok: "var(--good)", warn: "var(--warn, #b45309)", failed: "var(--bad)", stopped: "var(--bad)", skipped: "var(--muted)", pending: "var(--muted)", not_run: "var(--muted)" };
 const LABEL: Record<string, string> = { ok: "Done", warn: "Done, with a warning", failed: "Failed", stopped: "Stopped", skipped: "Skipped", pending: "Waiting", not_run: "Not run" };
@@ -22,6 +24,7 @@ export default function IntakePage() {
   const [protect, setProtect] = useState(true);
   const [run, setRun] = useState<Run | null>(null);
   const [hist, setHist] = useState<Hist[]>([]);
+  const [sug, setSug] = useState<{ rid: string; items: Sug[] } | null>(null);
   const [agents, setAgents] = useState<AgentMap | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -59,6 +62,14 @@ export default function IntakePage() {
   };
   const open = async (id: string) => { setErr(null); try { setRun(await getJson<Run>(`/api/intake/${id}`)); } catch (e) { setErr(m(e, "Couldn't open that run.")); } };
 
+  const finished = !!run?.stages.find((s) => s.key === "report" && s.status !== "pending");
+  const runId = run?.id;
+  useEffect(() => {
+    if (!finished || !runId) return;
+    let live = true;
+    getJson<{ suggestions: Sug[] }>(`/api/intake/${runId}/suggest`).then((r) => { if (live) setSug({ rid: runId, items: r.suggestions }); }).catch(() => {});
+    return () => { live = false; };
+  }, [finished, runId]);
   const rep = run?.stages.find((s) => s.key === "report")?.details as { needs_you?: string[]; links?: Link_[] } | undefined;
   const plan = run?.stages.find((s) => s.key === "preview_plan")?.details as { plan?: string[] } | undefined;
 
@@ -67,7 +78,7 @@ export default function IntakePage() {
       <section className="card space-y-3 p-4" aria-label="Upload">
         <div className="grid gap-3 md:grid-cols-3">
           <label className="flex flex-col gap-1 text-sm">File (CSV, Excel, JSON, XML, text or log, Parquet, HTML, PDF with a table)
-            <input className="field" type="file" accept=".csv,.tsv,.txt,.log,.dat,.xlsx,.xlsm,.json,.jsonl,.ndjson,.xml,.pdf,.parquet,.html,.htm" aria-label="File" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+            <input className="field" type="file" accept={acceptFor("data")} aria-label="File" onChange={(e) => { const f = e.target.files?.[0] ?? null; const bad = f ? checkFile(f, "data") : null; setErr(bad); if (bad) e.target.value = ""; setFile(bad ? null : f); }} /></label>
           <label className="flex flex-col gap-1 text-sm">Name for this data<input className="field" value={name} maxLength={50} onChange={(e) => setName(e.target.value)} placeholder="e.g. Q3 sales" /></label>
           <label className="flex flex-col gap-1 text-sm">Column to predict (optional)<input className="field" value={target} maxLength={80} onChange={(e) => setTarget(e.target.value)} placeholder="leave blank to skip modelling" /></label>
         </div>
@@ -112,6 +123,21 @@ export default function IntakePage() {
               <h3 className="font-semibold">What needs you</h3>
               {rep.needs_you && rep.needs_you.length > 0 ? <ul className="list-disc pl-5">{rep.needs_you.map((n) => <li key={n}>{n}</li>)}</ul> : <p>Nothing.</p>}
               <div className="flex flex-wrap gap-2">{rep.links?.map((l) => <Link key={l.href + l.label} className="btn" href={l.href}>{l.label}</Link>)}</div>
+            </div>
+          )}
+          {finished && sug && sug.rid === run?.id && sug.items.length > 0 && (
+            <div className="card space-y-2 p-4 text-sm" aria-label="Work on it in a dashboard">
+              <h3 className="font-semibold">Where do you want to work on this file?</h3>
+              <p className="text-xs text-muted">Best fits first, from the columns and file name. Pick one: it opens that dashboard with your file loaded and its agent ready to start.</p>
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {sug.items.map((x) => (
+                  <li key={x.track} className="rounded border border-line p-3">
+                    <Link href={x.href} className="btn btn-primary">Open in {x.name}</Link>
+                    <div className="mt-1 text-xs">{x.does}</div>
+                    <div className="text-xs text-muted">Why: {x.why.join("; ")}</div>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           <div className="card space-y-1 p-4 text-sm"><h3 className="font-semibold">Supervisor notes</h3><ul className="list-disc pl-5 text-muted">{run.supervisor.map((n, i) => <li key={i}>{n}</li>)}</ul></div>

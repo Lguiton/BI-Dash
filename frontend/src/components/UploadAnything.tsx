@@ -6,11 +6,11 @@ import { Upload } from "lucide-react";
 import { Badge, errMsg } from "@/components/panels/kit";
 import { postFile, postJson } from "@/lib/api";
 import { useActiveJob } from "@/lib/activeJob";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 
 type Finding = { severity: string; title: string; detail: string; advice: string };
 type Ev = { events: number; distinct_ids: number; findings: Finding[]; table: { id: number; count: number; meaning: string }[]; caveat: string };
 type Kind = "event" | "business" | "text";
-const TEXT_EXT = /\.(csv|txt|log|json|tsv|md)$/i;
 const DOC_EXT = /\.(xlsx|xlsm|pdf|docx)$/i;
 const norm = (h: string) => h.trim().toLowerCase().replace(/[\s-]+/g, "_");
 
@@ -47,9 +47,8 @@ export function UploadAnything() {
   async function pick(f: File) {
     setErr(null); setEv(null); setOut(null); setKind(null); setText(""); setName(f.name); setBusy(true);
     try {
-      if (/\.evtx$/i.test(f.name)) { setErr("An .evtx file is binary. In Event Viewer choose Action, Save All Events As, and pick CSV, then upload that."); return; }
-      if (!TEXT_EXT.test(f.name) && !DOC_EXT.test(f.name)) { setErr("This button reads Excel, PDF, Word, csv, tsv, txt, log, json and md files."); return; }
-      if (f.size > 25 * 1024 * 1024) { setErr("That file is over 25 MB. Export a smaller slice."); return; }
+      const bad = checkFile(f, "anything");
+      if (bad) { setErr(bad); return; }
       let t: string;
       if (DOC_EXT.test(f.name)) {
         const r = await postFile<{ text: string; note: string }>("/api/files/text", f);
@@ -71,7 +70,7 @@ export function UploadAnything() {
 
   return (
     <div className="print:hidden">
-      <input ref={ref} type="file" accept=".csv,.tsv,.txt,.log,.json,.md,.evtx,.xlsx,.xlsm,.pdf,.docx" className="hidden" aria-label="Upload a file" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setOpen(true); void pick(f); } }} />
+      <input ref={ref} type="file" accept={acceptFor("anything")} className="hidden" aria-label="Upload a file" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) { setOpen(true); void pick(f); } }} />
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn" onClick={() => ref.current?.click()}><Upload className="h-4 w-4" aria-hidden /> Upload a file</button>
         {open && <button className="text-xs underline" onClick={() => setOpen(false)}>Hide</button>}

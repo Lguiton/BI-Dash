@@ -93,7 +93,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 0.75rem;
 }
-.field {
+.field, .input {
   background: var(--panel);
   border: 1px solid var(--line);
   color: var(--fg);

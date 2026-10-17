@@ -237,7 +237,7 @@ SLIPS = [
     "Dates like 03/04/2026 are ambiguous - the reader flags them rather than guessing.",
     "An 'accuracy' figure on a vendor page is measured on their test set; measure it on your own 20 documents.",
 ]
-NOT_BUILT = ["The OCR engine itself (image/PDF to text) - run Tesseract or a cloud OCR and paste the text here.", "Layout or table-structure detection, handwriting and signature recognition."]
+NOT_BUILT = ["The OCR engine is Tesseract on your own computer (Settings > Scanned files and capture shows whether it is installed); upload the picture or scan from any Upload button, or paste text from another OCR tool here.", "Layout or table-structure detection, handwriting and signature recognition."]
 
 SAMPLES = {
     "invoice": "Northwind Supplies Ltd\nInvoice No: INV-20417\nInvoice Date: 2026-03-14\nDue Date: 2026-04-13\nBill To: Acme Corp\n\nPaper A4 box  10 x 24.50  245.00\nToner cartridge  2 x 89.99  179.98\nDelivery  35.00\n\nSubtotal 459.98\nTax 36.80\nTotal Due 496.78\n",

@@ -5,7 +5,7 @@ import { API_BASE, apiFetch, deleteJson, getJson, postJson, putJson } from "@/li
 import { downloadFile } from "@/lib/download";
 import { Badge, Field, Section, errMsg } from "./kit";
 
-export type FixArea = "it" | "security" | "network";
+export type FixArea = "it" | "security" | "network" | "data" | "ml" | "fullstack";
 export type Fix = { id: number; area: FixArea; area_label: string; title: string; category: string; device: string; symptoms: string; cause: string; steps: string[]; result: string; result_label: string; minutes: number; tools: string; prevention: string; client: string; ticket_id: number | null; tags: string[]; created_at: string; score?: number };
 type Draft = Partial<Omit<Fix, "steps" | "tags">> & { steps?: string[]; tags?: string[] };
 type Found = { fixes: Fix[]; guides: { id: string; title: string; area: string }[] };
@@ -13,7 +13,7 @@ type List = { fixes: Fix[]; stats: { total: number; by_result: Record<string, nu
 
 const RESULTS: [string, string][] = [["fixed", "Fixed"], ["workaround", "Workaround only"], ["not_fixed", "Not fixed yet"]];
 const tone = (r: string) => (r === "fixed" ? "ok" : r === "workaround" ? "warn" : "bad");
-const HINT: Record<FixArea, string> = { it: "e.g. laptop will not charge, printer offline after router change", security: "e.g. user clicked a phishing link, admin account locked out", network: "e.g. wifi drops every hour, cannot reach the printer by name" };
+const HINT: Record<FixArea, string> = { it: "e.g. laptop will not charge, printer offline after router change", security: "e.g. user clicked a phishing link, admin account locked out", network: "e.g. wifi drops every hour, cannot reach the printer by name", data: "e.g. report total does not match the ledger, import dropped rows", ml: "e.g. model scores high in testing but fails on new data", fullstack: "e.g. login works locally but fails after deploy" };
 
 /** Shows past fixes that match the words you typed: what was tried and what worked. */
 export function SeenBefore({ q, area }: { q: string; area: FixArea }) {

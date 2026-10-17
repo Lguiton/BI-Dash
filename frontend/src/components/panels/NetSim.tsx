@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile } from "@/lib/fileCheck";
 import { useEffect, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { getJson, postJson } from "@/lib/api";
@@ -56,14 +57,17 @@ export function PcapTab() {
   useEffect(() => { getJson<R>("/api/netsim/reference").then(setInfo).catch(() => setInfo(null)); }, []);
   async function pick(f: File | undefined) {
     if (!f) return;
-    setErr(null); setRes(null); setBusy(true);
+    setErr(null); setRes(null);
+    const bad = checkFile(f, "pcap");
+    if (bad) { setErr(bad); return; }
+    setBusy(true);
     try { setRes(await postJson<R>("/api/netsim/pcap", { data: toB64(await f.arrayBuffer()) })); }
     catch (e) { setErr(errMsg(e, "Could not read that capture.")); }
     finally { setBusy(false); }
   }
   return (
     <Section title="Saved capture reader" note="Choose a .pcap or .pcapng file saved from Wireshark or tcpdump. The file is read by your own app and not sent anywhere else. Up to 6 MB.">
-      <input type="file" accept=".pcap,.pcapng,.cap" aria-label="Capture file" onChange={(e) => pick(e.target.files?.[0])} />
+      <input type="file" accept={acceptFor("pcap")} aria-label="Capture file" onChange={(e) => pick(e.target.files?.[0])} />
       {busy && <p className="mt-2 text-sm text-muted">Reading...</p>}
       {err && <ErrorBanner message={err} />}
       {res && (

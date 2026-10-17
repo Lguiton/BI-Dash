@@ -134,6 +134,12 @@ SECURITY = {
     "cloud_pick": ("need = what the client needs, e.g. email for 8 people, database for a booking app", _cloud_pick),
 }
 BI = {
+    "forecast_range": ("values = numbers oldest first (pasted), season?, horizon?, width?", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).forecast(a.get("values") or a.get("text") or "", a.get("season", 12), a.get("horizon", 3), a.get("width", 2))),
+    "cohort": ("text = lines of: customer_id, date", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).cohort(str(a["text"]))),
+    "funnel": ("text = lines of: step name, count", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).funnel(str(a["text"]))),
+    "unit_economics": ("monthly_revenue_per_customer, gross_margin_pct, monthly_churn_pct, cac", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).unit_econ(a["monthly_revenue_per_customer"], a["gross_margin_pct"], a["monthly_churn_pct"], a["cac"])),
+    "breakeven": ("fixed_costs, price, variable_cost, target_profit?", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).breakeven(a["fixed_costs"], a["price"], a["variable_cost"], a.get("target_profit", 0))),
+    "ab_test": ("a_visitors, a_conversions, b_visitors, b_conversions", lambda a: __import__("app.services.analyst_pro", fromlist=["x"]).ab_test(a["a_visitors"], a["a_conversions"], a["b_visitors"], a["b_conversions"])),
     "forecast": ("values=[numbers, 8+], horizon?, holdout?, season?", lambda a: bi_calc.forecast_compare(a["values"], int(a.get("horizon", 6)), a.get("holdout"), int(a.get("season", 0)), a.get("alpha"))),
     "variance": ("rows=[{name, budget, actual}], threshold_pct?", lambda a: bi_calc.variance(a["rows"], float(a.get("threshold_pct", 10)))),
     "profit_scenario": ("price, volume, unit_cost, fixed_cost?, shock_pct?", lambda a: bi_calc.scenario(float(a["price"]), float(a["volume"]), float(a["unit_cost"]), float(a.get("fixed_cost", 0)), None, float(a.get("shock_pct", 10)))),
@@ -315,3 +321,12 @@ def valid_job(jid) -> bool:
         return jid is not None and bool(clients.job_totals(int(jid)))
     except Exception:  # noqa: BLE001
         return False
+
+
+def _attach_prolab() -> None:
+    """Every advanced-lab calculator also becomes an agent tool for its field."""
+    from app.services import prolab, prolab_all  # noqa: F401
+    prolab.attach(BY_TRACK)
+
+
+_attach_prolab()

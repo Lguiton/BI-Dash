@@ -1,4 +1,5 @@
 "use client";
+import { acceptFor, checkFile, readableFile } from "@/lib/fileCheck";
 import { useEffect, useRef, useState } from "react";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { deleteJson, getJson, postForm, postJson, putJson } from "@/lib/api";
@@ -186,8 +187,11 @@ export function ThemesTab({ source, cols }: { source: string; cols: Col[] }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const data = up ?? r.data;
   const upload = async (f: File) => {
-    setUpBusy(true); setUpErr(null);
-    try { const fd = new FormData(); fd.append("file", f); setUp(await postForm<Themes>("/api/stats/themes/upload", fd)); } catch (e) { setUpErr(errMsg(e, "Couldn't read that file.")); } finally { setUpBusy(false); }
+    setUpErr(null);
+    const bad = checkFile(f, "text");
+    if (bad) { setUpErr(bad); return; }
+    setUpBusy(true);
+    try { const fd = new FormData(); fd.append("file", await readableFile(f)); setUp(await postForm<Themes>("/api/stats/themes/upload", fd)); } catch (e) { setUpErr(errMsg(e, "Couldn't read that file.")); } finally { setUpBusy(false); }
   };
   return (
     <div className="space-y-4">
@@ -199,7 +203,7 @@ export function ThemesTab({ source, cols }: { source: string; cols: Col[] }) {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn btn-primary" disabled={r.busy || (!text.trim() && !col && !notes)} onClick={() => { setUp(null); r.run("/api/stats/themes", { text: text || null, source: col ? source : null, text_col: col || null, include_notes: notes, top: 15 }); }}>{r.busy ? "Reading…" : "Find themes"}</button>
-        <input ref={fileRef} type="file" accept=".txt,.md,.log,.csv,.pdf" className="sr-only" aria-label="Upload a text file or PDF" onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ""; }} />
+        <input ref={fileRef} type="file" accept={acceptFor("text")} className="sr-only" aria-label="Upload a text file or PDF" onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(f); e.target.value = ""; }} />
         <button className="btn" disabled={upBusy} onClick={() => fileRef.current?.click()}>{upBusy ? "Reading…" : "Upload a file instead"}</button>
       </div>
       {(r.err || upErr) && <ErrorBanner message={(r.err || upErr) as string} />}

@@ -8,7 +8,8 @@ import zipfile
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
-from app.services import fileformats
+from app.services import fileformats, ocr
+from app.services.datasets import DataError
 
 router = APIRouter(prefix="/api/files", tags=["files"])
 MAX = 25 * 1024 * 1024
@@ -49,9 +50,21 @@ def _docx(raw: bytes) -> str:
     return re.sub(r"<[^>]+>", "", xml).replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">")
 
 
+def _scan(name: str, raw: bytes) -> tuple[str, str]:
+    try:
+        r = ocr.read(name, raw)
+    except ocr.OcrError as e:
+        raise HTTPException(e.status, e.message) from None
+    return r["text"], " ".join(r["notes"]) + " "
+
+
 @router.post("/text")
 async def to_text(file: UploadFile = File(...)):
     name = (file.filename or "").lower()
+    if re.search(r"\.(crdownload|part|partial|download|opdownload|tmp|temp)$", name):
+        raise HTTPException(400, "That is a download that hasn't finished. Wait for it to complete, then pick the finished file.")
+    if name.endswith(".xls"):
+        raise HTTPException(400, "This is an old Excel (.xls) file. Open it in Excel and Save As .xlsx or CSV.")
     raw = await file.read(MAX + 1)
     if len(raw) > MAX:
         raise HTTPException(400, "That file is over 25 MB. Export a smaller slice.")
@@ -59,11 +72,18 @@ async def to_text(file: UploadFile = File(...)):
     if name.endswith((".xlsx", ".xlsm")):
         text, note = _xlsx(raw)
     elif name.endswith(".pdf"):
-        text = fileformats.pdf_text(raw)
+        try:
+            text = fileformats.pdf_text(raw)
+        except DataError as e:
+            if "No text found" not in str(e):
+                raise
+            text, note = _scan(file.filename or name, raw)      # a scanned PDF: read the page pictures instead
+    elif name.endswith(ocr.IMAGE_EXT):
+        text, note = _scan(file.filename or name, raw)
     elif name.endswith(".docx"):
         text = _docx(raw)
     else:
-        raise HTTPException(400, "This reader handles .xlsx, .xlsm, .pdf and .docx files.")
+        raise HTTPException(400, "This reader handles .xlsx, .xlsm, .pdf, .docx and picture files (png, jpg, tif, bmp, webp).")
     if not text.strip():
-        raise HTTPException(400, "No readable text found (a scanned PDF needs OCR first).")
+        raise HTTPException(400, "No readable text found (for a scan, install Tesseract so the app can read it).")
     return {"name": file.filename, "chars": len(text), "text": text[:60000], "note": (note + ("Text was cut at 60,000 characters." if len(text) > 60000 else "")).strip()}

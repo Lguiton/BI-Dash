@@ -19,6 +19,7 @@ import { Tabs } from "@/components/panels/kit";
 import { AlertsSettings } from "@/components/panels/OpsPanels";
 import { API_BASE, ApiError, deleteJson, getJson, postJson, putJson } from "@/lib/api";
 import { BizBackup } from "@/components/BizBackup";
+import { ScanCapture } from "@/components/ScanCapture";
 import type { AiMode, BackupItem, WorkspaceInfo, WorkspaceList, WorkspaceSettings } from "@/lib/types";
 
 const MODES: [AiMode, string, string][] = [
@@ -36,6 +37,7 @@ const TABS = [
   { id: "data", label: "Data and backups" },
   { id: "alerts", label: "Alerts and reports" },
   { id: "security", label: "Security and device" },
+  { id: "scan", label: "Scanned files and capture" },
   { id: "legal", label: "Legal and compliance" },
 ];
 
@@ -100,6 +102,7 @@ function Body() {
           <BriefingSettings />
         </div>
       )}
+      {tab === "scan" && <ScanCapture />}
       {tab === "security" && (
         <div className="grid gap-4">
           <PasswordSettings />

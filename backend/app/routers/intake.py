@@ -30,6 +30,18 @@ async def start(file: UploadFile = File(...), name: str = Form(""), target: str 
     return _wrap(intake.start, raw, file.filename or "data.csv", name, target, preview, protect_pii)
 
 
+@router.get("/{rid}/suggest")
+def suggest(rid: str):
+    from app.services import intake_handoff
+    return _wrap(intake_handoff.suggest, rid)
+
+
+@router.get("/{rid}/brief")
+def brief(rid: str, track: str = "analyst"):
+    from app.services import intake_handoff
+    return _wrap(intake_handoff.brief, rid, track)
+
+
 @router.get("/{rid}")
 def one(rid: str):
     return _wrap(intake.get, rid)

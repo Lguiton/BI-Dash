@@ -7,8 +7,8 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 
 ## Next (agreed)
 - [ ] Use the dashboard for real work for a few weeks and write down what annoys you (this decides what to build next).
-- [ ] Clean-up: tighten the header so the Settings button does not wrap.
-- [ ] Extend the fix log to other fields (data, ML, full stack) if you want a record there too.
+- [x] Clean-up: header tightened. Work mode, Settings and Save page as PDF now sit beside the page title, and the menu row sits under it, so nothing wraps mid-button.
+- [x] Fix log extended to Data and BI, Machine learning and Full-stack: a "Fix log" section on the Analyst, Data Scientist, Data Engineer, ML and Full-stack dashboards in Work mode.
 
 ## Done recently
 
@@ -53,11 +53,11 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [x] Client messages (10 types, free templates plus optional AI) and a weekly "who to contact" list on Leads. Decided against a full customer service or marketing dashboard (the Marketing Dashboard is a separate tool).
 
 ## Waiting for your go-ahead
-- [ ] **Portfolio page** (sample work for prospects): a simple public-facing page, separate from the dashboard, which stays private. Starts after you finish a few practice jobs. Rules: every item labeled "sample" or "practice", no fake reviews or testimonials, no client names or data, made-up data for any sample dashboard. Use before/after, the written quote, and the job summary or checklist PDF as the pieces.
+- [x] **Sample work page** (built, zip 53): `/samples`, `samples.py`. A separate downloadable page of labelled practice work; the rules are enforced in code (sample label on every item, no emails or phone numbers, no reviews or testimonials, no outside requests). Nothing is published or sent.
 - [ ] Launcher `.bat` for the test data (after the dashboard is fully built and tested).
 - [ ] Gmail (IMAP) and Google Calendar sign-in. Last; wait until you say ready.
-- [ ] Live network capture (needs Npcap or libpcap and admin rights; your own network only; opt-in).
-- [ ] OCR for scanned files (needs Tesseract installed).
+- [x] Live network capture (built, zip 53): Settings > Scanned files and capture. Needs Npcap and administrator rights on Windows, the backend in Windows Python (not WSL), and your own network only. Headers only by default.
+- [x] OCR for scanned files (built, zip 53): needs Tesseract on the backend's computer. Every Upload button then reads photos and scanned PDFs.
 - [ ] Security review against your transcripts.
 - [ ] Optional: NLP and deep-learning "by hand" tabs.
 - [ ] Hosting online (login on, HTTPS, strong owner password).
@@ -69,5 +69,30 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - **Security**: `sec_pro.py`, `/api/secpro`, `SecProLab` (CVSS 3.1 calculator, annualized loss and control payback, risk matrix and register, pen-test scope template, OWASP Top 10, attack stages, forensic timeline, Suricata and Snort rule explainer, HIPAA, SOC 2, PCI and continuity checklists), agent tools `cvss`, `risk_ale`, `rule_explain`.
 - **Network**: `net_pro.py`, `/api/netpro`, `NetProLab` (OSPF cost, spanning tree root, IPv6 plan, EUI-64, PoE budget, fiber budget, wireless link budget, TCP speed limit, firewall rule review, VPN, QoS, SNMP and monitoring reference), agent tools `fiber_budget`, `poe_budget`, `ipv6_plan`, `firewall_review`, `tcp_limit`.
 - **Upload button** reads Excel, PDF and Word (`/api/files/text`); the text sent to the agent grew from 4,000 to 12,000 characters.
-- Still to build, in order: Analyst, Computer Engineer depth, Full-stack, PM, Systems Analyst, then AI, ML, Data Engineer and Data Scientist (see `AUDIT_GAPS.md`).
+- Advanced labs for every field are now built (see Zip 53). Nothing is left in the audit list; quizzes for the new labs are not written yet.
 - **"Agents do the job" card** (`JobAgentCard.tsx`) on every real work dashboard (all 12 tracks in Work mode) and on the field pages: pick an open job, then the field's agent and the three-AI team draft the work, with a file upload for the job. Drafts only; nothing is sent, closed or marked done. The job page and the pinned job bar already had the same buttons.
+
+## Zip 52
+- **One set of file rules for every upload button** (`frontend/src/lib/fileCheck.ts`): the same plain-English message for an unfinished download (`.crdownload`), an empty file, an old `.xls`, an `.evtx`, a zip or a wrong type, and one accepted-types list per kind (data, text, anything, csv, capture, backup). Text-only readers (security logs, IT events, theme finder) now also take Excel, PDF and Word by converting them first; security logs read UTF-16 exports; the theme finder takes .tsv and .json.
+- **Pick a dashboard after Intake** (`intake_handoff.py`, `/api/intake/{id}/suggest` and `/brief`): after a run, "Where do you want to work on this file?" ranks dashboards from the columns, types and file name. Clicking one opens it (`/tracks/<id>?view=tools&run=<id>`) with a "Your uploaded file is ready here" banner (`WorkingFile.tsx`) and one button for that dashboard's agent to start on the file (columns and first rows only, personal-data columns left out).
+
+## Analyst batch (in zip 53)
+- `analyst_pro.py`, `/api/analystpro`, `AnalystProLab` on the Analyst dashboard: forecast with a range (checked against "repeat last value"), cohorts and retention (pasted or straight from a table), funnel, Pareto, A/B test, break-even, unit economics, margins, cash runway, cash cycle, NPV and IRR, star schema from a flat table, 10 runnable window-function recipes, SQL to DAX to Tableau to Excel map, dashboard design review, metric definition card, requirements interview and page, report QA checklist and self-service rollout. Agent tools: `forecast_range`, `cohort`, `funnel`, `unit_economics`, `breakeven`, `ab_test`.
+- Held on purpose (you said when): launcher .bat (after the build is finished), Gmail and Calendar sign-in (when you say ready), hosting online. Optional: NLP and deep-learning by-hand tabs, security review against your transcripts.
+
+
+## Zip 53 (includes zips 51 and 52)
+- **Advanced labs for the remaining fields**, one shared page (`ProLab.tsx`, `/api/prolab`, `prolab.py` framework, one module per field). Every calculator is also an agent tool for that field.
+  - Computer Engineer (`prolab_cpe.py`): state machine check with Verilog, setup and hold timing, pipeline CPI, virtual memory and TLB, average memory access time, UART baud, timer prescaler, I2C pull-ups, ADC resolution and ENOB, op-amp gain, RC filter and order, buck and boost design, DC motor operating point, second-order response, PID from Ziegler-Nichols, PCB trace width, microstrip impedance, reliability and MTBF, derating, plus datasheet, embedded, HDL/FPGA, architecture, bench, standards and PCB-flow references.
+  - Full-stack (`prolab_fullstack.py`): JWT checker, OpenAPI lint, Dockerfile review, CI workflow starter, migration lint, Core Web Vitals, accessibility check and contrast, cache maths, queue sizing, password hash cost, plus auth, testing, observability, API design, git and system-design references.
+  - Project Manager (`prolab_pm.py`): Monte Carlo schedule risk, critical path, PERT, RACI check, stakeholder map, resource loading, earned value status report, pricing, plus PMBOK, retrospectives, roadmapping, agile, contracts and change references.
+  - Systems Analyst (`prolab_sysanalyst.py`): user stories, Mermaid diagrams, process lint, UAT cases, migration mapping and cutover checklist, vendor scoring, change impact, business case, data requirements, integration pattern, plus TOGAF-lite and elicitation references.
+  - AI (`prolab_ai.py`): LoRA memory, vector database size, retrieval metrics, chunking, quantization speed, KV cache, LLM cost with caching, prompt comparison, plus red team, guardrails, LLMOps and multimodal references.
+  - ML (`prolab_ml.py`): convolution shape, transformer size, LSTM parameters, exact Shapley values, tuning budget, item recommender, forecast metrics (MASE), drift (PSI), serving capacity, bandit simulation, plus experiment tracking.
+  - Data Engineer (`prolab_de.py`, track id `engineering`): Kafka sizing, Spark partitions and skew, DAG validator, data contract check, volume anomaly, warehouse cost, small-files compaction, plus lakehouse, streaming and observability references.
+  - Data Scientist (`prolab_ds.py`, track id `scientist`): Bayesian A/B, sample size, Kaplan-Meier, linear programming, distance between places, fairness audit, difference in differences, bootstrap interval, plus causal, experiment and ethics references.
+- **OCR** (`ocr.py`, `/api/ocr`): photos and scanned PDFs to text through Tesseract; the universal file reader now takes png, jpg, tif, bmp and webp and falls back to OCR for scanned PDFs. Install steps show in Settings when Tesseract is missing.
+- **Live capture** (`capture.py`, `/api/capture`): scapy capture on a chosen card, limits (60 s, 5,000 packets), a confirm box, headers only by default, summary through the existing capture reader, save as .pcap.
+- **Sample work page** (`samples.py`, `/samples`): see above.
+- Fix: the shared `.input` style was never defined (about 60 components used it), so many boxes had no border. It now matches `.field`.
+- Not live-tested: AI provider calls. Quizzes for the new labs are not written.

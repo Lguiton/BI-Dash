@@ -69,7 +69,8 @@ async def logs_file(file: UploadFile = File(...), year: int | None = Form(None))
     raw = await file.read(seclogs.MAX_BYTES + 1)
     if len(raw) > seclogs.MAX_BYTES:
         raise HTTPException(413, f"That log is over {seclogs.MAX_BYTES // (1024 * 1024)} MB. Upload a smaller slice.")
-    return _g(seclogs.analyze, raw.decode("utf-8", "replace"), year)
+    from app.services import datasets
+    return _g(seclogs.analyze, datasets.decode(raw), year)
 
 
 @router.post("/logs/search")
