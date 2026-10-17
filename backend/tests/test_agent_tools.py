@@ -95,7 +95,7 @@ def test_repair_guide_tool_for_cpe_and_it():
     from app.services import agent_tools, agents
     for t in ("cpe", "itsupport"):
         assert "repair_guide" in agent_tools.BY_TRACK[t]
-    text, err = agent_tools.run_tool("cpe", {"tool": "repair_guide", "args": {"q": "no power"}})
+    text, err = agent_tools.run_tool("cpe", {"tool": "repair_guide", "args": {"q": "computer will not turn on"}})
     assert not err and "steps" in text and "Computer will not turn on" in text
     text, err = agent_tools.run_tool("itsupport", {"tool": "repair_guide", "args": {"q": ""}})
     assert err

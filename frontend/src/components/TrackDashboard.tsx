@@ -40,6 +40,9 @@ const AiWorkbenchPanel = dynamic(() => import("@/components/panels/AiWorkbenchPa
 const GovPanel = dynamic(() => import("@/components/panels/GovPanel").then((m) => m.GovPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const PyLibPanel = dynamic(() => import("@/components/panels/PyLibPanel").then((m) => m.PyLibPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const ElecHvacLab = dynamic(() => import("@/components/panels/ElecHvacLab").then((m) => m.ElecHvacLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const CloudLab = dynamic(() => import("@/components/panels/CloudLab").then((m) => m.CloudLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const PcBuildLab = dynamic(() => import("@/components/panels/PcBuildLab").then((m) => m.PcBuildLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
+const RoboticsLab = dynamic(() => import("@/components/panels/RoboticsLab").then((m) => m.RoboticsLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const CsLab = dynamic(() => import("@/components/panels/CsLab").then((m) => m.CsLab), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const CpePanel = dynamic(() => import("@/components/panels/CpePanel").then((m) => m.CpePanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
 const SurveyPanel = dynamic(() => import("@/components/panels/SurveyPanel").then((m) => m.SurveyPanel), { loading: () => <p className="text-sm text-muted">Loading…</p> });
@@ -359,9 +362,9 @@ function TrackDashboardInner({ id }: { id: TrackId }) {
               {dash && id === "sysanalyst" && <SaPanel tab={tab} onTab={setTab} />}
               {dash && id === "fullstack" && <FullStackPanel tab={tab} onTab={setTab} />}
               {dash && id === "security" && (<><SecPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="exploited" />}</>)}
-              {dash && id === "network" && <NetPanel tab={tab} onTab={setTab} />}
-              {dash && id === "itsupport" && (<><ItPanel tab={tab} onTab={setTab} />{work && <KnownIssues first="support" />}</>)}
-              {dash && id === "cpe" && (<><CpePanel tab={tab} onTab={setTab} /><ElecHvacLab /><CsLab /></>)}
+              {dash && id === "network" && (<><NetPanel tab={tab} onTab={setTab} /><CloudLab /></>)}
+              {dash && id === "itsupport" && (<><ItPanel tab={tab} onTab={setTab} /><CloudLab />{work && <KnownIssues first="support" />}</>)}
+              {dash && id === "cpe" && (<><CpePanel tab={tab} onTab={setTab} /><PcBuildLab /><RoboticsLab /><ElecHvacLab /><CsLab /></>)}
               {dash && id === "ai" && (<><AiPanels d={dash as unknown as AiDash} />{!work && <LearnToolkit track="ai" />}<PromptLibrary /><AiWorkbenchPanel /><GovPanel /><ImplPanel />{!work && <><CoursePanel /><PyLibPanel /></>}<MlopsPanel />{!work && <><MlBuildPanel /><AiFundamentalsPanel /></>}<InferencePanel /></>)}
               {dash && !work && (
                 <section className="card p-4">

@@ -6,6 +6,7 @@ from app.services import clients as cl
 from app.services import jobfield, job_intake
 from app.services.worklog import WorkError
 from app.services import jobpage as jobs
+from app.services import jobauto
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
@@ -60,3 +61,11 @@ def summary_pdf(jid: int):
 @router.get("/{jid}/summary")
 def summary(jid: int):
     return HTMLResponse(_g(jobs.summary_html, jid), headers={"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'"})
+
+
+@router.post("/{jid}/auto")
+def auto_work(jid: int, body: dict = Body(default={})):
+    try:
+        return jobauto.run(jid, str(body.get("instructions") or ""))
+    except jobauto.AutoError as e:
+        raise HTTPException(e.status, e.message) from None

@@ -11,6 +11,7 @@ import { BusinessProfile, ServiceRates } from "@/components/BusinessSettings";
 import { PriceList } from "@/components/PriceList";
 import { QuoteBuilder } from "@/components/QuoteBuilder";
 import { PageShell } from "@/components/PageShell";
+import { ComplianceLibrary } from "@/components/ComplianceLibrary";
 import { PwaSetup } from "@/components/PwaSetup";
 import { ThemeChoice } from "@/components/ThemeChoice";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
@@ -35,6 +36,7 @@ const TABS = [
   { id: "data", label: "Data and backups" },
   { id: "alerts", label: "Alerts and reports" },
   { id: "security", label: "Security and device" },
+  { id: "legal", label: "Legal and compliance" },
 ];
 
 function Body() {
@@ -91,6 +93,7 @@ function Body() {
           <ExportEverything />
         </div>
       )}
+      {tab === "legal" && <ComplianceLibrary />}
       {tab === "alerts" && (
         <div className="grid gap-4">
           {ws && <AlertsSettings key={ws.active} />}

@@ -61,3 +61,5 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - [ ] Security review against your transcripts.
 - [ ] Optional: NLP and deep-learning "by hand" tabs.
 - [ ] Hosting online (login on, HTTPS, strong owner password).
+- Compliance library in Settings (Legal and compliance tab) with agent `compliance` tool (security, itsupport).
+- Cloud and as-a-service lab with IaC reviewer, templates, real-work checklist, quiz (IT support, Network); agent tools iac_review, cloud_pick.

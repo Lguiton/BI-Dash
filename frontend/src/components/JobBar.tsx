@@ -8,6 +8,7 @@ import { deleteJson, getJson, postJson, putJson } from "@/lib/api";
 import { useActiveJob } from "@/lib/activeJob";
 import { useStoredJson } from "@/lib/useStoredJson";
 import { downloadFile } from "@/lib/download";
+import { AgentWork } from "@/components/AgentWork";
 import { WorkTeam } from "@/components/WorkTeam";
 
 type Fld = { key: string; label: string; href: string };
@@ -229,6 +230,7 @@ export function JobBar() {
                   <button className="btn" disabled={!note.trim()} onClick={() => run(async () => { await postJson(`/api/worklog/${target.id}/log`, { text: note }); setNote(""); })}>Add note</button>
                 </div>
               )}
+              <AgentWork key={`aw${id}`} jobId={id} />
               <WorkTeam key={id} jobId={id} advice={["itsupport", "network", "security"].includes(field?.key ?? "")} />
               {o.ready_to_close && <p role="status" className="text-xs">Every step is done. You can close the job.</p>}
               <p className="text-xs text-muted">{help

@@ -30,7 +30,57 @@ NETWORK = {
     "bdp": ("mbps, rtt_ms, window_kb?", lambda a: netlab.bdp(float(a["mbps"]), float(a["rtt_ms"]), float(a.get("window_kb", 64)))),
     "config_audit": ("text = pasted router or switch config", lambda a: netlab.audit_config(str(a["text"]))),
     "capture_read": ("text = pasted packet-capture text", lambda a: netlab.read_capture(str(a["text"]))),
+    "iac_review": ("text = pasted Terraform, Ansible or similar", lambda a: _iac_review(a)),
 }
+
+def _compliance(a):
+    """Look up privacy and security rules (HIPAA, GDPR, CCPA, FTC, Nevada and more) from the built-in library."""
+    from app.services import compliance
+    q = str(a.get("q") or "").strip()
+    if len(q) < 2:
+        raise ValueError("Give a topic or law, like HIPAA, breach notice or email marketing.")
+    r = compliance.search(q, 3)
+    top = compliance.get(r["results"][0]["id"]) if r["results"] else None
+    out = {"matches": r["results"], "glossary": r.get("glossary", [])}
+    if top:
+        out["best"] = {k: top[k] for k in ("name", "applies", "duties", "penalties", "freelancer", "links")}
+    out["note"] = compliance.NOTE
+    return out
+
+
+def _iac_review(a):
+    """Check pasted Terraform, Ansible or similar text for common risky settings (open ports, hard-coded secrets, public storage)."""
+    from app.services import cloud_lab
+    return cloud_lab.review(str(a.get("text") or ""))
+
+
+def _cloud_pick(a):
+    """Suggest as-a-service models (SaaS, IaaS, PaaS, DBaaS, FaaS and more) for a described need, with what to ask first."""
+    from app.services import cloud_lab
+    return cloud_lab.pick(str(a.get("need") or a.get("q") or ""))
+
+
+def _pc_check(a):
+    """Check PC parts for compatibility (socket, RAM type, case size, GPU and cooler clearance, power supply)."""
+    from app.services import pc_build
+    return pc_build.check(dict(a))
+
+
+def _pc_psu(a):
+    from app.services import pc_build
+    return pc_build.recommend_psu(a.get("cpu_w"), a.get("gpu_w"), int(a.get("ssd", 1)), int(a.get("hdd", 0)), int(a.get("fans", 4)), int(a.get("sticks", 2)))
+
+
+def _pc_nopost(a):
+    from app.services import pc_build
+    return pc_build.diagnose(str(a.get("symptom") or a.get("q") or ""))
+
+
+def _robot(a):
+    """Robotics calculators: drive, gearbox, battery, servo, pid, arm_fk, arm_ik, diff_drive, encoder, ultrasonic."""
+    from app.services import robotics
+    return robotics.calc(str(a.get("kind") or ""), dict(a.get("args") or {}))
+
 
 def _repair_guide(a):
     """Search the built-in repair guides (the How to repair tab) and return the best match with steps, tools, safety and when to escalate."""
@@ -56,10 +106,19 @@ IT = {
     "raid": ("level, disks, size_tb", lambda a: itlab.raid(str(a["level"]), int(a["disks"]), float(a["size_tb"]))),
     "read_events": ("text = pasted Windows/system event log text", lambda a: itlab.read_events(str(a["text"]))),
     "repair_guide": ("q = symptom, e.g. no power, beeps no display, overheating", _repair_guide),
+    "pc_check": ("cpu_socket?, board_socket?, board_ram?, ram_type?, board_form?, case_form?, gpu_len_mm?, case_gpu_mm?, psu_w?", _pc_check),
+    "pc_psu": ("cpu_w, gpu_w, ssd?, hdd?, fans?, sticks?", _pc_psu),
+    "pc_nopost": ("symptom = what the PC does at power on", _pc_nopost),
+    "compliance": ("q = law or topic, e.g. HIPAA, PII, breach notice, email marketing", _compliance),
+    "iac_review": ("text = pasted Terraform, Ansible, CloudFormation or similar", _iac_review),
+    "cloud_pick": ("need = what the client needs, e.g. email for 8 people, database for a booking app", _cloud_pick),
 }
 SECURITY = {
     "analyze_logs": ("text = pasted log lines, year?", lambda a: seclogs.analyze(str(a["text"]), a.get("year"))),
     "search_logs": ("text, query?, level?, ip?", lambda a: seclogs.search(str(a["text"]), str(a.get("query", "")), str(a.get("level", "")), str(a.get("ip", "")), 40, a.get("year"))),
+    "compliance": ("q = law or topic, e.g. HIPAA, breach notice, CFAA scope", _compliance),
+    "iac_review": ("text = pasted Terraform, Ansible, CloudFormation or similar", _iac_review),
+    "cloud_pick": ("need = what the client needs, e.g. email for 8 people, database for a booking app", _cloud_pick),
 }
 BI = {
     "forecast": ("values=[numbers, 8+], horizon?, holdout?, season?", lambda a: bi_calc.forecast_compare(a["values"], int(a.get("horizon", 6)), a.get("holdout"), int(a.get("season", 0)), a.get("alpha"))),
@@ -114,6 +173,10 @@ CPE = {
     "dtc": ("code e.g. P0301", lambda a: veh_decode.dtc(str(a["code"]))),
     "obd_pid": ("pid, data_hex", lambda a: veh_decode.obd_pid(str(a["pid"]), str(a["data_hex"]))),
     "repair_guide": ("q = symptom, e.g. no power, no display, battery not charging, drive clicking", _repair_guide),
+    "pc_check": ("cpu_socket?, board_socket?, board_ram?, ram_type?, board_form?, case_form?, gpu_len_mm?, case_gpu_mm?, cooler_mm?, case_cooler_mm?, cpu_tdp?, gpu_tdp?, psu_w?", _pc_check),
+    "pc_psu": ("cpu_w, gpu_w, ssd?, hdd?, fans?, sticks?", _pc_psu),
+    "pc_nopost": ("symptom = what the PC does at power on", _pc_nopost),
+    "robot_calc": ("kind = drive|gearbox|battery|servo|pid|arm_fk|arm_ik|diff_drive|encoder|ultrasonic, args = numbers for it", _robot),
     "voltage_drop": ("amps, length_ft (one way), awg?, volts?", lambda a: elec_calc.voltage_drop(a["amps"], a["length_ft"], a.get("awg", 12), a.get("volts", 120))),
     "circuit_load": ("volts?, breaker_amps, loads = lines 'name, watts', continuous?", lambda a: elec_calc.circuit_load(a.get("volts", 120), a["breaker_amps"], a["loads"], bool(a.get("continuous")))),
     "energy_cost": ("watts, hours_per_day, rate_per_kwh?, days?", lambda a: elec_calc.energy_cost(a["watts"], a["hours_per_day"], a.get("rate_per_kwh", 0.13), a.get("days", 30))),

@@ -6,6 +6,7 @@ import { PageShell } from "@/components/PageShell";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { WorkLog } from "@/components/WorkLog";
 import { PrepDraft } from "@/components/PrepDraft";
+import { AgentWork } from "@/components/AgentWork";
 import { JobMaterials } from "@/components/JobMaterials";
 import { EivantaNote } from "@/components/EivantaNote";
 import { JobVideos } from "@/components/HowTo";
@@ -85,6 +86,7 @@ function JobView({ id }: { id: number }) {
       {o.ready_to_close && <p role="status" className="card p-3 text-sm">Every work item on this job is done. Time to close it and invoice. Scroll down to <strong>Close job</strong>.</p>}
 
       <JobMaterials jobId={id} />
+      {!done && <AgentWork key={id} jobId={id} />}
       <WorkLog jobId={id} />
       <JobChecklists jobId={id} />
       <JobVideos jobId={id} />

@@ -115,3 +115,12 @@ For reference, planning and quoting; **licensed trades do the licensed work** (h
 - **Electrical and HVAC lab** under the Computer Engineer tools: wire size and voltage drop, circuit load (with the 80% continuous rule), energy cost, rough AC sizing, AC air-temperature split check, Ohm's law, and a "who does what" table. The agent has the same calculators. A rough sizing is only a starting point; a contractor's load calculation decides.
 - Jobs with appliance, HVAC or electrical words in the title go to the Computer Engineer dashboard with matching starter steps.
 
+
+## Compliance library (Settings → Legal and compliance)
+Plain-language summaries of HIPAA, GDPR, CCPA/CPRA, FTC Act, FTC Safeguards Rule, GLBA, PCI DSS, CAN-SPAM, TCPA, COPPA, FERPA, Nevada NRS 603A, state breach laws, CFAA, SOX and NIST/ISO, each with who it applies to, key duties, penalties, what it means for you and official links. Also a before-every-job checklist and a PII/PHI glossary. Summaries only, not the legal text and not legal advice. The security, IT support and CPE-adjacent agents can look it up with the `compliance` tool. Data lives in `services/compliance.py`; update it and `REVIEWED` when laws change.
+
+## Cloud and "as a service" lab (IT Support and Network dashboards)
+Reference for IaaS, PaaS, SaaS, DBaaS, FaaS/serverless, CaaS (containers), BaaS, DaaS (desktop and data), SECaaS, IDaaS, backup, DRaaS, NaaS, storage, communications (CaaS/UCaaS/CCaaS), AIaaS, RMM/MSP, XaaS and IaC. Tabs: service models, who manages what (shared responsibility), pick one for a client need, Infrastructure as Code (lesson, pasted-IaC risk reviewer, Terraform/Ansible/router-backup templates, .gitignore, change plan), a real-work safe-change checklist, and a quiz. Nothing connects to a cloud or runs pasted code. Agents get `iac_review` and `cloud_pick` tools (IT support, network, security). Data in `services/cloud_lab.py`.
+
+## Computer Engineer: PC build, board-level repair, robotics
+PC build lab (compatibility, power supply sizing, build and first-boot checklist, no-POST diagnostic), 10 board-level repair guides in How to repair (micro-soldering, hot air, schematics, shorts, rails, USB-C, backlight, BGA, liquid, traces), and a robotics lab (drive motor, gearbox, battery, servo, arm kinematics, differential drive, encoder, ultrasonic, PID sandbox, sensors, drivers, wiring, safety, starter projects). Agent tools: pc_check, pc_psu, pc_nopost (CPE and IT support), robot_calc (CPE).
