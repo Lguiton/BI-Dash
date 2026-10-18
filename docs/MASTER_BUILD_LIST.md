@@ -96,3 +96,8 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - **Sample work page** (`samples.py`, `/samples`): see above.
 - Fix: the shared `.input` style was never defined (about 60 components used it), so many boxes had no border. It now matches `.field`.
 - Not live-tested: AI provider calls. Quizzes for the new labs are not written.
+
+## Launcher (after zip 53)
+- `Start BI Dashboard.bat` in the project folder: double-click menu to start (everyday: backend and screen in WSL, scanned-file reading works), start with live capture (asks for administrator, backend in Windows `.venv-win`, screen in WSL), stop everything, or open the dashboard. Builds the screen if it has not been built. Never connects to the internet. Not tested on Windows from here.
+- Fixed headers-only capture: records keep 128 bytes but remember the real packet length (matches tcpdump), so Wireshark and the summary no longer see false gaps.
+- Capture download is now a clear button.

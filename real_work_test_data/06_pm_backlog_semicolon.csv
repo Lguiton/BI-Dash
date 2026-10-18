@@ -1,0 +1,9 @@
+id;title;owner;estimate_days;status;start;due;risk
+T01;Kickoff and scope;Lamarcus;2;Done;09/01/2026;09/02/2026;Low
+T02;Gather requirements;Lamarcus;4;Done;09/03/2026;09/08/2026;Medium
+T03;Design data model;Lamarcus;3;In progress;09/09/2026;09/11/2026;Medium
+T04;Build import;Lamarcus;5;In progress;09/12/2026;09/18/2026;High
+T05;Build dashboard;Lamarcus;6;To do;09/19/2026;09/28/2026;Medium
+T06;User testing;Client;3;To do;09/29/2026;10/01/2026;High
+T07;Fix findings;Lamarcus;3;To do;10/02/2026;10/06/2026;Medium
+T08;Handover and training;Lamarcus;2;To do;10/07/2026;10/08/2026;Low

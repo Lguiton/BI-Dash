@@ -1,0 +1,68 @@
+{
+ "openapi": "3.0.3",
+ "info": {
+  "title": "Sample Co Orders API (made-up)",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/orders": {
+   "get": {
+    "summary": "List orders",
+    "responses": {
+     "200": {
+      "description": "OK"
+     }
+    }
+   },
+   "post": {
+    "summary": "Create an order",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OrderIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Created"
+     }
+    }
+   }
+  },
+  "/orders/{id}": {
+   "get": {
+    "responses": {
+     "200": {
+      "description": "OK"
+     }
+    }
+   },
+   "delete": {
+    "summary": "Delete an order",
+    "responses": {
+     "204": {
+      "description": "Deleted"
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "OrderIn": {
+    "type": "object",
+    "properties": {
+     "customer": {
+      "type": "string"
+     },
+     "qty": {
+      "type": "integer"
+     }
+    }
+   }
+  }
+ }
+}
