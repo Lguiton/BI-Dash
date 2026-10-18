@@ -14,7 +14,7 @@ TIMEOUT = 90
 
 INSTALL = {
     "windows": ["Install Tesseract for Windows from the UB Mannheim build: search 'tesseract UB Mannheim' and run the installer (keep the English language option ticked).",
-                "The default folder is C:\\Program Files\\Tesseract-OCR. Add it to your PATH, or set the TESSERACT_CMD setting to the full path of tesseract.exe.",
+                "The default folder is C:\\Program Files\\Tesseract-OCR. The app looks there by itself, so there is no need to change PATH. If you installed it somewhere else, set TESSERACT_CMD in backend/.env to the full path of tesseract.exe. Then restart the backend.",
                 "If the dashboard backend runs inside WSL, install it there instead: sudo apt update && sudo apt install -y tesseract-ocr"],
     "wsl_or_linux": ["sudo apt update && sudo apt install -y tesseract-ocr", "Other languages: sudo apt install tesseract-ocr-spa (Spanish), tesseract-ocr-fra, and so on."],
     "check": "Run  tesseract --version  in the same terminal that starts the backend. If it prints a version, restart the backend and reload this page.",
@@ -27,11 +27,39 @@ class OcrError(Exception):
         self.message, self.status = message, status
 
 
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
+def _windows_paths() -> list[str]:
+    """Where the Windows installers put tesseract.exe, so it is found even when it was never added to PATH."""
+    roots = [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)"), os.environ.get("LOCALAPPDATA")]
+    out = [os.path.join(r, "Tesseract-OCR", "tesseract.exe") for r in roots if r]
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        out.append(os.path.join(local, "Programs", "Tesseract-OCR", "tesseract.exe"))
+    return out + [r"C:\Program Files\Tesseract-OCR\tesseract.exe", r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"]
+
+
 def _cmd() -> str | None:
-    c = os.environ.get("TESSERACT_CMD", "").strip()
+    c = os.environ.get("TESSERACT_CMD", "").strip().strip('"')
     if c:
         return c if (os.path.isfile(c) or shutil.which(c)) else None
-    return shutil.which("tesseract")
+    found = shutil.which("tesseract")
+    if found:
+        return found
+    if _is_windows():
+        for p in _windows_paths():
+            if os.path.isfile(p):
+                return p
+    return None
+
+
+def _run(args, **kw):
+    """subprocess.run that does not flash a console window on Windows."""
+    if _is_windows():
+        kw.setdefault("creationflags", 0x08000000)       # CREATE_NO_WINDOW
+    return subprocess.run(args, **kw)
 
 
 def status() -> dict:
@@ -40,9 +68,9 @@ def status() -> dict:
         return {"available": False, "version": None, "languages": [], "install": INSTALL,
                 "message": "Tesseract is not installed on the computer that runs the backend, so scanned files and photos can't be read yet."}
     try:
-        v = subprocess.run([cmd, "--version"], capture_output=True, text=True, timeout=15)
+        v = _run([cmd, "--version"], capture_output=True, text=True, timeout=15)
         ver = (v.stdout or v.stderr).splitlines()[0] if (v.stdout or v.stderr) else "unknown"
-        langs = subprocess.run([cmd, "--list-langs"], capture_output=True, text=True, timeout=15).stdout.splitlines()[1:]
+        langs = _run([cmd, "--list-langs"], capture_output=True, text=True, timeout=15).stdout.splitlines()[1:]
     except (OSError, subprocess.TimeoutExpired):
         return {"available": False, "version": None, "languages": [], "install": INSTALL, "message": "Tesseract was found but would not start."}
     return {"available": True, "version": ver, "languages": [x.strip() for x in langs if x.strip() and x.strip() != "osd"], "install": INSTALL, "message": "Ready."}
@@ -61,7 +89,7 @@ def _ocr_png(cmd: str, png: bytes, lang: str) -> tuple[str, float | None]:
         with open(src, "wb") as f:
             f.write(png)
         try:
-            p = subprocess.run([cmd, src, "stdout", "-l", lang, "--psm", "3", "tsv"], capture_output=True, text=True, timeout=TIMEOUT)
+            p = _run([cmd, src, "stdout", "-l", lang, "--psm", "3", "tsv"], capture_output=True, text=True, timeout=TIMEOUT)
         except subprocess.TimeoutExpired:
             raise OcrError("Reading that page took too long. Try a smaller or clearer image.") from None
         if p.returncode != 0:

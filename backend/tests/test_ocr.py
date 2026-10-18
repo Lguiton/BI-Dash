@@ -63,3 +63,22 @@ def test_blank_and_bad_inputs():
     assert client.post("/api/ocr/read", files={"file": ("x.png", b"not an image", "image/png")}).status_code == 400
     assert client.post("/api/ocr/read", files={"file": ("x.txt", b"hello", "text/plain")}).status_code == 400
     assert client.post("/api/ocr/read", files={"file": ("a.png", picture(), "image/png")}, data={"lang": "../etc"}).status_code == 400
+
+
+def test_finds_tesseract_in_the_windows_install_folder(monkeypatch, tmp_path):
+    """On Windows the installer does not always add itself to PATH, so the app looks in the usual folders."""
+    from app.services import ocr
+    exe = tmp_path / "Tesseract-OCR" / "tesseract.exe"
+    exe.parent.mkdir()
+    exe.write_text("")
+    monkeypatch.delenv("TESSERACT_CMD", raising=False)
+    monkeypatch.setattr(ocr.shutil, "which", lambda _n: None)
+    monkeypatch.setattr(ocr, "_is_windows", lambda: True)
+    monkeypatch.setenv("ProgramFiles", str(tmp_path))
+    assert ocr._cmd() == str(exe)
+    monkeypatch.setattr(ocr, "_is_windows", lambda: False)             # on Linux or WSL the same folder is not searched
+    assert ocr._cmd() is None
+    monkeypatch.setenv("TESSERACT_CMD", f'"{exe}"')                     # an explicit setting wins, quotes tolerated
+    assert ocr._cmd() == str(exe)
+    monkeypatch.setenv("TESSERACT_CMD", str(tmp_path / "missing.exe"))
+    assert ocr._cmd() is None
