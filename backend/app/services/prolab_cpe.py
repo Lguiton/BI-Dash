@@ -339,6 +339,54 @@ def derate(a):
 tool(T, "derating", "Derating check", "Is a part run safely under its rating?", [("rated", "Rated value (V, A or W)", 0.25), ("actual", "Actual value", 0.15), ("derating_pct", "Allowed % of rating", 50)], derate)
 
 # ------------------------------------------------------------------ reference tabs
+
+
+# ------------------------------------------------------------------ real code checks (compile and simulate)
+def verilog_tool(a):
+    from app.services import codecheck
+    try:
+        return codecheck.verilog_sim(txt(a, "source", "the Verilog source", limit=60000), str(a.get("top", "")).strip())
+    except codecheck.CodeError as e:
+        raise ProError(e.message, e.status) from None
+
+
+def c_tool(a):
+    from app.services import codecheck
+    try:
+        return codecheck.c_check(txt(a, "source", "the C source", limit=60000), str(a.get("stdin", "")), str(a.get("run", "no")).strip().lower() in ("yes", "y", "true", "1", "run"))
+    except codecheck.CodeError as e:
+        raise ProError(e.message, e.status) from None
+
+
+_V_DEMO = """module adder(input [3:0] a, b, output [4:0] s);
+  assign s = a + b;
+endmodule
+
+module tb;
+  reg [3:0] a, b; wire [4:0] s;
+  adder u(.a(a), .b(b), .s(s));
+  initial begin
+    a = 3;  b = 4;  #1; if (s !== 7)  $display("FAIL 3+4=%d", s);   else $display("PASS 3+4");
+    a = 15; b = 15; #1; if (s !== 30) $display("FAIL 15+15=%d", s); else $display("PASS 15+15");
+    $finish;
+  end
+endmodule
+"""
+_C_DEMO = """#include <stdio.h>
+
+int main(void) {
+    int a[3] = {1, 2, 3};
+    int sum = 0;
+    for (int i = 0; i < 3; i++) sum += a[i];
+    printf("sum=%d\\n", sum);
+    return 0;
+}
+"""
+tool(T, "verilog_sim", "Verilog simulator (real)", "Compile your design with Icarus Verilog and run its testbench. Reports failing checks, endless clocks and unknown (x) values. Needs iverilog installed.",
+     [("source", "Paste the design and its testbench", _V_DEMO, "area"), ("top", "Top module (blank = the testbench)", "")], verilog_tool)
+tool(T, "c_check", "C compile, lint and run (real)", "Compile C with strict warnings and, if you choose, run it with memory and undefined-behavior checks. Needs gcc installed. Only run code you have read.",
+     [("source", "Paste the C source", _C_DEMO, "area"), ("stdin", "Input to feed the program (optional)", "", "area"), ("run", "Run it too? yes or no", "no")], c_tool)
+
 ref(T, "datasheet", "Reading a datasheet", [
     {"title": "Read in this order", "items": ["Front page: what it is, key features, package, and the typical application.", "Absolute maximum ratings: limits that damage the part. Never design to these.", "Recommended operating conditions and electrical characteristics: what you design to, with min, typical and max.", "Pin description and the application circuit: copy the reference design first.", "Timing diagrams and tables: setup, hold, rise, propagation, with the test conditions.", "Thermal data: junction-to-ambient and the power the package can dissipate.", "Layout guidelines and errata: the cause of most surprise problems."]},
     {"title": "What to check before you buy", "items": ["Operating voltage and I/O level match your system (3.3 V vs 5 V).", "Maximum current on each pin and on the whole chip.", "Temperature grade (commercial, industrial, automotive).", "Package you can solder or have assembled.", "Availability and a second source; lifecycle status (active, not recommended for new designs).", "Worst-case values, not typical: typical is not guaranteed."]}])

@@ -38,9 +38,6 @@ export function JobBar() {
   const [bill, setBill] = useState<Bill>("time");
   const [confirm, setConfirm] = useState(false);
   const [closed, setClosed] = useState<string | null>(null);
-  const [helpBusy, setHelpBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [helpText, setHelpText] = useState<{ step: string; text: string } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [loadedAt, setLoadedAt] = useState(() => Date.now());
 
@@ -111,40 +108,6 @@ export function JobBar() {
     if (j.field) router.push(j.field.href);
   };
   const target = current ?? items[items.length - 1];
-  const copyText = async (text: string) => {
-    try { await navigator.clipboard.writeText(text); setMsg("Copied to the clipboard."); }
-    catch {
-      const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
-      let ok = false; try { ok = document.execCommand("copy"); } catch { ok = false; }
-      document.body.removeChild(ta);
-      setMsg(ok ? "Copied to the clipboard." : "Couldn't copy. Select the text and press Ctrl+C.");
-    }
-    setTimeout(() => setMsg(null), 3000);
-  };
-  const saveAsNotes = async (text: string) => {
-    if (!target) { setMsg("Add a step first, then save the draft as a note on it."); return; }
-    const parts: string[] = []; let cur = "";
-    for (const line of text.split("\n")) {
-      if ((cur + "\n" + line).length > 480 && cur) { parts.push(cur.trim()); cur = line; } else cur = cur ? cur + "\n" + line : line;
-    }
-    if (cur.trim()) parts.push(cur.trim());
-    const use = parts.filter(Boolean).slice(0, 8);
-    try {
-      for (const p of use) await postJson(`/api/worklog/${target.id}/log`, { text: p.slice(0, 500) });
-      setTick((t) => t + 1);
-      setMsg(`Saved as ${use.length} note${use.length === 1 ? "" : "s"} on "${target.title.slice(0, 40)}".${parts.length > use.length ? " The rest was too long, use Copy for it." : ""}`);
-    } catch (e) { setMsg(errMsg(e, "That didn't save.")); }
-    setTimeout(() => setMsg(null), 5000);
-  };
-  const nextStep = async () => {
-    if (!current || helpBusy) return;
-    setErr(null); setHelpBusy(true); setHelpText(null);
-    try {
-      const track = field?.key ?? "itsupport";
-      const r = await postJson<{ reply: string }>(`/api/agents/${track}/chat`, { message: `Help me with the current step of this job: "${current.title}". Use the job details, my tools and my past fixes. Give concrete next actions and what to check. Draft only.`, history: [], job_id: id });
-      setHelpText({ step: current.title, text: r.reply });
-    } catch (e) { setErr(errMsg(e, "The agent couldn't help with that step.")); } finally { setHelpBusy(false); }
-  };
   const close = () => run(async () => {
     const r = await postJson<{ invoice: { number: string } | null; note: string }>(`/api/jobs/${id}/close`, { bill });
     setClosed([r.invoice ? `Job closed. Draft invoice ${r.invoice.number} created.` : "Job closed.", r.note].filter(Boolean).join(" ")); setConfirm(false);
@@ -209,20 +172,8 @@ export function JobBar() {
                 <input ref={stepRef} className="input min-w-56 flex-1" aria-label="Add a step" placeholder="Add a step" value={step} onChange={(e) => setStep(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && step.trim()) run(async () => { await postJson("/api/worklog", { title: step, status: "todo", job_id: id }); setStep(""); }); }} />
                 <button className="btn" disabled={!step.trim()} onClick={() => run(async () => { await postJson("/api/worklog", { title: step, status: "todo", job_id: id }); setStep(""); })}>Add step</button>
               </div>
-              {current && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="btn" disabled={helpBusy} onClick={nextStep}>{helpBusy ? "Working…" : "Do the next step"}</button>
-                  <span className="text-xs text-muted">Drafts help for &quot;{current.title.slice(0, 40)}&quot;. Nothing changes on its own.</span>
-                </div>
-              )}
-              {helpText && (
-                <div className="space-y-1 rounded border border-line p-2 text-sm" role="status">
-                  <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted">AI draft for &quot;{helpText.step.slice(0, 50)}&quot; (can be wrong, check it)</span><button className="text-xs underline" onClick={() => setHelpText(null)}>Hide</button></div>
-                  <pre className="whitespace-pre-wrap font-sans text-sm">{helpText.text}</pre>
-                  <button className="btn" onClick={() => void copyText(helpText.text)}>Copy</button>
-                  <button className="btn" onClick={() => void saveAsNotes(helpText.text)}>Save as note</button>
-                  {msg && <p role="status" className="text-xs">{msg}</p>}
-                </div>
+              {id != null && (
+                <p className="text-xs"><Link href={`/workroom?id=${id}`} className="btn btn-primary">Open the Work Room</Link> <span className="text-muted">Your checklist on one side, the agents&apos; finished work on the other.</span></p>
               )}
               {target && (
                 <div className="flex flex-wrap gap-2">

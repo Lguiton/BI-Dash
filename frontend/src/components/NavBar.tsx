@@ -143,6 +143,7 @@ export function NavBar() {
         <Plain href="/" label="Home" Icon={Home} active={path === "/"} />
         {mode === "work" ? (
           <>
+            <Plain href="/workroom" label="Work Room" Icon={ClipboardCheck} active={path === "/workroom"} />
             <Plain href="/clients" label="Clients" Icon={Briefcase} active={path === "/clients"} />
             <Plain href="/money" label="Money" Icon={Wallet} active={path === "/money"} />
             <Plain href="/leads" label="Leads" Icon={UserPlus} active={path === "/leads"} />

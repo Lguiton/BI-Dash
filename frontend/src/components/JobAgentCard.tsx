@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AgentWork } from "@/components/AgentWork";
 import { WorkTeam } from "@/components/WorkTeam";
-import { UploadAnything } from "@/components/UploadAnything";
+import { WorkRoom } from "@/components/WorkRoom";
+import { StartBox } from "@/components/StartBox";
 import { getJson } from "@/lib/api";
 import { useActiveJob } from "@/lib/activeJob";
 
@@ -26,8 +26,9 @@ export function JobAgentCard({ track }: { track: string }) {
     <section className="card space-y-3 p-4" aria-label="Agents do the job">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-semibold">Agents do the job</h2>
-        <span className="text-xs text-muted">Pick a job. The agent drafts the work for each open step. You check it, and nothing is sent to a client.</span>
+        <span className="text-xs text-muted">Paste an issue or pick a job. The agents do the steps while you work your checklist. Nothing is sent to a client.</span>
       </div>
+      <StartBox onStarted={(id) => { setActive(id); setJobs(null); getJson<{ jobs: OpenJob[] }>("/api/clients/open-jobs").then((r) => setJobs(r.jobs)).catch(() => setJobs([])); }} />
       {jobs === null && <p className="text-sm text-muted">Loading jobs…</p>}
       {jobs !== null && jobs.length === 0 && (
         <p className="text-sm">No open jobs yet. <Link href="/intake" className="underline">Paste a client request to start one</Link>, or use Start job on <Link href="/" className="underline">Home</Link>.</p>
@@ -44,12 +45,8 @@ export function JobAgentCard({ track }: { track: string }) {
       {sample && <p className="text-xs text-muted">Practice workspace: nothing here is real.</p>}
       {current && (
         <div className="space-y-3">
-          <AgentWork key={`ja${current.id}`} jobId={current.id} />
+          <WorkRoom key={`wr${current.id}`} jobId={current.id} />
           <WorkTeam key={`jt${current.id}`} jobId={current.id} advice={["itsupport", "network", "security"].includes(track)} />
-          <div className="space-y-1 border-t border-line pt-2">
-            <p className="text-xs text-muted">Have a file for this job (Excel, PDF, Word, csv or a log)? Read it here and ask the agent about it.</p>
-            <UploadAnything />
-          </div>
           <p className="text-xs"><Link href={`/job?id=${current.id}`} className="underline">Open the full job page</Link> for steps, timer and closing.</p>
         </div>
       )}

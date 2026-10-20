@@ -22,4 +22,3 @@ computer_control.enabled
 # real uploads and local app data must never be committed (any workspace name)
 backend/data/bi_warehouse*
 backend/data/*_intake/
-real_work_test_data*

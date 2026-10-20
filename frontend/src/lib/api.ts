@@ -59,9 +59,10 @@ export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T>
   return (await res.json()) as T;
 }
 
-export async function postFile<T>(path: string, file: File): Promise<T> {
+export async function postFile<T>(path: string, file: File, fields?: Record<string, string>): Promise<T> {
   const body = new FormData();
   body.append("file", file);
+  for (const [k, v] of Object.entries(fields ?? {})) body.append(k, v);
   let res: Response;
   try {
     res = await apiFetch(`${API_BASE}${path}`, { method: "POST", body });

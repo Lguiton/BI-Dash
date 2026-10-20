@@ -101,3 +101,15 @@ What is done, what is next, and what is waiting on a go-ahead. Update this file 
 - `Start BI Dashboard.bat` in the project folder: double-click menu to start (everyday: backend and screen in WSL, scanned-file reading works), start with live capture (asks for administrator, backend in Windows `.venv-win`, screen in WSL), stop everything, or open the dashboard. Builds the screen if it has not been built. Never connects to the internet. Not tested on Windows from here.
 - Fixed headers-only capture: records keep 128 bytes but remember the real packet length (matches tcpdump), so Wireshark and the summary no longer see false gaps.
 - Capture download is now a clear button.
+
+## After zip 54 (held, not yet in a zip)
+- OCR now finds Tesseract in the usual Windows install folders (and honours `TESSERACT_CMD`), so the Windows backend used for live capture can read scans too once Tesseract for Windows is installed. No console window flashes.
+- Drills added as tests (`test_concurrency_dr.py`): the pipeline runs while the SQL Lab and the dashboard read at the same time with no errors; a table is deleted and a backup restore brings back the same rows.
+
+## Held for zip 55 (not yet in a zip): Autopilot and Work Room
+- `services/autopilot.py` + `/api/autopilot/run`: upload a file, every fitting analysis runs (A/B test with sample-size note, group compare, trend, correlations, data quality, PM status, ML baseline vs models with leakage removal, security log, pcap, event log, OpenAPI lint, CAN decode, document outline). Reports ran/skipped/failed with plain English and caveats; writes nothing.
+- `services/workroom.py` + `/api/workroom/*` + `/workroom` page + `WorkRoom.tsx`/`StartBox.tsx`: paste a client issue or "build/fix X" -> job and ordered steps -> agents work every step in the background (file analysis fed to them), build on earlier steps, then draft the client reply. Two screens (My checklist / Agents' work, or side by side). Agents never tick a step, send anything or touch equipment.
+- "Do the next step" button removed from the job bar (link to the Work Room instead). Work Room replaces the old agent card on each field page.
+- Tests: test_autopilot (7), test_workroom (4). Full backend suite passed apart from one race, fixed (run state is read before saved results).
+- Not verified: live AI provider calls; the Next.js production build (sandbox cannot fetch Google Fonts; tsc and eslint are clean).
+- Code checks (held for zip 55): `services/codecheck.py`, two new Computer Engineering lab tools ("Verilog simulator (real)", "C compile, lint and run (real)"), Autopilot routes for .v/.sv/.c files, and the Work Room now compiles/simulates code blocks the agents write (C is only compiled automatically, never run; Verilog with $system/file/include is refused). Needs `sudo apt install iverilog build-essential` in WSL (Windows: MSYS2 gcc, Icarus Verilog). Tests: tests/test_codecheck.py (8).

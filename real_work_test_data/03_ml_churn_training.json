@@ -1,0 +1,2405 @@
+{
+ "note": "Made-up churn training set (Sample Co). Predict churned; beat the baseline.",
+ "records": [
+  {
+   "customer_id": "C0001",
+   "tenure_months": 30,
+   "support_tickets_90d": 4,
+   "monthly_spend": 150.25,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0002",
+   "tenure_months": 39,
+   "support_tickets_90d": 2,
+   "monthly_spend": 193.47,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0003",
+   "tenure_months": 28,
+   "support_tickets_90d": 5,
+   "monthly_spend": 86.03,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0004",
+   "tenure_months": 49,
+   "support_tickets_90d": 1,
+   "monthly_spend": 42.59,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0005",
+   "tenure_months": 42,
+   "support_tickets_90d": 0,
+   "monthly_spend": 38.1,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0006",
+   "tenure_months": 47,
+   "support_tickets_90d": 5,
+   "monthly_spend": 130.51,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0007",
+   "tenure_months": 43,
+   "support_tickets_90d": 6,
+   "monthly_spend": 175.11,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0008",
+   "tenure_months": 24,
+   "support_tickets_90d": 0,
+   "monthly_spend": 35.94,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0009",
+   "tenure_months": 5,
+   "support_tickets_90d": 7,
+   "monthly_spend": 34.37,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0010",
+   "tenure_months": 55,
+   "support_tickets_90d": 7,
+   "monthly_spend": 37.84,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0011",
+   "tenure_months": 2,
+   "support_tickets_90d": 0,
+   "monthly_spend": 125.63,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0012",
+   "tenure_months": 28,
+   "support_tickets_90d": 4,
+   "monthly_spend": 186.18,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0013",
+   "tenure_months": 53,
+   "support_tickets_90d": 5,
+   "monthly_spend": 109.14,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0014",
+   "tenure_months": 17,
+   "support_tickets_90d": 4,
+   "monthly_spend": 71.35,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0015",
+   "tenure_months": 4,
+   "support_tickets_90d": 3,
+   "monthly_spend": 179.28,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0016",
+   "tenure_months": 26,
+   "support_tickets_90d": 5,
+   "monthly_spend": 145.09,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0017",
+   "tenure_months": 24,
+   "support_tickets_90d": 5,
+   "monthly_spend": 162.35,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0018",
+   "tenure_months": 18,
+   "support_tickets_90d": 8,
+   "monthly_spend": 174.34,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0019",
+   "tenure_months": 51,
+   "support_tickets_90d": 1,
+   "monthly_spend": 36.78,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0020",
+   "tenure_months": 36,
+   "support_tickets_90d": 0,
+   "monthly_spend": 148.01,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0021",
+   "tenure_months": 48,
+   "support_tickets_90d": 7,
+   "monthly_spend": 172.71,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0022",
+   "tenure_months": 45,
+   "support_tickets_90d": 2,
+   "monthly_spend": 85.49,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0023",
+   "tenure_months": 38,
+   "support_tickets_90d": 7,
+   "monthly_spend": 94.43,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0024",
+   "tenure_months": 11,
+   "support_tickets_90d": 2,
+   "monthly_spend": 58.31,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0025",
+   "tenure_months": 22,
+   "support_tickets_90d": 0,
+   "monthly_spend": 47.54,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0026",
+   "tenure_months": 40,
+   "support_tickets_90d": 1,
+   "monthly_spend": 174.56,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0027",
+   "tenure_months": 47,
+   "support_tickets_90d": 1,
+   "monthly_spend": 161.54,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0028",
+   "tenure_months": 36,
+   "support_tickets_90d": 4,
+   "monthly_spend": 130.42,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0029",
+   "tenure_months": 24,
+   "support_tickets_90d": 1,
+   "monthly_spend": 169.74,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0030",
+   "tenure_months": 16,
+   "support_tickets_90d": 3,
+   "monthly_spend": 161.57,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0031",
+   "tenure_months": 33,
+   "support_tickets_90d": 2,
+   "monthly_spend": 40.0,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0032",
+   "tenure_months": 3,
+   "support_tickets_90d": 4,
+   "monthly_spend": 196.22,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0033",
+   "tenure_months": 5,
+   "support_tickets_90d": 0,
+   "monthly_spend": 186.79,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0034",
+   "tenure_months": 37,
+   "support_tickets_90d": 6,
+   "monthly_spend": 117.68,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0035",
+   "tenure_months": 34,
+   "support_tickets_90d": 7,
+   "monthly_spend": 65.85,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0036",
+   "tenure_months": 20,
+   "support_tickets_90d": 5,
+   "monthly_spend": 31.2,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0037",
+   "tenure_months": 14,
+   "support_tickets_90d": 8,
+   "monthly_spend": 103.74,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0038",
+   "tenure_months": 28,
+   "support_tickets_90d": 8,
+   "monthly_spend": 65.7,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0039",
+   "tenure_months": 27,
+   "support_tickets_90d": 4,
+   "monthly_spend": 143.5,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0040",
+   "tenure_months": 24,
+   "support_tickets_90d": 0,
+   "monthly_spend": 167.66,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0041",
+   "tenure_months": 19,
+   "support_tickets_90d": 1,
+   "monthly_spend": 156.19,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0042",
+   "tenure_months": 11,
+   "support_tickets_90d": 8,
+   "monthly_spend": 190.46,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0043",
+   "tenure_months": 40,
+   "support_tickets_90d": 7,
+   "monthly_spend": 167.48,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0044",
+   "tenure_months": 17,
+   "support_tickets_90d": 3,
+   "monthly_spend": 164.46,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0045",
+   "tenure_months": 46,
+   "support_tickets_90d": 0,
+   "monthly_spend": 92.77,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0046",
+   "tenure_months": 41,
+   "support_tickets_90d": 8,
+   "monthly_spend": 143.79,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0047",
+   "tenure_months": 60,
+   "support_tickets_90d": 0,
+   "monthly_spend": 38.67,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0048",
+   "tenure_months": 48,
+   "support_tickets_90d": 7,
+   "monthly_spend": 173.95,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0049",
+   "tenure_months": 55,
+   "support_tickets_90d": 3,
+   "monthly_spend": 92.17,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0050",
+   "tenure_months": 59,
+   "support_tickets_90d": 5,
+   "monthly_spend": 53.39,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0051",
+   "tenure_months": 17,
+   "support_tickets_90d": 4,
+   "monthly_spend": 197.73,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0052",
+   "tenure_months": 41,
+   "support_tickets_90d": 8,
+   "monthly_spend": 86.95,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0053",
+   "tenure_months": 44,
+   "support_tickets_90d": 8,
+   "monthly_spend": 129.9,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0054",
+   "tenure_months": 30,
+   "support_tickets_90d": 8,
+   "monthly_spend": 159.61,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0055",
+   "tenure_months": 33,
+   "support_tickets_90d": 3,
+   "monthly_spend": 55.15,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0056",
+   "tenure_months": 36,
+   "support_tickets_90d": 1,
+   "monthly_spend": 78.58,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0057",
+   "tenure_months": 17,
+   "support_tickets_90d": 2,
+   "monthly_spend": 149.24,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0058",
+   "tenure_months": 4,
+   "support_tickets_90d": 3,
+   "monthly_spend": 175.67,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0059",
+   "tenure_months": 6,
+   "support_tickets_90d": 1,
+   "monthly_spend": 67.37,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0060",
+   "tenure_months": 37,
+   "support_tickets_90d": 6,
+   "monthly_spend": 146.07,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0061",
+   "tenure_months": 37,
+   "support_tickets_90d": 2,
+   "monthly_spend": 67.51,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0062",
+   "tenure_months": 29,
+   "support_tickets_90d": 7,
+   "monthly_spend": 33.02,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0063",
+   "tenure_months": 45,
+   "support_tickets_90d": 1,
+   "monthly_spend": 35.71,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0064",
+   "tenure_months": 30,
+   "support_tickets_90d": 0,
+   "monthly_spend": 178.54,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0065",
+   "tenure_months": 40,
+   "support_tickets_90d": 8,
+   "monthly_spend": 81.98,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0066",
+   "tenure_months": 40,
+   "support_tickets_90d": 7,
+   "monthly_spend": 117.37,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0067",
+   "tenure_months": 38,
+   "support_tickets_90d": 1,
+   "monthly_spend": 176.86,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0068",
+   "tenure_months": 38,
+   "support_tickets_90d": 8,
+   "monthly_spend": 22.13,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0069",
+   "tenure_months": 37,
+   "support_tickets_90d": 1,
+   "monthly_spend": 198.78,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0070",
+   "tenure_months": 34,
+   "support_tickets_90d": 2,
+   "monthly_spend": 64.31,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0071",
+   "tenure_months": 10,
+   "support_tickets_90d": 0,
+   "monthly_spend": 165.65,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0072",
+   "tenure_months": 2,
+   "support_tickets_90d": 7,
+   "monthly_spend": 75.38,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0073",
+   "tenure_months": 43,
+   "support_tickets_90d": 5,
+   "monthly_spend": 22.54,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0074",
+   "tenure_months": 34,
+   "support_tickets_90d": 8,
+   "monthly_spend": 169.51,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0075",
+   "tenure_months": 11,
+   "support_tickets_90d": 2,
+   "monthly_spend": 125.78,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0076",
+   "tenure_months": 22,
+   "support_tickets_90d": 8,
+   "monthly_spend": 143.94,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0077",
+   "tenure_months": 51,
+   "support_tickets_90d": 8,
+   "monthly_spend": 129.58,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0078",
+   "tenure_months": 8,
+   "support_tickets_90d": 6,
+   "monthly_spend": 166.27,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0079",
+   "tenure_months": 44,
+   "support_tickets_90d": 3,
+   "monthly_spend": 97.35,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0080",
+   "tenure_months": 36,
+   "support_tickets_90d": 6,
+   "monthly_spend": 192.6,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0081",
+   "tenure_months": 48,
+   "support_tickets_90d": 3,
+   "monthly_spend": 153.38,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0082",
+   "tenure_months": 15,
+   "support_tickets_90d": 1,
+   "monthly_spend": 55.2,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0083",
+   "tenure_months": 36,
+   "support_tickets_90d": 3,
+   "monthly_spend": 157.26,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0084",
+   "tenure_months": 51,
+   "support_tickets_90d": 7,
+   "monthly_spend": 20.75,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0085",
+   "tenure_months": 51,
+   "support_tickets_90d": 1,
+   "monthly_spend": 144.69,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0086",
+   "tenure_months": 45,
+   "support_tickets_90d": 8,
+   "monthly_spend": 195.07,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0087",
+   "tenure_months": 10,
+   "support_tickets_90d": 3,
+   "monthly_spend": 188.14,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0088",
+   "tenure_months": 30,
+   "support_tickets_90d": 4,
+   "monthly_spend": 67.09,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0089",
+   "tenure_months": 5,
+   "support_tickets_90d": 3,
+   "monthly_spend": 129.28,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0090",
+   "tenure_months": 17,
+   "support_tickets_90d": 7,
+   "monthly_spend": 71.91,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0091",
+   "tenure_months": 18,
+   "support_tickets_90d": 6,
+   "monthly_spend": 100.88,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0092",
+   "tenure_months": 12,
+   "support_tickets_90d": 1,
+   "monthly_spend": 52.82,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0093",
+   "tenure_months": 6,
+   "support_tickets_90d": 3,
+   "monthly_spend": 145.17,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0094",
+   "tenure_months": 44,
+   "support_tickets_90d": 7,
+   "monthly_spend": 163.31,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0095",
+   "tenure_months": 17,
+   "support_tickets_90d": 4,
+   "monthly_spend": 36.92,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0096",
+   "tenure_months": 8,
+   "support_tickets_90d": 0,
+   "monthly_spend": 124.67,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0097",
+   "tenure_months": 31,
+   "support_tickets_90d": 2,
+   "monthly_spend": 69.68,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0098",
+   "tenure_months": 25,
+   "support_tickets_90d": 8,
+   "monthly_spend": 129.88,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0099",
+   "tenure_months": 37,
+   "support_tickets_90d": 6,
+   "monthly_spend": 95.87,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0100",
+   "tenure_months": 8,
+   "support_tickets_90d": 5,
+   "monthly_spend": 131.18,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0101",
+   "tenure_months": 41,
+   "support_tickets_90d": 0,
+   "monthly_spend": 131.91,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0102",
+   "tenure_months": 21,
+   "support_tickets_90d": 0,
+   "monthly_spend": 82.75,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0103",
+   "tenure_months": 17,
+   "support_tickets_90d": 7,
+   "monthly_spend": 196.12,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0104",
+   "tenure_months": 29,
+   "support_tickets_90d": 8,
+   "monthly_spend": 120.93,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0105",
+   "tenure_months": 52,
+   "support_tickets_90d": 7,
+   "monthly_spend": 64.42,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0106",
+   "tenure_months": 13,
+   "support_tickets_90d": 7,
+   "monthly_spend": 189.02,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0107",
+   "tenure_months": 51,
+   "support_tickets_90d": 4,
+   "monthly_spend": 152.49,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0108",
+   "tenure_months": 27,
+   "support_tickets_90d": 3,
+   "monthly_spend": 47.61,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0109",
+   "tenure_months": 4,
+   "support_tickets_90d": 0,
+   "monthly_spend": 130.77,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0110",
+   "tenure_months": 40,
+   "support_tickets_90d": 8,
+   "monthly_spend": 23.42,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0111",
+   "tenure_months": 35,
+   "support_tickets_90d": 6,
+   "monthly_spend": 108.77,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0112",
+   "tenure_months": 47,
+   "support_tickets_90d": 5,
+   "monthly_spend": 33.75,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0113",
+   "tenure_months": 45,
+   "support_tickets_90d": 7,
+   "monthly_spend": 111.91,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0114",
+   "tenure_months": 29,
+   "support_tickets_90d": 3,
+   "monthly_spend": 146.16,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0115",
+   "tenure_months": 10,
+   "support_tickets_90d": 1,
+   "monthly_spend": 83.77,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0116",
+   "tenure_months": 20,
+   "support_tickets_90d": 0,
+   "monthly_spend": 39.34,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0117",
+   "tenure_months": 22,
+   "support_tickets_90d": 5,
+   "monthly_spend": 33.14,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0118",
+   "tenure_months": 7,
+   "support_tickets_90d": 4,
+   "monthly_spend": 199.89,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0119",
+   "tenure_months": 3,
+   "support_tickets_90d": 2,
+   "monthly_spend": 124.31,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0120",
+   "tenure_months": 53,
+   "support_tickets_90d": 3,
+   "monthly_spend": 184.44,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0121",
+   "tenure_months": 28,
+   "support_tickets_90d": 1,
+   "monthly_spend": 31.98,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0122",
+   "tenure_months": 55,
+   "support_tickets_90d": 2,
+   "monthly_spend": 188.82,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0123",
+   "tenure_months": 43,
+   "support_tickets_90d": 1,
+   "monthly_spend": 87.89,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0124",
+   "tenure_months": 12,
+   "support_tickets_90d": 1,
+   "monthly_spend": 109.87,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0125",
+   "tenure_months": 40,
+   "support_tickets_90d": 5,
+   "monthly_spend": 131.26,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0126",
+   "tenure_months": 47,
+   "support_tickets_90d": 4,
+   "monthly_spend": 172.4,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0127",
+   "tenure_months": 12,
+   "support_tickets_90d": 4,
+   "monthly_spend": 162.66,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0128",
+   "tenure_months": 41,
+   "support_tickets_90d": 8,
+   "monthly_spend": 78.06,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0129",
+   "tenure_months": 42,
+   "support_tickets_90d": 3,
+   "monthly_spend": 139.4,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0130",
+   "tenure_months": 8,
+   "support_tickets_90d": 8,
+   "monthly_spend": 91.51,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0131",
+   "tenure_months": 44,
+   "support_tickets_90d": 7,
+   "monthly_spend": 87.98,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0132",
+   "tenure_months": 43,
+   "support_tickets_90d": 0,
+   "monthly_spend": 154.6,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0133",
+   "tenure_months": 50,
+   "support_tickets_90d": 6,
+   "monthly_spend": 51.27,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0134",
+   "tenure_months": 14,
+   "support_tickets_90d": 3,
+   "monthly_spend": 70.65,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0135",
+   "tenure_months": 31,
+   "support_tickets_90d": 4,
+   "monthly_spend": 111.06,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0136",
+   "tenure_months": 45,
+   "support_tickets_90d": 6,
+   "monthly_spend": 51.94,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0137",
+   "tenure_months": 25,
+   "support_tickets_90d": 3,
+   "monthly_spend": 188.72,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0138",
+   "tenure_months": 24,
+   "support_tickets_90d": 6,
+   "monthly_spend": 124.17,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0139",
+   "tenure_months": 59,
+   "support_tickets_90d": 6,
+   "monthly_spend": 125.08,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0140",
+   "tenure_months": 20,
+   "support_tickets_90d": 0,
+   "monthly_spend": 110.3,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0141",
+   "tenure_months": 54,
+   "support_tickets_90d": 1,
+   "monthly_spend": 179.25,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0142",
+   "tenure_months": 43,
+   "support_tickets_90d": 5,
+   "monthly_spend": 137.6,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0143",
+   "tenure_months": 23,
+   "support_tickets_90d": 0,
+   "monthly_spend": 155.06,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0144",
+   "tenure_months": 22,
+   "support_tickets_90d": 4,
+   "monthly_spend": 162.7,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0145",
+   "tenure_months": 50,
+   "support_tickets_90d": 8,
+   "monthly_spend": 47.23,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0146",
+   "tenure_months": 29,
+   "support_tickets_90d": 5,
+   "monthly_spend": 26.75,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0147",
+   "tenure_months": 7,
+   "support_tickets_90d": 5,
+   "monthly_spend": 97.48,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0148",
+   "tenure_months": 10,
+   "support_tickets_90d": 6,
+   "monthly_spend": 38.47,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0149",
+   "tenure_months": 14,
+   "support_tickets_90d": 0,
+   "monthly_spend": 30.77,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0150",
+   "tenure_months": 41,
+   "support_tickets_90d": 0,
+   "monthly_spend": 154.64,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0151",
+   "tenure_months": 10,
+   "support_tickets_90d": 5,
+   "monthly_spend": 196.21,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0152",
+   "tenure_months": 39,
+   "support_tickets_90d": 3,
+   "monthly_spend": 137.23,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0153",
+   "tenure_months": 10,
+   "support_tickets_90d": 6,
+   "monthly_spend": 116.9,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0154",
+   "tenure_months": 43,
+   "support_tickets_90d": 1,
+   "monthly_spend": 141.76,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0155",
+   "tenure_months": 40,
+   "support_tickets_90d": 5,
+   "monthly_spend": 195.84,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0156",
+   "tenure_months": 16,
+   "support_tickets_90d": 7,
+   "monthly_spend": 128.57,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0157",
+   "tenure_months": 9,
+   "support_tickets_90d": 4,
+   "monthly_spend": 138.29,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0158",
+   "tenure_months": 48,
+   "support_tickets_90d": 6,
+   "monthly_spend": 162.2,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0159",
+   "tenure_months": 9,
+   "support_tickets_90d": 3,
+   "monthly_spend": 189.78,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0160",
+   "tenure_months": 58,
+   "support_tickets_90d": 8,
+   "monthly_spend": 146.31,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0161",
+   "tenure_months": 48,
+   "support_tickets_90d": 3,
+   "monthly_spend": 128.69,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0162",
+   "tenure_months": 7,
+   "support_tickets_90d": 0,
+   "monthly_spend": 133.08,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0163",
+   "tenure_months": 18,
+   "support_tickets_90d": 4,
+   "monthly_spend": 61.95,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0164",
+   "tenure_months": 3,
+   "support_tickets_90d": 6,
+   "monthly_spend": 125.37,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0165",
+   "tenure_months": 30,
+   "support_tickets_90d": 8,
+   "monthly_spend": 21.5,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0166",
+   "tenure_months": 9,
+   "support_tickets_90d": 5,
+   "monthly_spend": 187.51,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0167",
+   "tenure_months": 3,
+   "support_tickets_90d": 3,
+   "monthly_spend": 84.42,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0168",
+   "tenure_months": 22,
+   "support_tickets_90d": 4,
+   "monthly_spend": 21.07,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0169",
+   "tenure_months": 58,
+   "support_tickets_90d": 6,
+   "monthly_spend": 126.38,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0170",
+   "tenure_months": 48,
+   "support_tickets_90d": 2,
+   "monthly_spend": 38.89,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0171",
+   "tenure_months": 47,
+   "support_tickets_90d": 4,
+   "monthly_spend": 116.16,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0172",
+   "tenure_months": 7,
+   "support_tickets_90d": 2,
+   "monthly_spend": 155.55,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0173",
+   "tenure_months": 7,
+   "support_tickets_90d": 6,
+   "monthly_spend": 110.57,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0174",
+   "tenure_months": 52,
+   "support_tickets_90d": 3,
+   "monthly_spend": 38.63,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0175",
+   "tenure_months": 7,
+   "support_tickets_90d": 4,
+   "monthly_spend": 114.02,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0176",
+   "tenure_months": 22,
+   "support_tickets_90d": 1,
+   "monthly_spend": 192.86,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0177",
+   "tenure_months": 17,
+   "support_tickets_90d": 6,
+   "monthly_spend": 22.99,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0178",
+   "tenure_months": 29,
+   "support_tickets_90d": 6,
+   "monthly_spend": 111.84,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0179",
+   "tenure_months": 10,
+   "support_tickets_90d": 4,
+   "monthly_spend": 176.47,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0180",
+   "tenure_months": 26,
+   "support_tickets_90d": 4,
+   "monthly_spend": 165.26,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0181",
+   "tenure_months": 41,
+   "support_tickets_90d": 8,
+   "monthly_spend": 48.33,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0182",
+   "tenure_months": 4,
+   "support_tickets_90d": 4,
+   "monthly_spend": 179.25,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0183",
+   "tenure_months": 15,
+   "support_tickets_90d": 2,
+   "monthly_spend": 68.27,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0184",
+   "tenure_months": 2,
+   "support_tickets_90d": 8,
+   "monthly_spend": 121.88,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0185",
+   "tenure_months": 32,
+   "support_tickets_90d": 7,
+   "monthly_spend": 177.69,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0186",
+   "tenure_months": 37,
+   "support_tickets_90d": 8,
+   "monthly_spend": 169.23,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0187",
+   "tenure_months": 30,
+   "support_tickets_90d": 5,
+   "monthly_spend": 66.79,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0188",
+   "tenure_months": 41,
+   "support_tickets_90d": 3,
+   "monthly_spend": 105.56,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0189",
+   "tenure_months": 40,
+   "support_tickets_90d": 0,
+   "monthly_spend": 191.06,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0190",
+   "tenure_months": 54,
+   "support_tickets_90d": 3,
+   "monthly_spend": 144.15,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0191",
+   "tenure_months": 38,
+   "support_tickets_90d": 7,
+   "monthly_spend": 164.7,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0192",
+   "tenure_months": 21,
+   "support_tickets_90d": 4,
+   "monthly_spend": 40.38,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0193",
+   "tenure_months": 60,
+   "support_tickets_90d": 5,
+   "monthly_spend": 111.33,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0194",
+   "tenure_months": 30,
+   "support_tickets_90d": 5,
+   "monthly_spend": 104.17,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0195",
+   "tenure_months": 48,
+   "support_tickets_90d": 6,
+   "monthly_spend": 154.84,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0196",
+   "tenure_months": 29,
+   "support_tickets_90d": 2,
+   "monthly_spend": 189.4,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0197",
+   "tenure_months": 44,
+   "support_tickets_90d": 6,
+   "monthly_spend": 100.05,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0198",
+   "tenure_months": 57,
+   "support_tickets_90d": 5,
+   "monthly_spend": 144.94,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0199",
+   "tenure_months": 14,
+   "support_tickets_90d": 7,
+   "monthly_spend": 161.2,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0200",
+   "tenure_months": 51,
+   "support_tickets_90d": 1,
+   "monthly_spend": 45.52,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0201",
+   "tenure_months": 18,
+   "support_tickets_90d": 1,
+   "monthly_spend": 198.2,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0202",
+   "tenure_months": 31,
+   "support_tickets_90d": 0,
+   "monthly_spend": 107.07,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0203",
+   "tenure_months": 51,
+   "support_tickets_90d": 7,
+   "monthly_spend": 21.25,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0204",
+   "tenure_months": 15,
+   "support_tickets_90d": 6,
+   "monthly_spend": 175.14,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0205",
+   "tenure_months": 34,
+   "support_tickets_90d": 3,
+   "monthly_spend": 150.52,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0206",
+   "tenure_months": 45,
+   "support_tickets_90d": 7,
+   "monthly_spend": 141.26,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0207",
+   "tenure_months": 6,
+   "support_tickets_90d": 5,
+   "monthly_spend": 118.71,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0208",
+   "tenure_months": 5,
+   "support_tickets_90d": 5,
+   "monthly_spend": 156.11,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0209",
+   "tenure_months": 5,
+   "support_tickets_90d": 6,
+   "monthly_spend": 163.23,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0210",
+   "tenure_months": 50,
+   "support_tickets_90d": 7,
+   "monthly_spend": 181.58,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0211",
+   "tenure_months": 26,
+   "support_tickets_90d": 0,
+   "monthly_spend": 167.54,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0212",
+   "tenure_months": 40,
+   "support_tickets_90d": 8,
+   "monthly_spend": 125.34,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0213",
+   "tenure_months": 47,
+   "support_tickets_90d": 6,
+   "monthly_spend": 121.37,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0214",
+   "tenure_months": 45,
+   "support_tickets_90d": 5,
+   "monthly_spend": 180.2,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0215",
+   "tenure_months": 55,
+   "support_tickets_90d": 1,
+   "monthly_spend": 169.76,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0216",
+   "tenure_months": 45,
+   "support_tickets_90d": 1,
+   "monthly_spend": 184.55,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0217",
+   "tenure_months": 60,
+   "support_tickets_90d": 7,
+   "monthly_spend": 199.15,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0218",
+   "tenure_months": 34,
+   "support_tickets_90d": 1,
+   "monthly_spend": 97.94,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0219",
+   "tenure_months": 3,
+   "support_tickets_90d": 8,
+   "monthly_spend": 184.58,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0220",
+   "tenure_months": 60,
+   "support_tickets_90d": 3,
+   "monthly_spend": 59.34,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0221",
+   "tenure_months": 37,
+   "support_tickets_90d": 0,
+   "monthly_spend": 154.82,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0222",
+   "tenure_months": 19,
+   "support_tickets_90d": 7,
+   "monthly_spend": 77.45,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0223",
+   "tenure_months": 24,
+   "support_tickets_90d": 4,
+   "monthly_spend": 141.33,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0224",
+   "tenure_months": 41,
+   "support_tickets_90d": 0,
+   "monthly_spend": 48.64,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0225",
+   "tenure_months": 18,
+   "support_tickets_90d": 0,
+   "monthly_spend": 172.24,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0226",
+   "tenure_months": 56,
+   "support_tickets_90d": 2,
+   "monthly_spend": 79.88,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0227",
+   "tenure_months": 22,
+   "support_tickets_90d": 6,
+   "monthly_spend": 128.35,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0228",
+   "tenure_months": 59,
+   "support_tickets_90d": 7,
+   "monthly_spend": 52.69,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0229",
+   "tenure_months": 28,
+   "support_tickets_90d": 7,
+   "monthly_spend": 97.25,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0230",
+   "tenure_months": 49,
+   "support_tickets_90d": 6,
+   "monthly_spend": 192.29,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0231",
+   "tenure_months": 6,
+   "support_tickets_90d": 5,
+   "monthly_spend": 44.95,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0232",
+   "tenure_months": 11,
+   "support_tickets_90d": 5,
+   "monthly_spend": 198.92,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0233",
+   "tenure_months": 21,
+   "support_tickets_90d": 6,
+   "monthly_spend": 62.32,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0234",
+   "tenure_months": 39,
+   "support_tickets_90d": 0,
+   "monthly_spend": 61.88,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0235",
+   "tenure_months": 49,
+   "support_tickets_90d": 3,
+   "monthly_spend": 130.23,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0236",
+   "tenure_months": 23,
+   "support_tickets_90d": 8,
+   "monthly_spend": 108.92,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0237",
+   "tenure_months": 53,
+   "support_tickets_90d": 0,
+   "monthly_spend": 40.33,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0238",
+   "tenure_months": 57,
+   "support_tickets_90d": 3,
+   "monthly_spend": 70.75,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0239",
+   "tenure_months": 44,
+   "support_tickets_90d": 7,
+   "monthly_spend": 166.33,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0240",
+   "tenure_months": 23,
+   "support_tickets_90d": 5,
+   "monthly_spend": 64.5,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0241",
+   "tenure_months": 25,
+   "support_tickets_90d": 1,
+   "monthly_spend": 188.23,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0242",
+   "tenure_months": 6,
+   "support_tickets_90d": 4,
+   "monthly_spend": 94.44,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0243",
+   "tenure_months": 42,
+   "support_tickets_90d": 0,
+   "monthly_spend": 148.48,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0244",
+   "tenure_months": 40,
+   "support_tickets_90d": 4,
+   "monthly_spend": 20.4,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0245",
+   "tenure_months": 46,
+   "support_tickets_90d": 5,
+   "monthly_spend": 171.13,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0246",
+   "tenure_months": 51,
+   "support_tickets_90d": 7,
+   "monthly_spend": 161.21,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0247",
+   "tenure_months": 57,
+   "support_tickets_90d": 5,
+   "monthly_spend": 108.8,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0248",
+   "tenure_months": 54,
+   "support_tickets_90d": 5,
+   "monthly_spend": 174.32,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0249",
+   "tenure_months": 39,
+   "support_tickets_90d": 3,
+   "monthly_spend": 21.77,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0250",
+   "tenure_months": 43,
+   "support_tickets_90d": 1,
+   "monthly_spend": 100.64,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0251",
+   "tenure_months": 22,
+   "support_tickets_90d": 5,
+   "monthly_spend": 85.32,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0252",
+   "tenure_months": 36,
+   "support_tickets_90d": 5,
+   "monthly_spend": 185.77,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0253",
+   "tenure_months": 42,
+   "support_tickets_90d": 1,
+   "monthly_spend": 109.45,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0254",
+   "tenure_months": 36,
+   "support_tickets_90d": 6,
+   "monthly_spend": 29.52,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0255",
+   "tenure_months": 37,
+   "support_tickets_90d": 7,
+   "monthly_spend": 99.05,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0256",
+   "tenure_months": 56,
+   "support_tickets_90d": 8,
+   "monthly_spend": 115.28,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0257",
+   "tenure_months": 22,
+   "support_tickets_90d": 1,
+   "monthly_spend": 117.54,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0258",
+   "tenure_months": 7,
+   "support_tickets_90d": 1,
+   "monthly_spend": 144.44,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0259",
+   "tenure_months": 26,
+   "support_tickets_90d": 3,
+   "monthly_spend": 49.77,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0260",
+   "tenure_months": 45,
+   "support_tickets_90d": 4,
+   "monthly_spend": 115.02,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0261",
+   "tenure_months": 55,
+   "support_tickets_90d": 3,
+   "monthly_spend": 170.98,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0262",
+   "tenure_months": 41,
+   "support_tickets_90d": 1,
+   "monthly_spend": 167.54,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0263",
+   "tenure_months": 59,
+   "support_tickets_90d": 8,
+   "monthly_spend": 168.32,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0264",
+   "tenure_months": 26,
+   "support_tickets_90d": 3,
+   "monthly_spend": 27.77,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0265",
+   "tenure_months": 19,
+   "support_tickets_90d": 5,
+   "monthly_spend": 85.47,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0266",
+   "tenure_months": 3,
+   "support_tickets_90d": 3,
+   "monthly_spend": 66.84,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0267",
+   "tenure_months": 16,
+   "support_tickets_90d": 1,
+   "monthly_spend": 93.76,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0268",
+   "tenure_months": 50,
+   "support_tickets_90d": 0,
+   "monthly_spend": 60.83,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0269",
+   "tenure_months": 49,
+   "support_tickets_90d": 8,
+   "monthly_spend": 82.47,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0270",
+   "tenure_months": 58,
+   "support_tickets_90d": 4,
+   "monthly_spend": 124.61,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0271",
+   "tenure_months": 7,
+   "support_tickets_90d": 8,
+   "monthly_spend": 45.25,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0272",
+   "tenure_months": 38,
+   "support_tickets_90d": 3,
+   "monthly_spend": 138.7,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0273",
+   "tenure_months": 22,
+   "support_tickets_90d": 0,
+   "monthly_spend": 89.56,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0274",
+   "tenure_months": 27,
+   "support_tickets_90d": 8,
+   "monthly_spend": 72.67,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0275",
+   "tenure_months": 25,
+   "support_tickets_90d": 4,
+   "monthly_spend": 142.5,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0276",
+   "tenure_months": 50,
+   "support_tickets_90d": 2,
+   "monthly_spend": 193.3,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0277",
+   "tenure_months": 30,
+   "support_tickets_90d": 1,
+   "monthly_spend": 172.17,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0278",
+   "tenure_months": 59,
+   "support_tickets_90d": 1,
+   "monthly_spend": 40.58,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0279",
+   "tenure_months": 49,
+   "support_tickets_90d": 6,
+   "monthly_spend": 114.1,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0280",
+   "tenure_months": 4,
+   "support_tickets_90d": 0,
+   "monthly_spend": 145.29,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0281",
+   "tenure_months": 29,
+   "support_tickets_90d": 4,
+   "monthly_spend": 167.38,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0282",
+   "tenure_months": 56,
+   "support_tickets_90d": 4,
+   "monthly_spend": 115.63,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0283",
+   "tenure_months": 10,
+   "support_tickets_90d": 5,
+   "monthly_spend": 43.42,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0284",
+   "tenure_months": 23,
+   "support_tickets_90d": 6,
+   "monthly_spend": 109.35,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0285",
+   "tenure_months": 40,
+   "support_tickets_90d": 7,
+   "monthly_spend": 184.71,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0286",
+   "tenure_months": 29,
+   "support_tickets_90d": 8,
+   "monthly_spend": 99.84,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0287",
+   "tenure_months": 26,
+   "support_tickets_90d": 2,
+   "monthly_spend": 37.52,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0288",
+   "tenure_months": 57,
+   "support_tickets_90d": 5,
+   "monthly_spend": 84.46,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0289",
+   "tenure_months": 34,
+   "support_tickets_90d": 1,
+   "monthly_spend": 130.2,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0290",
+   "tenure_months": 20,
+   "support_tickets_90d": 6,
+   "monthly_spend": 53.16,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0291",
+   "tenure_months": 7,
+   "support_tickets_90d": 8,
+   "monthly_spend": 33.93,
+   "plan": "pro",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0292",
+   "tenure_months": 3,
+   "support_tickets_90d": 5,
+   "monthly_spend": 154.3,
+   "plan": "plus",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0293",
+   "tenure_months": 20,
+   "support_tickets_90d": 2,
+   "monthly_spend": 31.27,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0294",
+   "tenure_months": 27,
+   "support_tickets_90d": 3,
+   "monthly_spend": 189.22,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0295",
+   "tenure_months": 54,
+   "support_tickets_90d": 2,
+   "monthly_spend": 21.37,
+   "plan": "basic",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0296",
+   "tenure_months": 45,
+   "support_tickets_90d": 2,
+   "monthly_spend": 90.09,
+   "plan": "plus",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0297",
+   "tenure_months": 45,
+   "support_tickets_90d": 7,
+   "monthly_spend": 102.41,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0298",
+   "tenure_months": 17,
+   "support_tickets_90d": 8,
+   "monthly_spend": 194.48,
+   "plan": "basic",
+   "churned": 1
+  },
+  {
+   "customer_id": "C0299",
+   "tenure_months": 45,
+   "support_tickets_90d": 6,
+   "monthly_spend": 147.62,
+   "plan": "pro",
+   "churned": 0
+  },
+  {
+   "customer_id": "C0300",
+   "tenure_months": 42,
+   "support_tickets_90d": 0,
+   "monthly_spend": 156.34,
+   "plan": "plus",
+   "churned": 0
+  }
+ ]
+}
